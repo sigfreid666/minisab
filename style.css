@@ -1,9 +1,9 @@
 article.favoris
 {
-	color: rgb(20,0,0);
-	margin-left: 20px;
-	background-color: #7B917F;
-	box-shadow: 10px 10px 5px grey;
+	color: #56643b;
+	background-color: #dcff97;
+	border-style: solid;
+	margin-bottom: 5px;
 }
 article.telechargement
 {
@@ -19,33 +19,38 @@ article.termine
 	background-color: #7BFF7F;
 	box-shadow: 10px 10px 5px grey;
 }
-article.taille
+p.taille
 {
-	color: rgb(20,0,0);
-	margin-left: 40px;
-	background-color: #7B917F;
+	margin-left: 10px;
 }
-p
+p.taille span
 {
-	padding: 5px 5px 10px 5px;
-	font-size: 16px;
+	font-size: 14px;
+    border-right: 2px solid #ccc;
+    padding-left: 5px;
+    padding-right: 5px;
 }
-h2
+
+article > h2
 {
-	font-size: 20px;
-	padding-top: 10px;
-	padding-bottom: 10px;
-	padding-left: 20px;
+	font-size: 18px;
+	padding-left: 5px;
+}
+section > h2
+{
+	font-size: 24px;
+	padding-left: 5px;
+	padding-bottom: 5px;
+	padding-top: 5px;
 	background-color: #B0D5AD;
 }
 section
 {
-	background-color: rgb(200, 190, 200);
-	padding-bottom: 10px;
+	padding-bottom: 55px;
 }
 section.options
 {
-	background-color: rgb(100, 90, 100);
+	background-color: #e9f9cb;
 	position: fixed;
 	right: 0px;
 	bottom: 0px;
@@ -55,11 +60,11 @@ body
 {
 	margin-bottom: 100px;
 }
-ul {
+h2 > ul {
 	list-style-type:none
 }
 li.favoris {
-    display: inline;
     padding-right: 5px;
-    border-right: 1px solid #ccc;
+    padding-left: 5px;
+    border-right: 2px solid #ccc;
 } 
