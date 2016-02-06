@@ -67,4 +67,10 @@ li.favoris {
     padding-right: 5px;
     padding-left: 5px;
     border-right: 2px solid #ccc;
-} 
+}
+img
+{
+	vertical-align: middle;
+	width: 24px;
+	height: 24px;
+}
