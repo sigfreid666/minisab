@@ -11,7 +11,7 @@ liste_options = ( 'recherche', 'supprimercategoriemetal', 'supprimerfavoristermi
 form = cgi.FieldStorage()
 options = { }
 for opt in liste_options:
-    if form.getvalue(opt) <> None:
+    if not (form.getvalue(opt) is None):
         options[opt] = form.getvalue(opt)
 
 buffer = genere_fichier_html5_cgi('192.168.0.8', '192.168.0.8', form.getlist('resultat'), option = options)
