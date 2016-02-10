@@ -1,23 +1,20 @@
-article.favoris
+article
 {
 	color: #56643b;
-	background-color: #dcff97;
 	border-style: solid;
 	margin-bottom: 5px;
 }
+article.favoris
+{
+	background-color: #dcff97;
+}
 article.telechargement
 {
-	color: rgb(20,0,0);
-	margin-left: 20px;
 	background-color: #FF917F;
-	box-shadow: 10px 10px 5px grey;
 }
 article.termine
 {
-	color: rgb(20,0,0);
-	margin-left: 20px;
 	background-color: #7BFF7F;
-	box-shadow: 10px 10px 5px grey;
 }
 p.taille
 {
@@ -46,7 +43,7 @@ section > h2
 }
 section
 {
-	padding-bottom: 55px;
+	padding-bottom: 10px;
 }
 section.options
 {
