@@ -7,8 +7,9 @@ import os, sys, cgi
 import site
 from ownmodule.miniflux import genere_fichier_html5_cgi
 
+liste_options = ( 'recherche', 'supprimercategoriemetal', 'supprimerfavoristermine' )
 form = cgi.FieldStorage()
-options = { opt : True if form.getvalue(opt) == 'oui' else False for opt in [ 'recherche', 'supprimercategoriemetal', 'supprimerfavoristermine' ] }
+options = { opt : form.getvalue(opt) for opt in liste_options }
 
 buffer = genere_fichier_html5_cgi('192.168.0.8', '192.168.0.8', form.getlist('resultat'), option = options)
 #sys.stdout.buffer.write('Content-Type: text/html\r\n\r\n'.encode('utf-8'))
