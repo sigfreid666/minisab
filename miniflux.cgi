@@ -7,7 +7,7 @@ import os, sys, cgi
 import site
 from ownmodule.miniflux import genere_fichier_html5_cgi
 
-liste_options = ( 'recherche', 'supprimercategoriemetal', 'supprimerfavoristermine' )
+liste_options = ( 'recherche', 'supprimercategoriemetal', 'supprimerfavoristermine', 'testjava' )
 form = cgi.FieldStorage()
 options = { }
 for opt in liste_options:
