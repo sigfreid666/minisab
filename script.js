@@ -12,3 +12,20 @@ function sendmessage() {
   xhttp.open("GET", "/minisab/miniflux.cgi?testjava", true);
   xhttp.send();
 }
+
+function supprimerfavoris(idminiflux, idsab) {
+  document.getElementById ("res").innerHTML = "Debug : envoie requete"
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+        var x = document.getElementById ("res");
+        var o = JSON.parse(xhttp.responseText)
+        x.innerHTML = o.supprimer[0].miniflux;
+        document.getElementById (o.supprimer[0].miniflux).style.display = "none";
+    }
+  }
+  xhttp.open("POST", "miniflux.cgi", true);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send("action=supprimerfavoris&miniflux=" + idminiflux + "&sab=" + idsab);//JSON.stringify(test));
+  // xhttp.send(null);
+}
