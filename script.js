@@ -18,10 +18,9 @@ function supprimerfavoris(idminiflux, idsab) {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
-        var x = document.getElementById ("res");
-        var o = JSON.parse(xhttp.responseText)
-        x.innerHTML = o.supprimer[0].miniflux;
-        document.getElementById (o.supprimer[0].miniflux).style.display = "none";
+        // document.getElementById ("res").innerHTML = xhttp.responseText;
+        var o = JSON.parse(xhttp.responseText);
+        document.getElementById (o.supprimer[0].id).style.display = "none";
     }
   }
   xhttp.open("POST", "miniflux.cgi", true);
