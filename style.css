@@ -79,6 +79,11 @@ img
 	width: 56px;
 	height: 56px;
 }
+span.taille {
+    font-size: 14px;
+    font-weight: bold;
+}
+
 button.taille {
 	background-color: white;
     color: black;
