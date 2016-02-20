@@ -64,6 +64,7 @@ h2 > ul {
 ul.taille li {
 	display: inline;
 	list-style-type:none;
+	margin: 2px;
 }
 ul.options li {
 	display: inline;
@@ -125,4 +126,5 @@ a.boutonarticle
 p.debug{
 	background-color: red;
     border: 5px solid black; /* Green */
+    /*visibility: collapse;*/
 }

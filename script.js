@@ -28,3 +28,15 @@ function supprimerfavoris(idminiflux, idsab) {
   xhttp.send("action=supprimerfavoris&miniflux=" + idminiflux + "&sab=" + idsab);//JSON.stringify(test));
   // xhttp.send(null);
 }
+
+function lancer_telechargement(idtelechargement, titre, idhtml) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (xhttp.readyState == 4 && xhttp.status == 200 && xhttp.responseText == 'OK') {
+        document.getElementById (idhtml).style.display = "none";
+    }
+  }
+  xhttp.open("POST", "miniflux.cgi", true);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send("action=telechargement&id=" + idtelechargement + "&titre=" + titre);
+}
