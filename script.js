@@ -14,7 +14,7 @@ function sendmessage() {
 }
 
 function supprimerfavoris(idminiflux, idsab) {
-  document.getElementById ("res").innerHTML = "Debug : envoie requete"
+  // document.getElementById ("res").innerHTML = "Debug : envoie requete"
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
     if (xhttp.readyState == 4 && xhttp.status == 200) {
