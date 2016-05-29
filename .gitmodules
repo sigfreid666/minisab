@@ -1,0 +1,3 @@
+[submodule "ownmodule"]
+	path = ownmodule
+	url = ssh://git@ssh.sigfreid.top:80/~git/ownmodule
