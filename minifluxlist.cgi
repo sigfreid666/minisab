@@ -14,8 +14,6 @@ form = cgi.FieldStorage()
 if 'action' in form.keys():
         mini = miniflux('192.168.0.8')
         mini.set_status_liste(form.getvalue('id').split(','))
-        buffer = 'OK'
-else:
-        buffer = generer_fichier_html_newsgroup('192.168.0.8')
+buffer = generer_fichier_html_newsgroup('192.168.0.8')
 sys.stdout.buffer.write(buffer.encode('utf-8'))
 
