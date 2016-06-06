@@ -29,6 +29,20 @@ function supprimerfavoris(idminiflux, idsab) {
   // xhttp.send(null);
 }
 
+function setfavoris(idminiflux) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+        var o = JSON.parse(xhttp.responseText);
+        document.getElementById (o.set[0].id).style.display = "none";
+    }
+  }
+  xhttp.open("POST", "miniflux.cgi", true);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send("action=setfavoris&miniflux=" + idminiflux );
+  // xhttp.send(null);
+}
+
 function lancer_telechargement(idtelechargement, titre, idhtml) {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
