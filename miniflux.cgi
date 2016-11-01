@@ -19,6 +19,6 @@ if 'action' in form.keys():
     elif action == 'setfavoris':
         buffer = set_favoris('192.168.0.8', form.getvalue('miniflux').split(','))
 else:
-    buffer = genere_fichier_html5_cgi('192.168.0.8', '192.168.0.8', form.getlist('resultat'), option = { 'recherche' : 'oui'})
+    buffer = genere_fichier_html5_cgi('192.168.0.8', '192.168.0.8', form.getlist('resultat'), option = { 'recherche' : form.getvalue('recherche', 'non')})
 sys.stdout.buffer.write(buffer.encode('utf-8'))
 
