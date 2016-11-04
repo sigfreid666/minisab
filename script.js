@@ -54,3 +54,15 @@ function lancer_telechargement(idtelechargement, titre, idhtml) {
   xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   xhttp.send("action=telechargement&id=" + idtelechargement + "&titre=" + titre);
 }
+
+function lancer_telechargement_url(url, titre, idhtml) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (xhttp.readyState == 4 && xhttp.status == 200 && xhttp.responseText == 'OK') {
+        document.getElementById (idhtml).style.display = "none";
+    }
+  }
+  xhttp.open("POST", "miniflux.cgi", true);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send("action=telechargement_url&url=" + url + "&titre=" + titre);
+}
