@@ -14,11 +14,7 @@ def lancer_telechargement_url(url, titre):
     sab = sabnzbd.sabnzbd(serveur='192.168.0.8', port=9000, cle_api=ownmodule.sabnzbd_nc_cle_api)
     resultat = sab.add_by_url(url, titre)
     # output = {'encours' : []}
-    for titre in resultat:
-        if resultat[titre]['result'] == 'OK':
-            output = 'OK'
-    #         output['encours'].append({'titre' : titre, 'html' : ''})
-    return output
+    return resultat['result']
 
 liste_options = ( 'recherche', 'supprimercategoriemetal', 'supprimerfavoristermine', 'testjava' )
 form = cgi.FieldStorage()
