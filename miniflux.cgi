@@ -19,11 +19,7 @@ def lancer_telechargement_url(url, titre):
     sab = sabnzbd.sabnzbd(serveur=host_sabG, port=9000, cle_api=ownmodule.sabnzbd_nc_cle_api)
     resultat = sab.add_by_url(url, titre)
     # output = {'encours' : []}
-    for titre in resultat:
-        if resultat[titre]['result'] == 'OK':
-            output = 'OK'
-    #         output['encours'].append({'titre' : titre, 'html' : ''})
-    return output
+    return resultat['result']
 
 def supprimer_favoris(host_sab, host_miniflux, idminisab, port_sab=9000):
     output = {'supprimer': []}
