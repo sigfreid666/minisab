@@ -8,7 +8,7 @@ import pickle
 #cgitb.enable(display=0, logdir="./")
 import site
 import ownmodule
-from ownmodule import sabnzbd
+from ownmodule import sabnzbd,sabnzbd_nc_cle_api
 from ownmodule.miniflux import miniflux,ctx_miniflux
 
 host_minifluxG = '192.168.0.8'
@@ -59,10 +59,9 @@ def genere_fichier_html5_cgi(host_sab, host_miniflux, option={}, port_sab=9000, 
         try:
             with open('recherche.bin', 'wb') as fichier:
                 pickle.dump({id_mini: val.analyse_taille for id_mini,val in mini.new_favoris.items()}, fichier)
-        except:
-            pass
+        except Exception as e:
+            ctx.div.alone('Exception' + str(e), height='400px', width='100%')
     ctx.afficher_favoris([x[1] for x in mini.new_favoris.items()])
-    ctx.div.alone('', height='400px', width='100%')
     return ctx.close()
 
 form = cgi.FieldStorage()
