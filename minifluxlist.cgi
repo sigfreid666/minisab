@@ -6,7 +6,8 @@ import cgi
 #import cgitb
 #cgitb.enable(display=0, logdir="./")
 import site
-from ownmodule.miniflux import miniflux
+import re
+from ownmodule.miniflux import miniflux,ctx_generic
 
 
 def generer_liste_elem(ctx, tri_cat, cat, groupe_annee):
