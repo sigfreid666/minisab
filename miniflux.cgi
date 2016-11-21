@@ -8,11 +8,19 @@ import pickle
 #cgitb.enable(display=0, logdir="./")
 import site
 import ownmodule
-from ownmodule import sabnzbd,sabnzbd_nc_cle_api
+from ownmodule import sabnzbd,sabnzbd_nc_cle_api, ctx_generic
 from ownmodule.miniflux import miniflux,ctx_miniflux
 
 host_minifluxG = '192.168.0.8'
 host_sabG = '192.168.0.8'
+
+def lancer_recherche(id):
+    mini = miniflux(host_minifluxG)
+    mini.get_favoris(sab)
+    mini.create_une_url(id, liste_nom_indexeur=['nzbindex'])
+    ctx = ctx_generic.ctx_generic()
+    afficher_article_alone(ctx, mini.new_favoris[id])
+    return ctx.close()
 
 def lancer_telechargement_url(url, titre):
     # output['supprimer'].append({'id' : ids['miniflux']})
@@ -77,6 +85,8 @@ if 'action' in form.keys():
         buffer = lancer_telechargement_url(form.getvalue('url'), form.getvalue('titre'))
     elif action == 'setfavoris':
         buffer = set_favoris(host_minifluxG, form.getvalue('miniflux').split(','))
+    elif action == 'recheche':
+        buffer = lancer_recherche(form.getvalue('id'))
 else:
     buffer = genere_fichier_html5_cgi(host_minifluxG, '192.168.0.8', option = { 'recherche' : form.getvalue('recherche', 'non')})
 sys.stdout.buffer.write(buffer.encode('utf-8'))
