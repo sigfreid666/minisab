@@ -10,17 +10,18 @@ import site
 import ownmodule
 import json
 from ownmodule import sabnzbd,sabnzbd_nc_cle_api, ctx_generic
-from ownmodule.miniflux import miniflux,ctx_miniflux
+from ownmodule.miniflux import miniflux,ctx_miniflux, afficher_article_alone
 
 host_minifluxG = '192.168.0.8'
 host_sabG = '192.168.0.8'
 
 def lancer_recherche(id):
+    sab = sabnzbd.sabnzbd(serveur=host_sabG, port=9000, cle_api=ownmodule.sabnzbd_nc_cle_api)
     mini = miniflux(host_minifluxG)
     mini.get_favoris(sab)
     mini.create_une_url(id, liste_nom_indexeur=['nzbindex'])
     ctx = ctx_generic.ctx_generic()
-    afficher_article_alone(ctx, mini.new_favoris[id])
+    afficher_article_alone(ctx, mini.new_favoris[id], 'favoris')
     return ctx.close()
 
 def lancer_telechargement_url(url, titre):
@@ -75,8 +76,8 @@ def genere_fichier_html5_cgi(host_sab, host_miniflux, option={}, port_sab=9000, 
 
 form = cgi.FieldStorage()
 
-if 'action' in form.keys():
-    action = form.getvalue('action')
+action = form.getvalue('action', '')
+if (action != '') and (action != 'recherche'):
     sys.stdout.buffer.write('Content-Type: application/json\r\n\r\n'.encode('utf-8'))
     if action == 'supprimerfavoris':
         buffer = supprimer_favoris(host_minifluxG, '192.168.0.8', [{ 'miniflux' : form.getvalue('miniflux'), 'sab' : form.getvalue('sab')}])
@@ -86,9 +87,11 @@ if 'action' in form.keys():
         buffer = lancer_telechargement_url(form.getvalue('url'), form.getvalue('titre'))
     elif action == 'setfavoris':
         buffer = set_favoris(host_minifluxG, form.getvalue('miniflux').split(','))
-    elif action == 'recheche':
-        buffer = lancer_recherche(form.getvalue('id'))
 else:
-    buffer = genere_fichier_html5_cgi(host_minifluxG, '192.168.0.8', option = { 'recherche' : form.getvalue('recherche', 'non')})
+    sys.stdout.buffer.write('Content-Type: text/html\r\n\r\n'.encode('utf-8'))
+    if action == 'recherche':
+        buffer = lancer_recherche(form.getvalue('id'))
+    else:
+        buffer = genere_fichier_html5_cgi(host_minifluxG, '192.168.0.8', option = { 'recherche' : form.getvalue('recherche', 'non')})
 sys.stdout.buffer.write(buffer.encode('utf-8'))
 
