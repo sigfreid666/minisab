@@ -46,7 +46,7 @@ function setfavoris(idminiflux) {
 function lancer_telechargement(idtelechargement, titre, idhtml) {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
-    if (xhttp.readyState == 4 && xhttp.status == 200 && xhttp.responseText == 'OK') {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
         document.getElementById (idhtml).style.display = "none";
     }
   }
@@ -58,11 +58,23 @@ function lancer_telechargement(idtelechargement, titre, idhtml) {
 function lancer_telechargement_url(url, titre, idhtml) {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function () {
-    if (xhttp.readyState == 4 && xhttp.status == 200 && xhttp.responseText == 'OK') {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
         document.getElementById (idhtml).style.display = "none";
     }
   }
   xhttp.open("POST", "miniflux.cgi", true);
   xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   xhttp.send("action=telechargement_url&url=" + url + "&titre=" + titre);
+}
+
+function lancer_recherche(id) {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function () {
+    if (xhttp.readyState == 4 && xhttp.status == 200) {
+        document.getElementById (id).innerHTML = xhttp.responseText;
+    }
+  }
+  xhttp.open("POST", "miniflux.cgi", true);
+  xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  xhttp.send("action=recherche&id=" + id );
 }
