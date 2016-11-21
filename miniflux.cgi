@@ -8,6 +8,7 @@ import pickle
 #cgitb.enable(display=0, logdir="./")
 import site
 import ownmodule
+import json
 from ownmodule import sabnzbd,sabnzbd_nc_cle_api
 from ownmodule.miniflux import miniflux,ctx_miniflux
 
@@ -55,7 +56,7 @@ def genere_fichier_html5_cgi(host_sab, host_miniflux, option={}, port_sab=9000, 
                 if id_mini in mini.new_favoris:
                     mini.new_favoris[id_mini].analyse_taille = analyse_taille
     if ('recherche' in option) and (option['recherche'] == 'oui'):
-        mini.create_url_favoris(liste_nom_indexeur=['nzbindex'])
+        mini.create_url_favoris(liste_nom_indexeur=['nzbindex', 'binsearch'])
         try:
             with open('recherche.bin', 'wb') as fichier:
                 pickle.dump({id_mini: val.analyse_taille for id_mini,val in mini.new_favoris.items()}, fichier)
