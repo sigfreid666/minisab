@@ -19,9 +19,19 @@ def lancer_recherche(id):
     sab = sabnzbd.sabnzbd(serveur=host_sabG, port=9000, cle_api=ownmodule.sabnzbd_nc_cle_api)
     mini = miniflux(host_minifluxG)
     mini.get_favoris(sab)
+    if os.access('recherche.bin', os.R_OK):
+        with open('recherche.bin', 'rb') as fichier:
+            for id_mini,analyse_taille in pickle.load(fichier).items():
+                if id_mini in mini.new_favoris:
+                    mini.new_favoris[id_mini].analyse_taille = analyse_taille
     mini.create_une_url(id, liste_nom_indexeur=['nzbindex'])
     ctx = ctx_generic.ctx_generic()
     afficher_article_alone(ctx, mini.new_favoris[id], 'favoris')
+    try:
+        with open('recherche.bin', 'wb') as fichier:
+            pickle.dump({id_mini: val.analyse_taille for id_mini,val in mini.new_favoris.items()}, fichier)
+    except Exception as e:
+        pass
     return ctx.close()
 
 def lancer_telechargement_url(url, titre):
@@ -71,12 +81,18 @@ def genere_fichier_html5_cgi(host_sab, host_miniflux, option={}, port_sab=9000, 
                 pickle.dump({id_mini: val.analyse_taille for id_mini,val in mini.new_favoris.items()}, fichier)
         except Exception as e:
             ctx.div.alone('Exception' + str(e), height='400px', width='100%')
-    ctx.afficher_favoris([x[1] for x in mini.new_favoris.items()])
+    element_favoris = [ x for x in mini.new_favoris.values()]
+    element_favoris.sort(key=lambda x: x.title)
+    ctx.afficher_favoris(element_favoris)
     return ctx.close()
 
 form = cgi.FieldStorage()
 
 action = form.getvalue('action', '')
+form_id = form.getvalue('id', '')
+# action = 'recherche'
+# form_id = 'c64f08a7'
+
 if (action != '') and (action != 'recherche'):
     sys.stdout.buffer.write('Content-Type: application/json\r\n\r\n'.encode('utf-8'))
     if action == 'supprimerfavoris':
@@ -88,9 +104,10 @@ if (action != '') and (action != 'recherche'):
     elif action == 'setfavoris':
         buffer = set_favoris(host_minifluxG, form.getvalue('miniflux').split(','))
 else:
-    sys.stdout.buffer.write('Content-Type: text/html\r\n\r\n'.encode('utf-8'))
+    # sys.stdout.buffer.write('Content-Type: text/html\r\n\r\n'.encode('utf-8'))
     if action == 'recherche':
-        buffer = lancer_recherche(form.getvalue('id'))
+        sys.stdout.buffer.write('Content-Type: text/html\r\n\r\n'.encode('utf-8'))
+        buffer = lancer_recherche(form_id)
     else:
         buffer = genere_fichier_html5_cgi(host_minifluxG, '192.168.0.8', option = { 'recherche' : form.getvalue('recherche', 'non')})
 sys.stdout.buffer.write(buffer.encode('utf-8'))

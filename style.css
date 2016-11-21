@@ -127,7 +127,7 @@ button.boutonrecherche {
     margin-right: 4px;
     margin-left: 4px;
     font-size: 16px;
-	right: 50px;
+	right: 100px;
 	position: absolute;
 	z-index: 10;
 }
