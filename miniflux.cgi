@@ -24,7 +24,7 @@ def lancer_recherche(id):
             for id_mini,analyse_taille in pickle.load(fichier).items():
                 if id_mini in mini.new_favoris:
                     mini.new_favoris[id_mini].analyse_taille = analyse_taille
-    mini.create_une_url(id, liste_nom_indexeur=['nzbindex'])
+    mini.create_une_url(id, liste_nom_indexeur=['nzbindex', 'binsearch'])
     ctx = ctx_generic.ctx_generic()
     afficher_article_alone(ctx, mini.new_favoris[id], 'favoris')
     try:
