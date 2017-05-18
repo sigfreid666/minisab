@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 import os
 import sys
@@ -24,7 +24,7 @@ def lancer_recherche(id):
             for id_mini,analyse_taille in pickle.load(fichier).items():
                 if id_mini in mini.new_favoris:
                     mini.new_favoris[id_mini].analyse_taille = analyse_taille
-    mini.create_une_url(id, liste_nom_indexeur=['nzbindex', 'binsearch'])
+    mini.create_une_url(id, liste_nom_indexeur=['binsearch'])
     ctx = ctx_generic.ctx_generic()
     afficher_article_alone(ctx, mini.new_favoris[id], 'favoris')
     try:
@@ -85,6 +85,9 @@ def genere_fichier_html5_cgi(host_sab, host_miniflux, option={}, port_sab=9000, 
     element_favoris.sort(key=lambda x: x.title)
     ctx.afficher_favoris(element_favoris)
     return ctx.close()
+
+#lancer_recherche('865baf05')
+#quit()
 
 form = cgi.FieldStorage()
 
