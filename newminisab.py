@@ -8,6 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 db = SqliteDatabase('minisab.db')
 
+
 class article(Model):
     title = CharField()
     link = CharField()
@@ -19,6 +20,8 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
+    categorie = CharField()
+
     def analyse_description(self):
         logging.info('analyse_description : debut')
         meta = {}
@@ -40,20 +43,27 @@ class article(Model):
                     self.fichier = decoup[1]
                 elif decoup[0] == 'Taille':
                     self.taille = decoup[1]
+                elif decoup[0] == 'Catégorie':
+                    self.categorie = decoup[1]
                 elif len(decoup) == 2:
                     meta[decoup[0]] = decoup[1]
         self.meta = str(meta)
         logging.info('analyse_description : fin')
+
     def __str__(self):
         return '<%s %s>' % (self.title, self.pubDate)
+
     class Meta:
         database = db
 
+
 class ParserArticle(html.parser.HTMLParser):
+
     def resetin(self):
-        self.data = [] 
+        self.data = []
         self.tag = None
         self.ondata = False
+
     def handle_starttag(self, tag, attr):
         if tag == 'item':
             logging.info('ParserArticle.handle_starttag : nouvel item')
@@ -63,25 +73,35 @@ class ParserArticle(html.parser.HTMLParser):
         else:
             self.tag = tag
             logging.info('ParserArticle.handle_starttag : nouveau tag <%s>', tag)
+
     def handle_endtag(self, tag):
         self.tag = None
         if tag == 'item':
             self.ondata = False
             self.data[-1].analyse_description()
+
     def handle_data(self, data):
         if self.ondata and (self.tag is not None):
             self.data[-1].__setattr__(self.tag, data)
             logging.info('ParserArticle.handle_data : attribut <%s> <%s>', self.tag, data)
 
-myurl = "http://www.binnews.in/rss/rss_new.php"
 
-db.connect()
-# db.create_tables([article])
+def base_de_donnee(wrap):
+    def wrapper():
+        db.connect()
+        db.create_tables([article], safe=True)
+        ret = wrap()
+        db.close()
+        return ret
+    return wrapper
 
+
+@base_de_donnee
 def check_new_article():
+    myurl = "http://www.binnews.in/rss/rss_new.php"
     logging.info('check_new_article: debut url <%s>', myurl)
     r = requests.get(myurl)
-    logging.info('check_new_article: fin requete status <%d> content-type <%s>', 
+    logging.info('check_new_article: fin requete status <%d> content-type <%s>',
                  r.status_code, r.headers['content-type'])
     resultat = r.text
     logging.info('check_new_article: taille reponse <%d>', len(resultat))
@@ -94,12 +114,18 @@ def check_new_article():
             ar = article.get(article.guid == x.guid)
             logging.info('check_new_article: article existant <%s>', ar.guid)
         except article.DoesNotExist:
-            logging.info('check_new_article: nouvel article <%s>', ar.title)
             x.save()
+            logging.info('check_new_article: nouvel article <%s>', x.title)
     logging.info('check_new_article: fin')
 
-check_new_article()
-ar = article.get(id=1)
-print(str(ar))
 
-db.close()
+@base_de_donnee
+def recuperer_tous_articles():
+    return [x for x in article.select()]
+
+# db.connect()
+# db.create_tables([article], safe=True)
+# print([x for x in article.select()])
+# db.close()
+
+# print(recuperer_tous_articles())

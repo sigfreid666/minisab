@@ -1,2 +1,4 @@
 ownmodule/*
 *.sublime-workspace
+
+__pycache__/

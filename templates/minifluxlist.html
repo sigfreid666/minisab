@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>{{ titlepage }}</title>
+</head>
+<body>
+    {% for title, taille, categorie in items %}
+        <div background-color="#FF0000">
+            <h2>{{ title }}</h2>
+            <h3>Taille : {{ taille }} </h3>
+            <h3>Catégorie : {{ categorie }} </h3>
+        </div>
+    {% endfor %}
+</body>
+</html>
