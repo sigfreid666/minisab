@@ -2,3 +2,5 @@ ownmodule/*
 *.sublime-workspace
 
 __pycache__/
+
+*.db

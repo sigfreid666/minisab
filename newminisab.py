@@ -3,6 +3,7 @@ from peewee import *
 import html.parser
 import re
 import logging
+import itertools
 
 logging.basicConfig(level=logging.INFO)
 
@@ -123,9 +124,20 @@ def check_new_article():
 def recuperer_tous_articles():
     return [x for x in article.select()]
 
+
+@base_de_donnee
+def recuperer_tous_articles_par_categorie():
+    a = [x for x in article.select()]
+    a.sort(key=lambda x: x.categorie)
+    b = itertools.groupby(a, lambda x: x.categorie)
+    c = {x: [z for z in y] for x, y in b}
+    return c
+
 # db.connect()
 # db.create_tables([article], safe=True)
 # print([x for x in article.select()])
 # db.close()
 
 # print(recuperer_tous_articles())
+check_new_article()
+# recuperer_tous_articles_par_categorie()
