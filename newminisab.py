@@ -22,6 +22,9 @@ class article(Model):
     fichier = CharField()
     taille = CharField()
     categorie = CharField()
+    favorie = BooleanField(index=True, default=False)
+    sabnzbd = CharField(default='')
+    recherche = CharField(default='')
 
     def analyse_description(self):
         logging.info('analyse_description : debut')
@@ -51,8 +54,30 @@ class article(Model):
         self.meta = str(meta)
         logging.info('analyse_description : fin')
 
+    def categorie_preferee(self):
+        return (not self.favorie) and (self.categorie in categorie_preferee)
+
+    def categorie_autre(self):
+        return (not self.favorie) and (self.categorie not in categorie_preferee)
+
     def __str__(self):
-        return '<%s %s>' % (self.title, self.pubDate)
+        return '<%s %s %s>' % (self.title, self.pubDate, self.favorie)
+
+    def printall(self):
+        return ('<' + '<' + str(self.title) + '>,\n' +
+                '<' + str(self.link) + '>,\n' +
+                '<' + str(self.description) + '>,\n' +
+                '<' + str(self.pubDate) + '>,\n' +
+                '<' + str(self.comment) + '>,\n' +
+                '<' + str(self.guid) + '>,\n' +
+                '<' + str(self.meta) + '>,\n' +
+                '<' + str(self.nfo) + '>,\n' +
+                '<' + str(self.fichier) + '>,\n' +
+                '<' + str(self.taille) + '>,\n' +
+                '<' + str(self.categorie) + '>,\n' +
+                '<' + str(self.favorie) + '>,\n' +
+                '<' + str(self.sabnzbd) + '>,\n' +
+                '<' + str(self.recherche) + '>')
 
     class Meta:
         database = db
@@ -133,11 +158,6 @@ def recuperer_tous_articles_par_categorie():
     c = {x: [z for z in y] for x, y in b}
     return c
 
-# db.connect()
-# db.create_tables([article], safe=True)
-# print([x for x in article.select()])
-# db.close()
 
-# print(recuperer_tous_articles())
-check_new_article()
-# recuperer_tous_articles_par_categorie()
+if __name__ == "__main__":
+    check_new_article()

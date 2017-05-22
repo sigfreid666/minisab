@@ -15,19 +15,46 @@
             padding-left: 10px;
             border-style: solid;
         }
+        span {
+            display: inline;
+        }
     </style>
 </head>
 <body>
-    {% for categorie, items in cat_items.items() %}
+    <div class="categorie">
+    <span>
+        <h1>Favoris ({{ favoris|length }})</h1>
+        <a href="/categorie/favoris/lu">Marquer comme lu</a>
+    </span>
+    {% for item in favoris %}
+        <div class="article">
+            <span>
+                <h2>{{ item.title }}</h2>
+                <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
+                <a href="/article/{{ item.id }}/favoris">Favoris</a>
+            </span>
+            <h3>Taille : {{ item.taille }}</h3>
+            Fichier : "{{ item.fichier }}"
+            <a href="{{ item.nfo }}">Nfo</a>
+        </div>
+    {% endfor %}
+    {% for categorie, taille, items in articles %}
         <div class="categorie">
-        <h1>{{ categorie }} {{ items|length }}</h1>
+        <span>
+            <h1>{{ categorie }} ({{ taille }})</h1>
+            <a href="/categorie/{{ categorie }}/lu">Marquer comme lu</a>
+        </span>
         <table>
         {% for ligne_items in items %}
             <tr>
             {% for item in ligne_items %}
                 <td>
                 <div class="article">
-                    <h2>{{ item.title }}</h2>
+                    <span>
+                        <h2>{{ item.title }}</h2>
+                        <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
+                        <a href="/article/{{ item.id }}/favoris">Favoris</a>
+                    </span>
                     <h3>Taille : {{ item.taille }}</h3>
                     Fichier : "{{ item.fichier }}"
                     <a href="{{ item.nfo }}">Nfo</a>
