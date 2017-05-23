@@ -21,7 +21,7 @@ def hello():
                            articles=articles, favoris=favoris)
 
 
-@app.route('/article/<id_article/favoris')
+@app.route('/article/<id_article>/favoris')
 def marquer_article_favoris(id_article=None):
     try:
         ar = newminisab.article.get(newminisab.article.guid == id_article)

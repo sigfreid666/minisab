@@ -5,9 +5,29 @@ import re
 import logging
 import itertools
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-db = SqliteDatabase('minisab.db')
+# create a file handler
+handler = logging.FileHandler('/var/services/homes/admin/minisab/minisab.log', encoding='utf-8')
+handler.setLevel(logging.DEBUG)
+
+# create stderr handler
+handlerstd = logging.StreamHandler()
+handlerstd.setLevel(logging.INFO)
+
+# create a logging format
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# add the handlers to the logger
+logger.addHandler(handler)
+logger.addHandler(handlerstd)
+#logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', 
+#                    filename='/var/services/homes/admin/minisab/minisab.log', 
+#                    level=logger.info)
+
+db = SqliteDatabase('/var/services/homes/admin/minisab/minisab.db')
 
 
 class article(Model):
@@ -27,22 +47,22 @@ class article(Model):
     recherche = CharField(default='')
 
     def analyse_description(self):
-        logging.info('analyse_description : debut')
+        logger.debug('analyse_description : debut')
         meta = {}
         for x in self.description.split('<br>'):
             data = x.strip()
-            logging.info('analyse_description : champs <%s>', data)
+            logger.debug('analyse_description : champs <%s>', data)
             # detection lien
             if data.startswith('<a href'):
                 reg = re.match(r'<a[ ]*href="(.*)">[ ]*Fichier Nfo[ ]*</a>', data)
-                logging.info('analyse_description : lien detecte %s', str(reg))
+                logger.debug('analyse_description : lien detecte %s', str(reg))
                 if reg is not None:
                     self.nfo = reg.groups()[0]
                     # r = requests.get(self.nfo)
                     # self.nfo_html = r.text
             else:
                 decoup = [y.strip() for y in data.strip().split(':')]
-                logging.info('analyse_description : split champs %s', str(decoup))
+                logger.debug('analyse_description : split champs %s', str(decoup))
                 if decoup[0] == 'Nom du fichier':
                     self.fichier = decoup[1]
                 elif decoup[0] == 'Taille':
@@ -52,7 +72,7 @@ class article(Model):
                 elif len(decoup) == 2:
                     meta[decoup[0]] = decoup[1]
         self.meta = str(meta)
-        logging.info('analyse_description : fin')
+        logger.debug('analyse_description : fin')
 
     def categorie_preferee(self):
         return (not self.favorie) and (self.categorie in categorie_preferee)
@@ -92,13 +112,13 @@ class ParserArticle(html.parser.HTMLParser):
 
     def handle_starttag(self, tag, attr):
         if tag == 'item':
-            logging.info('ParserArticle.handle_starttag : nouvel item')
+            logger.debug('ParserArticle.handle_starttag : nouvel item')
             self.data.append(article(link='', description='', pubDate='', comment='',
                                      fichier='', taille='', nfo='', meta=''))
             self.ondata = True
         else:
             self.tag = tag
-            logging.info('ParserArticle.handle_starttag : nouveau tag <%s>', tag)
+            logger.debug('ParserArticle.handle_starttag : nouveau tag <%s>', tag)
 
     def handle_endtag(self, tag):
         self.tag = None
@@ -109,7 +129,7 @@ class ParserArticle(html.parser.HTMLParser):
     def handle_data(self, data):
         if self.ondata and (self.tag is not None):
             self.data[-1].__setattr__(self.tag, data)
-            logging.info('ParserArticle.handle_data : attribut <%s> <%s>', self.tag, data)
+            logger.debug('ParserArticle.handle_data : attribut <%s> <%s>', self.tag, data)
 
 
 def base_de_donnee(wrap):
@@ -125,24 +145,26 @@ def base_de_donnee(wrap):
 @base_de_donnee
 def check_new_article():
     myurl = "http://www.binnews.in/rss/rss_new.php"
-    logging.info('check_new_article: debut url <%s>', myurl)
+    logger.info('check_new_article: debut url <%s>', myurl)
     r = requests.get(myurl)
-    logging.info('check_new_article: fin requete status <%d> content-type <%s>',
+    logger.info('check_new_article: fin requete status <%d> content-type <%s>',
                  r.status_code, r.headers['content-type'])
     resultat = r.text
-    logging.info('check_new_article: taille reponse <%d>', len(resultat))
+    logger.debug('check_new_article: taille reponse <%d>', len(resultat))
     parse = ParserArticle()
     parse.resetin()
     parse.feed(resultat)
-    logging.info('check_new_article: article detecte <%d>', len(parse.data))
+    logger.info('check_new_article: article detecte <%d>', len(parse.data))
+    nb_nouveau_article = 0
     for x in parse.data:
         try:
             ar = article.get(article.guid == x.guid)
-            logging.info('check_new_article: article existant <%s>', ar.guid)
+            logger.debug('check_new_article: article existant <%s>', ar.guid)
         except article.DoesNotExist:
             x.save()
-            logging.info('check_new_article: nouvel article <%s>', x.title)
-    logging.info('check_new_article: fin')
+            logger.debug('check_new_article: nouvel article <%s>', x.title)
+            nb_nouveau_article = nb_nouveau_article + 1
+    logger.info('check_new_article: %d nouveau(x) article(s)', nb_nouveau_article)
 
 
 @base_de_donnee
