@@ -151,7 +151,7 @@ def check_new_article():
     logger.info('check_new_article: debut url <%s>', myurl)
     r = requests.get(myurl)
     logger.info('check_new_article: fin requete status <%d> content-type <%s>',
-                 r.status_code, r.headers['content-type'])
+                r.status_code, r.headers['content-type'])
     resultat = r.text
     logger.debug('check_new_article: taille reponse <%d>', len(resultat))
     parse = ParserArticle()
