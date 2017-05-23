@@ -19,6 +19,8 @@
             display: inline;
         }
     </style>
+    <script src="jquery-3.2.1.j"></script>
+    <script src='minsab.js'></script>
 </head>
 <body>
     <div class="categorie">
@@ -31,7 +33,7 @@
             <span>
                 <h2>{{ item.title }}</h2>
                 <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
-                <a href="/article/{{ item.id }}/favoris">Favoris</a>
+                <button onclick="marquer_favoris({{ item.id }})">-</button>
             </span>
             <h3>Taille : {{ item.taille }}</h3>
             Fichier : "{{ item.fichier }}"
@@ -53,7 +55,7 @@
                     <span>
                         <h2>{{ item.title }}</h2>
                         <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
-                        <a href="/article/{{ item.id }}/favoris">Favoris</a>
+                        <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
                     </span>
                     <h3>Taille : {{ item.taille }}</h3>
                     Fichier : "{{ item.fichier }}"

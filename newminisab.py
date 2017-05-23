@@ -174,11 +174,12 @@ def recuperer_tous_articles():
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
-    a = [x for x in article.select()]
+    favoris = [x for x in article.select().where(article.favorie == True)]
+    a = [x for x in article.select().where(article.favorie == False)]
     a.sort(key=lambda x: x.categorie)
     b = itertools.groupby(a, lambda x: x.categorie)
     c = {x: [z for z in y] for x, y in b}
-    return c
+    return (c, favoris)
 
 
 if __name__ == "__main__":
