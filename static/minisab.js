@@ -6,3 +6,12 @@ function marquer_favoris(id) {
             }
         })
 }
+
+function lancer_recherche(id) {
+    $.get("/article/" + id + "/recherche",
+        function(data, status) {
+            if (status == 200) {
+                console.write("OK");
+            }
+        })
+}

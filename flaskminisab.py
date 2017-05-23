@@ -31,5 +31,15 @@ def marquer_article_favoris(id_article=None):
         abort(404)
 
 
+@app.route('/article/<id_article>/recherche')
+def recherche_article(id_article=None):
+    try:
+        ar = newminisab.article.get(newminisab.article.id == id_article)
+        ar.lancer_recherche()
+        return redirect(url_for('index'))
+    except newminisab.article.DoesNotExist:
+        abort(404)
+
+
 if __name__ == "__main__":
     app.run()

@@ -99,7 +99,7 @@ class MyParserNzb(html.parser.HTMLParser):
                             self.resultat[-1]['taille'] = 'NZB'
 
 
-def recherche_indexeur(url, fichier, parseur):
+def recherche_indexeur(url, fichier, parseur=MyParserNzb):
     logger.debug('recherche_indexeur %s %s %s', url, fichier, str(type(parseur)))
     url = url.format(fichier)
     r = requests.get(url)
@@ -115,5 +115,6 @@ def recherche_indexeur(url, fichier, parseur):
 
 
 if __name__ == "__main__":
-    recherche_indexeur('https://binsearch.info/?q={0}&max=100',
-                       'OC30SF.2011.BD.Remux', MyParserNzb)
+    ret = recherche_indexeur('https://binsearch.info/?q={0}&max=100',
+                             'yw2jLohnTIKTdJC36ltHaTB', MyParserNzb)
+    print(ret)

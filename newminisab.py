@@ -4,6 +4,7 @@ import html.parser
 import re
 import logging
 import itertools
+from indexeur import recherche_indexeur
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -74,6 +75,22 @@ class article(Model):
         self.meta = str(meta)
         logger.debug('analyse_description : fin')
 
+    def lancer_recherche(self):
+        ret = recherche_indexeur('https://binsearch.info/?q={0}&max=100',
+                                 self.fichier)
+        if len(ret) > 0:
+            for item in ret:
+                logger.info('item %s', str(item))
+                try:
+                    rec = recherche(id_check=item['id'],
+                                    url=item['url'],
+                                    taille=item['taille'] if 'taille' in item else 'Vide',
+                                    title=item['title'],
+                                    article=self)
+                    rec.save()
+                except IntegrityError:
+                    logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
+
     def categorie_preferee(self):
         return (not self.favorie) and (self.categorie in categorie_preferee)
 
@@ -98,6 +115,17 @@ class article(Model):
                 '<' + str(self.favorie) + '>,\n' +
                 '<' + str(self.sabnzbd) + '>,\n' +
                 '<' + str(self.recherche) + '>')
+
+    class Meta:
+        database = db
+
+
+class recherche(Model):
+    id_check = IntegerField(unique=True)
+    url = CharField()
+    taille = CharField()
+    title = CharField()
+    article = ForeignKeyField(article, related_name='recherche_resultat')
 
     class Meta:
         database = db
@@ -136,7 +164,7 @@ def base_de_donnee(wrap):
     def wrapper():
         try:
             db.connect()
-            db.create_tables([article], safe=True)
+            db.create_tables([article, recherche], safe=True)
         except OperationalError:
             pass
         ret = wrap()
