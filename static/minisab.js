@@ -4,5 +4,5 @@ function marquer_favoris(id) {
             if (status == 200) {
                 console.write("OK");
             }
-        }
+        })
 }

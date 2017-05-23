@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # create a file handler
-handler = logging.FileHandler('/var/services/homes/admin/minisab/minisab.log', encoding='utf-8')
+handler = logging.FileHandler('minisab.log', encoding='utf-8')
 handler.setLevel(logging.DEBUG)
 
 # create stderr handler
@@ -27,7 +27,7 @@ logger.addHandler(handlerstd)
 #                    filename='/var/services/homes/admin/minisab/minisab.log', 
 #                    level=logger.info)
 
-db = SqliteDatabase('/var/services/homes/admin/minisab/minisab.db')
+db = SqliteDatabase('minisab.db')
 
 
 class article(Model):
@@ -134,8 +134,11 @@ class ParserArticle(html.parser.HTMLParser):
 
 def base_de_donnee(wrap):
     def wrapper():
-        db.connect()
-        db.create_tables([article], safe=True)
+        try:
+            db.connect()
+            db.create_tables([article], safe=True)
+        except OperationalError:
+            pass
         ret = wrap()
         db.close()
         return ret

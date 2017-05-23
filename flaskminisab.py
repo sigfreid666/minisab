@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, redirect, url_for
 import newminisab
 
 app = Flask(__name__)
@@ -7,7 +7,7 @@ categorie_preferee = ['Films HD']
 
 
 @app.route("/")
-def hello():
+def index():
     articles, favoris = newminisab.recuperer_tous_articles_par_categorie()
     articles_preferes = [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
                          for x in articles.items() if x[0] in categorie_preferee]
@@ -26,6 +26,7 @@ def marquer_article_favoris(id_article=None):
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.favorie = True
         ar.save()
+        return redirect(url_for('index'))
     except newminisab.article.DoesNotExist:
         abort(404)
 
