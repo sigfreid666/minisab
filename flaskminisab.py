@@ -14,7 +14,6 @@ def index():
     articles = (articles_preferes +
                 [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
                  for x in articles.items() if x[0] not in categorie_preferee])
-    print(articles)
     # articles = [[x.title, x.taille, x.categorie] for x in articles]
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles, favoris=favoris)
