@@ -6,7 +6,7 @@ import logging
 import itertools
 from indexeur import recherche_indexeur
 import click
-from settings import dbfile,logfile
+from settings import dbfile, logfile
 from functools import wraps
 
 logger = logging.getLogger(__name__)
@@ -177,9 +177,11 @@ def base_de_donnee(wrap):
         return ret
     return wrapper
 
+
 @click.group()
 def cli():
     pass
+
 
 @cli.command('check')
 @base_de_donnee

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, abort, redirect, url_for
 import newminisab
+from ownmodule import sabnzbd,sabnzbd_nc_cle_api
 
 app = Flask(__name__)
 
@@ -35,7 +36,20 @@ def recherche_article(id_article=None):
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.lancer_recherche()
-        return redirect(url_for('index'))
+        return render_template('./article.html', item=ar)
+    except newminisab.article.DoesNotExist:
+        abort(404)
+
+
+@app.route('/recherche/<id_recherche>/telecharger')
+def lancer_telecharger(id_recherche=None):
+    try:
+        host_sabG = '192.168.0.8'
+        rec = newminisab.recherche.get(newminisab.recherche.id == id_recherche)
+        sab = sabnzbd.sabnzbd(serveur=host_sabG, port=9000, cle_api=sabnzbd_nc_cle_api)
+        print(rec.url, rec.article.title)
+        sab.add_by_url(rec.url, rec.article.title)
+        return 'OK'
     except newminisab.article.DoesNotExist:
         abort(404)
 

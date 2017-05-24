@@ -1,0 +1,18 @@
+<div class="article">
+    <span>
+        <h2>{{ item.title }}</h2>
+        <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
+        <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
+        <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
+    </span><br>
+    <span class=recherche>
+    {% for item_recherche in recherche %}
+        {% for item_recherche in item.recherche_resultat %}
+            <button id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }})">{{ item_recherche.taille }}</button>
+        {% endfor %}
+    {% endfor %}
+    </span>
+    <h3>Taille : {{ item.taille }}</h3>
+    Fichier : "{{ item.fichier }}"
+    <a href="{{ item.nfo }}">Nfo</a>
+</div>
