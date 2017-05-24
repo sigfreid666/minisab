@@ -36,16 +36,7 @@
         <a href="/categorie/favoris/lu">Marquer comme lu</a>
     </span>
     {% for item in favoris %}
-        <div class="article">
-            <span>
-                <h2>{{ item.title }}</h2>
-                <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
-                <button onclick="marquer_favoris({{ item.id }})">-</button>
-            </span>
-            <h3>Taille : {{ item.taille }}</h3>
-            Fichier : "{{ item.fichier }}"
-            <a href="{{ item.nfo }}">Nfo</a>
-        </div>
+        {% include 'article.html' %}
     {% endfor %}
     {% for categorie, taille, items in articles %}
         <div class="categorie">
@@ -58,26 +49,7 @@
             <tr>
             {% for item in ligne_items %}
                 <td>
-                {% if item.recherche_resultat|length > 0 %}
-                <div class="article article_recherche" id="art_{{ item.id }}">
-                {% else %}
-                <div class="article" id="art_{{ item.id }}">
-                {% endif %}
-                    <span>
-                        <h2>{{ item.title }}</h2>
-                        <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
-                        <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
-                        <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
-                    </span><br>
-                    <span class=recherche>
-                    {% for item_recherche in item.recherche_resultat %}
-                        <button id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }})">{{ item_recherche.taille }}</button>
-                    {% endfor %}
-                    </span>
-                    <h3>Taille : {{ item.taille }}</h3>
-                    Fichier : "{{ item.fichier }}"
-                    <a href="{{ item.nfo }}">Nfo</a>
-                </div>
+                    {% include 'article.html' %}
                 </td>
             {% endfor %}
             </tr>

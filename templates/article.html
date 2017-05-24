@@ -1,6 +1,10 @@
-<div class="article">
+{% if item.recherche_resultat|length > 0 %}
+<div class="article article_recherche" id="art_{{ item.id }}">
+{% else %}
+<div class="article" id="art_{{ item.id }}">
+{% endif %}
     <span>
-        <h2>{{ item.title }}</h2>
+        <h2><a href="{{ item.link }}" target="_blank">{{ item.title }}</a></h2>
         <a href="/article/{{ item.id }}/lu">Marquer comme lu</a>
         <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
         <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
