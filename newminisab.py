@@ -5,12 +5,15 @@ import re
 import logging
 import itertools
 from indexeur import recherche_indexeur
+import click
+from settings import dbfile,logfile
+from functools import wraps
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 # create a file handler
-handler = logging.FileHandler('minisab.log', encoding='utf-8')
+handler = logging.FileHandler(logfile, encoding='utf-8')
 handler.setLevel(logging.DEBUG)
 
 # create stderr handler
@@ -28,7 +31,7 @@ logger.addHandler(handlerstd)
 #                    filename='/var/services/homes/admin/minisab/minisab.log', 
 #                    level=logger.info)
 
-db = SqliteDatabase('minisab.db')
+db = SqliteDatabase(dbfile)
 
 
 class article(Model):
@@ -161,7 +164,9 @@ class ParserArticle(html.parser.HTMLParser):
 
 
 def base_de_donnee(wrap):
+    @wraps(wrap)
     def wrapper():
+        global db
         try:
             db.connect()
             db.create_tables([article, recherche], safe=True)
@@ -172,7 +177,11 @@ def base_de_donnee(wrap):
         return ret
     return wrapper
 
+@click.group()
+def cli():
+    pass
 
+@cli.command('check')
 @base_de_donnee
 def check_new_article():
     myurl = "http://www.binnews.in/rss/rss_new.php"
@@ -214,4 +223,4 @@ def recuperer_tous_articles_par_categorie():
 
 
 if __name__ == "__main__":
-    check_new_article()
+    cli()
