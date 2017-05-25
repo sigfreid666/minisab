@@ -1,6 +1,7 @@
 from flask import Flask, render_template, abort, redirect, url_for
 import newminisab
-from ownmodule import sabnzbd,sabnzbd_nc_cle_api
+# from ownmodule import sabnzbd, sabnzbd_nc_cle_api
+import requests
 
 app = Flask(__name__)
 
@@ -56,11 +57,23 @@ def recherche_article(id_article=None):
 @app.route('/recherche/<id_recherche>/telecharger')
 def lancer_telecharger(id_recherche=None):
     try:
-        host_sabG = '192.168.0.8'
         rec = newminisab.recherche.get(newminisab.recherche.id == id_recherche)
-        sab = sabnzbd.sabnzbd(serveur=host_sabG, port=9000, cle_api=sabnzbd_nc_cle_api)
+        host_sabG = '192.168.0.8'
+        sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'mode': 'addurl',
+                 'name': rec.url,
+                 'nzbname': rec.article.title}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        r = requests.get(myurl, params=param)
+        # sab = sabnzbd.sabnzbd(serveur=host_sabG, port=9000, cle_api=sabnzbd_nc_cle_api)
         print(rec.url, rec.article.title)
-        sab.add_by_url(rec.url, rec.article.title)
+        print(r.status_code)
+        print(r.json())
+        print(r.headers)
         return 'OK'
     except newminisab.article.DoesNotExist:
         abort(404)
