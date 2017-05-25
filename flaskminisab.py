@@ -25,6 +25,18 @@ def marquer_article_favoris(id_article=None):
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.favorie = True
+        ar.lancer_recherche()
+        ar.save()
+        return render_template('./article.html', item=ar)
+    except newminisab.article.DoesNotExist:
+        abort(404)
+
+
+@app.route('/article/<id_article>/lu')
+def marquer_article_lu(id_article=None):
+    try:
+        ar = newminisab.article.get(newminisab.article.id == id_article)
+        ar.lu = True
         ar.save()
         return redirect(url_for('index'))
     except newminisab.article.DoesNotExist:

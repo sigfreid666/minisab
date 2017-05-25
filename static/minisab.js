@@ -1,10 +1,22 @@
+function marquer_lu(idarticle) {
+    $.get("/article/" + idarticle + "/lu",
+        function(data, status) {
+            if (status == "success") {
+                console.log("OK");
+                $("#art_"+idarticle).remove();
+            }
+        })
+}
+
+
 function marquer_favoris(idarticle) {
     $.get("/article/" + idarticle + "/favoris",
         function(data, status) {
-            if (status == 200) {
-                console.log("OK");
+            if (status == "success") {
+                $("#cat_favoris").append(data)
             }
         })
+    $("#art_"+idarticle).remove();
 }
 
 function lancer_recherche(idarticle) {

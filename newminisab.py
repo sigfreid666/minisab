@@ -10,7 +10,7 @@ from settings import dbfile, logfile
 from functools import wraps
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # create a file handler
 handler = logging.FileHandler(logfile, encoding='utf-8')
@@ -18,7 +18,7 @@ handler.setLevel(logging.DEBUG)
 
 # create stderr handler
 handlerstd = logging.StreamHandler()
-handlerstd.setLevel(logging.INFO)
+handlerstd.setLevel(logging.DEBUG)
 
 # create a logging format
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -53,6 +53,8 @@ class article(Model):
     def analyse_description(self):
         logger.debug('analyse_description : debut')
         meta = {}
+        self.analyse_annee()
+        # analyse description
         for x in self.description.split('<br>'):
             data = x.strip()
             logger.debug('analyse_description : champs <%s>', data)
@@ -93,6 +95,22 @@ class article(Model):
                     rec.save()
                 except IntegrityError:
                     logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
+
+    def analyse_annee(self):
+        if self.annee != 0:
+            return
+        logger.debug('analyse_annee : %s', self.title)
+        # analyse annee
+        reg = re.match(r'.*([0-9]{4}).*', self.title)
+        # on essaye en ??/??/????
+        if reg is None:
+            logger.debug('analyse_annee : premier reg non trouve')
+            reg = re.match(r'.*[0-9][0-9]/[0-9][0-9]/([0-9]{4}).*', self.title)
+        if reg is not None:
+            logger.debug('analyse_annee : reg trouve %s', str(reg.group()))
+            self.annee = int(reg.groups()[0])
+        logger.debug('analyse_annee fin : %d', self.annee)
+
 
     def categorie_preferee(self):
         return (not self.favorie) and (self.categorie in categorie_preferee)
@@ -169,6 +187,7 @@ def base_de_donnee(wrap):
     def wrapper():
         global db
         try:
+            print(dbfile)
             db.connect()
             db.create_tables([article, recherche], safe=True)
         except OperationalError:
@@ -217,12 +236,22 @@ def recuperer_tous_articles():
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
-    favoris = [x for x in article.select().where(article.favorie == True)]
-    a = [x for x in article.select().where(article.favorie == False)]
-    a.sort(key=lambda x: x.categorie)
+    favoris = [x for x in article.select()
+                                 .where((article.favorie == True) &
+                                        (article.lu == False))]
+    a = [x for x in article.select().where((article.favorie == False) &
+                                           (article.lu == False))]
+    a.sort(key=lambda x: (x.categorie, 3000 - x.annee))
     b = itertools.groupby(a, lambda x: x.categorie)
     c = {x: [z for z in y] for x, y in b}
     return (c, favoris)
+
+@cli.command()
+@base_de_donnee
+def patch_annee():
+    for x in article.select():
+        x.analyse_annee()
+        x.save()
 
 
 if __name__ == "__main__":
