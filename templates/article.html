@@ -9,13 +9,18 @@
         <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
         <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
     </span><br>
-    <span class=recherche>
+    <button onclick="deplier_recherche({{ item.id }})">...</button>
+    {% if item.recherche_resultat|length < 4 %}
+    <ul class=recherche style="display: block;">
+    {% else %}
+    <ul class=recherche style="display: none;">
+    {% endif %}
     {% for item_recherche in item.recherche_resultat %}
-        {% for item_recherche in item.recherche_resultat %}
-            <button id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }})">{{ item_recherche.taille }}</button>
-        {% endfor %}
+        <li>{{ item_recherche.taille }} {{ item_recherche.title }} {{ item_recherche.id_check }}
+        <button id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }})">Télécharger</button>
+        </li>
     {% endfor %}
-    </span>
+    </ul>
     <h3>Taille : {{ item.taille }}</h3>
     <h3>Annee : {{ item.annee }}</h3>
     Fichier : "{{ item.fichier }}"

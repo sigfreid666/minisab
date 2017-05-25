@@ -43,3 +43,13 @@ function envoyer_sab(idrecherche) {
         })
     $("#recherche_"+idrecherche).text($("#recherche_"+idrecherche).text() + " (En cours)");   
 }
+
+function deplier_recherche(idarticle) {
+    val = $("#art_"+idarticle+" > ul.recherche").css("display")
+    if (val == "block") {
+        $("#art_"+idarticle+" > ul.recherche").css("display", "none");
+    }
+    else {
+        $("#art_"+idarticle+" > ul.recherche").css("display", "block");
+    }
+}
