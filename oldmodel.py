@@ -16,6 +16,9 @@ class article(Model):
     fichier = CharField()
     taille = CharField()
     categorie = CharField()
+    favorie = BooleanField(index=True, default=False)
+    sabnzbd = CharField(default='')
+    recherche = CharField(default='')
 
     def convertold(self):
         ar = newminisab.article()
@@ -30,7 +33,28 @@ class article(Model):
         ar.fichier = self.fichier
         ar.taille = self.taille
         ar.categorie = self.categorie
+        ar.favorie = self.favorie
+        
         return ar
+
+    class Meta:
+        database = olddb
+
+
+class recherche(Model):
+    id_check = IntegerField(unique=True)
+    url = CharField()
+    taille = CharField()
+    title = CharField()
+    article = ForeignKeyField(article, related_name='recherche_resultat')
+
+    def convertold(self):
+        ar = newminisab.recherche()
+        ar.id_check = self.id_check
+        ar.url = self.url
+        ar.taille = self.taille
+        ar.title = self.title
+        ar.article = self.article
 
     class Meta:
         database = olddb
@@ -39,10 +63,12 @@ class article(Model):
 def convert():
     olddb.connect()
     newminisab.db.connect()
-    newminisab.db.create_tables([newminisab.article], safe=True)
-    for x in article.select():
-        y = x.convertold()
-        y.save()
+    newminisab.db.create_tables([newminisab.article,
+                                 newminisab.recherche], safe=True)
+    for y in [ article, recherche ]:
+        for x in y.select():
+            y = x.convertold()
+            y.save()
     newminisab.db.close()
     olddb.close()
 

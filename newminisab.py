@@ -47,8 +47,8 @@ class article(Model):
     taille = CharField()
     categorie = CharField()
     favorie = BooleanField(index=True, default=False)
-    sabnzbd = CharField(default='')
-    recherche = CharField(default='')
+    lu = BooleanField(index=True, default=False)
+    annee = IntegerField(default=0)
 
     def analyse_description(self):
         logger.debug('analyse_description : debut')
@@ -116,8 +116,7 @@ class article(Model):
                 '<' + str(self.taille) + '>,\n' +
                 '<' + str(self.categorie) + '>,\n' +
                 '<' + str(self.favorie) + '>,\n' +
-                '<' + str(self.sabnzbd) + '>,\n' +
-                '<' + str(self.recherche) + '>')
+                '<' + str(self.lu) + '>')
 
     class Meta:
         database = db
@@ -128,6 +127,8 @@ class recherche(Model):
     url = CharField()
     taille = CharField()
     title = CharField()
+    id_sabnzbd = CharField(default='')
+    categorie_sabnzbd = CharField(default='')
     article = ForeignKeyField(article, related_name='recherche_resultat')
 
     class Meta:
