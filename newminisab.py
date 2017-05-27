@@ -187,7 +187,6 @@ def base_de_donnee(wrap):
     def wrapper():
         global db
         try:
-            print(dbfile)
             db.connect()
             db.create_tables([article, recherche], safe=True)
         except OperationalError:

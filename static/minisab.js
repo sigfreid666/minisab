@@ -1,5 +1,5 @@
 function marquer_lu(idarticle) {
-    $.get("/article/" + idarticle + "/lu",
+    $.get("article/" + idarticle + "/lu",
         function(data, status) {
             if (status == "success") {
                 console.log("OK");
@@ -10,7 +10,7 @@ function marquer_lu(idarticle) {
 
 
 function marquer_favoris(idarticle) {
-    $.get("/article/" + idarticle + "/favoris",
+    $.get("article/" + idarticle + "/favoris",
         function(data, status) {
             if (status == "success") {
                 $("#cat_favoris").append(data)
@@ -20,7 +20,7 @@ function marquer_favoris(idarticle) {
 }
 
 function lancer_recherche(idarticle) {
-    $.get("/article/" + idarticle + "/recherche",
+    $.get("article/" + idarticle + "/recherche",
         function(data, status) {
             if (status == "success") {
                 console.log("OK");
@@ -35,7 +35,7 @@ function lancer_recherche(idarticle) {
 }
 
 function envoyer_sab(idrecherche) {
-    $.get("/recherche/" + idrecherche + "/telecharger",
+    $.get("recherche/" + idrecherche + "/telecharger",
         function(data, status) {
             if (status == "success") {
                 console.log("OK envoyer_sab");
