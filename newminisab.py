@@ -4,7 +4,7 @@ import html.parser
 import re
 import logging
 import itertools
-from indexeur import recherche_indexeur
+from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
 from settings import dbfile, logfile
 from functools import wraps
@@ -81,8 +81,12 @@ class article(Model):
         logger.debug('analyse_description : fin')
 
     def lancer_recherche(self):
-        ret = recherche_indexeur('https://binsearch.info/?q={0}&max=100',
-                                 self.fichier)
+        url_nzbindex = 'http://www.nzbindex.nl/search/?q={0}&max=100'
+        url_binsearch = 'https://binsearch.info/?q={0}&max=100'
+
+        ret = recherche_indexeur(url_nzbindex, self.fichier, parseur=MyParserNzbIndex)
+        if len(ret) == 0:
+            ret = recherche_indexeur(url_binsearch, self.fichier)
         if len(ret) > 0:
             for item in ret:
                 logger.info('item %s', str(item))
