@@ -1,9 +1,24 @@
-function marquer_lu(idarticle) {
-    $.get("article/" + idarticle + "/lu",
+function marquer_lu(tabarticle) {
+    console.log(tabarticle);
+    $.ajax({
+        url: 'articles/lu',
+        type: 'POST',
+        data: JSON.stringify(tabarticle),
+        contentType: 'application/json; charset=utf-8',
+        success: function(msg) {
+            for (i = 0; i < tabarticle.length; i++) {
+                $("#art_"+tabarticle[i]).remove();
+            }
+        }
+    });
+}
+
+function marquer_lu_categorie(strcategorie) {
+    $.get("categorie/" + strcategorie + "/lu",
         function(data, status) {
             if (status == "success") {
                 console.log("OK");
-                $("#art_"+idarticle).remove();
+                $("div.categorie > table").remove();
             }
         })
 }

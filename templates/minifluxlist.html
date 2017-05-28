@@ -43,7 +43,7 @@
         <div class="categorie">
         <span>
             <h1>{{ categorie }} ({{ taille }})</h1>
-            <a href="/categorie/{{ categorie }}/lu">Marquer comme lu</a>
+            <button onclick="marquer_lu([{% for ligne_items in items %}{% for item in ligne_items %}{{ item.id }},{% endfor %}{% endfor %}])">Marquer comme lu</button>
         </span>
         <table>
         {% for ligne_items in items %}

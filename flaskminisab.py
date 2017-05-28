@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, redirect, url_for, Blueprint
+from flask import Flask, render_template, abort, redirect, url_for, Blueprint, request
 import newminisab
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
@@ -35,12 +35,15 @@ def marquer_article_favoris(id_article=None):
         abort(404)
 
 
-@bp.route('/article/<id_article>/lu')
-def marquer_article_lu(id_article=None):
+@bp.route('/articles/lu', methods=['GET', 'POST'])
+def marquer_article_lu():
     try:
-        ar = newminisab.article.get(newminisab.article.id == id_article)
-        ar.lu = True
-        ar.save()
+        if request.method == 'POST':
+            data_json = request.get_json()
+            for art_id in data_json:
+                ar = newminisab.article.get(newminisab.article.id == art_id)
+                ar.lu = True
+                ar.save()
         return "OK"
     except newminisab.article.DoesNotExist:
         abort(404)
@@ -87,9 +90,10 @@ def lancer_telecharger(id_recherche=None):
 
 @bp.route('/categorie/<str_categorie>/lu')
 def categorie_lu(str_categorie=None):
-    cat = article.select().where(article.categorie == str_categorie)
+    cat = newminisab.article.select().where(newminisab.article.categorie == str_categorie)
     for x in cat:
         print(x.title)
+    return 'OK'
 
 
 app = Flask(__name__)

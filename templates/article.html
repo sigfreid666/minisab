@@ -5,7 +5,7 @@
 {% endif %}
     <span>
         <h2><a href="{{ item.link }}" target="_blank">{{ item.title }}</a></h2>
-        <button onclick="marquer_lu({{ item.id }})">Marquer comme lu</button>
+        <button onclick="marquer_lu([{{ item.id }}])">Marquer comme lu</button>
         <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
         <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
     </span><br>
