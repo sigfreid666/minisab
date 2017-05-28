@@ -33,6 +33,16 @@ logger.addHandler(handlerstd)
 
 db = SqliteDatabase(dbfile)
 
+categorie_sabnzbd = [('*', []),
+                     ('livre', ['Ebook']),
+                     ('logiciel', ['Autres OS']),
+                     ('romance', []),
+                     ('anime', ['Anime HD']),
+                     ('musique', ['Mp3', 'Vidéo Zik', 'DVD Zik']),
+                     ('serietv', []),
+                     ('documentaire', ['Docs / Actu', 'Emissions']),
+                     ('film', ['Films HD'])]
+
 
 class article(Model):
     title = CharField()
@@ -49,6 +59,12 @@ class article(Model):
     favorie = BooleanField(index=True, default=False)
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
+
+    def calculer_categorie_favoris(self):
+        self.categorie_sabnzbd = '*'
+        for x in categorie_sabnzbd:
+            if self.categorie in x[1]:
+                self.categorie_sabnzbd = x[0]
 
     def analyse_description(self):
         logger.debug('analyse_description : debut')
@@ -88,6 +104,7 @@ class article(Model):
         if len(ret) == 0:
             ret = recherche_indexeur(url_binsearch, self.fichier)
         if len(ret) > 0:
+            self.calculer_categorie_favoris()
             for item in ret:
                 logger.info('item %s', str(item))
                 try:
@@ -249,6 +266,7 @@ def recuperer_tous_articles_par_categorie():
     b = itertools.groupby(a, lambda x: x.categorie)
     c = {x: [z for z in y] for x, y in b}
     return (c, favoris)
+
 
 @cli.command()
 @base_de_donnee

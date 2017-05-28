@@ -49,8 +49,9 @@ function lancer_recherche(idarticle) {
     $("#art_"+idarticle+" > span.recherche").text("Recherche...");
 }
 
-function envoyer_sab(idrecherche) {
-    $.get("recherche/" + idrecherche + "/telecharger",
+function envoyer_sab(idrecherche, idarticle) {
+    var categorie = $("#art_"+idarticle+" select option:selected").text()
+    $.get("recherche/" + idrecherche + "/telecharger/" + categorie,
         function(data, status) {
             if (status == "success") {
                 console.log("OK envoyer_sab");

@@ -14,6 +14,17 @@
         <button onclick="marquer_lu([{{ item.id }}])">Marquer comme lu</button>
         <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
         <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
+        {% if item.recherche_resultat|length > 0 %}
+        <select name="Categorie">
+          {% for item_categorie in categorie_sabnzbd %}
+            {% if item.categorie_sabnzbd == item_categorie %}
+                <option value="{{ item_categorie }}" selected>{{ item_categorie }}</option>
+            {% else %}
+                <option value="{{ item_categorie }}">{{ item_categorie }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+        {% endif %}
     </span><br>
     <button onclick="deplier_recherche({{ item.id }})">...</button>
     {% if item.recherche_resultat|length < 4 %}
@@ -23,7 +34,7 @@
     {% endif %}
     {% for item_recherche in item.recherche_resultat %}
         <li>{{ item_recherche.taille }} {{ item_recherche.title }} {{ item_recherche.id_check }}
-        <button id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }})">Télécharger</button>
+        <button id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})">Télécharger</button>
         </li>
     {% endfor %}
     </ul>

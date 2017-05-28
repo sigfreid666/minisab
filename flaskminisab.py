@@ -26,7 +26,8 @@ def index():
                  for x in articles.items() if x[0] not in categorie_preferee])
     # articles = [[x.title, x.taille, x.categorie] for x in articles]
     return render_template('./minifluxlist.html', titlepage='Miniflux',
-                           articles=articles, favoris=favoris)
+                           articles=articles, favoris=favoris,
+                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
 
 
 @bp.route('/article/<id_article>/favoris')
@@ -36,7 +37,8 @@ def marquer_article_favoris(id_article=None):
         ar.favorie = True
         ar.lancer_recherche()
         ar.save()
-        return render_template('./article.html', item=ar)
+        return render_template('./article.html', item=ar,
+                               categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -60,20 +62,23 @@ def recherche_article(id_article=None):
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.lancer_recherche()
-        return render_template('./article.html', item=ar)
+        return render_template('./article.html', item=ar,
+                               categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
     except newminisab.article.DoesNotExist:
         abort(404)
 
 
-@bp.route('/recherche/<id_recherche>/telecharger')
-def lancer_telecharger(id_recherche=None):
+@bp.route('/recherche/<id_recherche>/telecharger/<categorie>')
+@bp.route('/recherche/<id_recherche>/telecharger/', defaults={'categorie': '*'})
+def lancer_telecharger(id_recherche, categorie):
     try:
         rec = newminisab.recherche.get(newminisab.recherche.id == id_recherche)
         param = {'apikey': sabnzbd_nc_cle_api,
                  'output': 'json',
                  'mode': 'addurl',
                  'name': rec.url,
-                 'nzbname': rec.article.title}
+                 'nzbname': rec.article.title,
+                 'cat': categorie}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
                 9000)
