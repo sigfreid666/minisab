@@ -1,5 +1,11 @@
 {% if item.recherche_resultat|length > 0 %}
-<div class="article article_recherche" id="art_{{ item.id }}">
+    {% if item.status_sabnzbd == 'Completed' %}
+        <div class="article article_recherche telechargement_reussi" id="art_{{ item.id }}">
+    {% elif item.status_sabnzbd == 'Failed' %}
+        <div class="article article_recherche telechargement_echoue" id="art_{{ item.id }}">
+    {% else %}
+        <div class="article article_recherche" id="art_{{ item.id }}">
+    {% endif %}
 {% else %}
 <div class="article" id="art_{{ item.id }}">
 {% endif %}

@@ -21,7 +21,12 @@
         .recherche_encours {
             background-color: #0055CC;
         }
-
+        .telechargement_reussi {
+            background-color: #88DD00
+        }
+        .telechargement_echoue {
+            background-color: #DD8800
+        }
         span {
             display: inline;
         }
@@ -33,7 +38,7 @@
     <div class="categorie" id="cat_favoris">
     <span>
         <h1>Favoris ({{ favoris|length }})</h1>
-        <a href="/categorie/favoris/lu">Marquer comme lu</a>
+        <button onclick="marquer_lu([{% for item in favoris %}{{ item.id }},{% endfor %}])">Marquer comme lu</button>
     </span>
     {% for item in favoris %}
         {% include 'article.html' %}

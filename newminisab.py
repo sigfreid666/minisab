@@ -134,7 +134,8 @@ class article(Model):
                 '<' + str(self.taille) + '>,\n' +
                 '<' + str(self.categorie) + '>,\n' +
                 '<' + str(self.favorie) + '>,\n' +
-                '<' + str(self.lu) + '>')
+                '<' + str(self.lu) + '>' + '>,\n' +
+                '<' + (str(self.status_nzbd) if 'status_nzbd' in dir(self) else '') + '>')
 
     class Meta:
         database = db

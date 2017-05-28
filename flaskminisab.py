@@ -5,14 +5,20 @@ import requests
 
 
 categorie_preferee = ['Films HD']
+host_sabG = '192.168.0.8'
+sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
 
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
+
 @bp.route("/")
 def index():
-    print(url_for('static', filename='minisab.js'))
-    print(url_for('minisab.static', filename='minisab.js'))
     articles, favoris = newminisab.recuperer_tous_articles_par_categorie()
+    status_sab = status_sabnzbd()
+    for x in favoris:
+        for y in x.recherche_resultat:
+            if y.id_sabnzbd in status_sab:
+                x.status_sabnzbd = status_sab[y.id_sabnzbd]
     articles_preferes = [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
                          for x in articles.items() if x[0] in categorie_preferee]
     articles = (articles_preferes +
@@ -63,8 +69,6 @@ def recherche_article(id_article=None):
 def lancer_telecharger(id_recherche=None):
     try:
         rec = newminisab.recherche.get(newminisab.recherche.id == id_recherche)
-        host_sabG = '192.168.0.8'
-        sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
         param = {'apikey': sabnzbd_nc_cle_api,
                  'output': 'json',
                  'mode': 'addurl',
@@ -94,6 +98,18 @@ def categorie_lu(str_categorie=None):
     for x in cat:
         print(x.title)
     return 'OK'
+
+
+def status_sabnzbd():
+    param = {'apikey': sabnzbd_nc_cle_api,
+             'output': 'json',
+             'mode': 'history'}
+    myurl = "http://{0}:{1}/sabnzbd/api".format(
+            host_sabG,
+            9000)
+    r = requests.get(myurl, params=param)
+    resultat = r.json()
+    return {x['nzo_id']: x['status'] for x in resultat['history']['slots']}
 
 
 app = Flask(__name__)
