@@ -2,7 +2,8 @@ from flask import Flask, render_template, abort, redirect, url_for, Blueprint, r
 import newminisab
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
-
+import logging
+import itertools
 
 categorie_preferee = ['Films HD']
 host_sabG = '192.168.0.8'
@@ -14,11 +15,15 @@ bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_fo
 @bp.route("/")
 def index():
     articles, favoris = newminisab.recuperer_tous_articles_par_categorie()
+    newminisab.logger.info('index, articles %d, favoris %d', len(articles), len(favoris))
     status_sab = status_sabnzbd()
+    newminisab.logger.info('index, statut sab %s', str(status_sab))
     for x in favoris:
         for y in x.recherche_resultat:
+            newminisab.logger.info('index, title %s, id sab %s', x.title, y.id_sabnzbd)
             if y.id_sabnzbd in status_sab:
                 x.status_sabnzbd = status_sab[y.id_sabnzbd]
+                newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
     articles_preferes = [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
                          for x in articles.items() if x[0] in categorie_preferee]
     articles = (articles_preferes +
@@ -51,6 +56,10 @@ def marquer_article_lu():
             for art_id in data_json:
                 ar = newminisab.article.get(newminisab.article.id == art_id)
                 ar.lu = True
+                for y in ar.recherche_resultat:
+                    newminisab.logger.info('article_lu, title %s, id sab %s', ar.title, y.id_sabnzbd)
+                    if y.id_sabnzbd != '': 
+                        delete_history_sab(y.id_sabnzbd)
                 ar.save()
         return "OK"
     except newminisab.article.DoesNotExist:
@@ -108,14 +117,43 @@ def categorie_lu(str_categorie=None):
 def status_sabnzbd():
     param = {'apikey': sabnzbd_nc_cle_api,
              'output': 'json',
+             'limit': '100',
              'mode': 'history'}
     myurl = "http://{0}:{1}/sabnzbd/api".format(
             host_sabG,
             9000)
     r = requests.get(myurl, params=param)
     resultat = r.json()
-    return {x['nzo_id']: x['status'] for x in resultat['history']['slots']}
+    param = {'apikey': sabnzbd_nc_cle_api,
+             'output': 'json',
+             'mode': 'queue'}
+    myurl = "http://{0}:{1}/sabnzbd/api".format(
+            host_sabG,
+            9000)
+    r = requests.get(myurl, params=param)
+    resultat2 = r.json()
+    return {x['nzo_id']: x['status'] for x in itertools.chain(resultat['history']['slots'], resultat2['queue']['slots'])}
 
+
+def delete_history_sab(id_sab):
+    param = {'apikey': sabnzbd_nc_cle_api,
+             'output': 'json',
+             'name': 'delete',
+             'value': id_sab,
+             'mode': 'history'}
+    myurl = "http://{0}:{1}/sabnzbd/api".format(
+            host_sabG,
+            9000)
+    r = requests.get(myurl, params=param)
+    return r.status_code
+
+
+app = Flask(__name__)
+app.register_blueprint(bp, prefix='/minisab')
+
+if __name__ == "__main__":
+    # app.run(host="0.0.0.0", port=9030)
+    app.run()
 
 app = Flask(__name__)
 app.register_blueprint(bp, prefix='/minisab')

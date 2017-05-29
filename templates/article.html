@@ -3,6 +3,8 @@
         <div class="article article_recherche telechargement_reussi" id="art_{{ item.id }}">
     {% elif item.status_sabnzbd == 'Failed' %}
         <div class="article article_recherche telechargement_echoue" id="art_{{ item.id }}">
+    {% elif item.status_sabnzbd == 'Downloading' %}
+        <div class="article article_recherche telechargement_encours" id="art_{{ item.id }}">
     {% else %}
         <div class="article article_recherche" id="art_{{ item.id }}">
     {% endif %}
