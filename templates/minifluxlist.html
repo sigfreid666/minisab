@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>{{ titlepage }}</title>
+    <style>
+        .categorie > h1 {
+            text-align: center;
+            border-bottom-style: solid;
+            border-width: 2px;
+        }
+        .article {
+            background-color: lightblue;
+            text-align: left;
+            margin-top: 10px;
+            padding-left: 10px;
+            border-style: solid;
+        }
+        .article_recherche {
+            background-color: #0088EE;
+        }
+        .recherche_encours {
+            background-color: #0055CC;
+        }
+        .telechargement_reussi {
+            background-color: #88DD00
+        }
+        .telechargement_echoue {
+            background-color: #DD8800
+        }
+        .telechargement_encours {
+            background-color: #DD8844
+        }
+        span {
+            display: inline;
+        }
+    </style>
+    <script src="{{ url_for('minisab.static', filename='jquery-3.2.1.js') }}"></script>
+    <script src="{{ url_for('minisab.static', filename='minisab.js') }}"></script>
+</head>
+<body>
+    <div class="categorie" id="cat_favoris">
+    <span>
+        <h1>Favoris ({{ favoris|length }})</h1>
+        <button onclick="marquer_lu([{% for item in favoris %}{{ item.id }},{% endfor %}])">Marquer comme lu</button>
+    </span>
+    {% for item in favoris %}
+        {% include 'article.html' %}
+    {% endfor %}
+    </div>
+    {% for categorie, taille, items in articles %}
+        <div class="categorie">
+        <span>
+            <h1>{{ categorie }} ({{ taille }})</h1>
+            <button onclick="marquer_lu([{% for ligne_items in items %}{% for item in ligne_items %}{{ item.id }},{% endfor %}{% endfor %}])">Marquer comme lu</button>
+        </span>
+        <table>
+        {% for ligne_items in items %}
+            <tr>
+            {% for item in ligne_items %}
+                <td>
+                    {% include 'article.html' %}
+                </td>
+            {% endfor %}
+            </tr>
+        {% endfor %}
+        </table>
+        </div>
+    {% endfor %}
+</body>
+</html>

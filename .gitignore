@@ -1,2 +1,10 @@
 ownmodule/*
 *.sublime-workspace
+
+__pycache__/
+
+*.db
+
+*.log
+
+settings_local\.py
