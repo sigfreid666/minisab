@@ -51,7 +51,12 @@ function lancer_recherche(idarticle) {
 
 function envoyer_sab(idrecherche, idarticle) {
     var categorie = $("#art_"+idarticle+" select option:selected").text()
-    $.get("recherche/" + idrecherche + "/telecharger/" + categorie,
+    console.log("envoyer_sab " + categorie);
+	if (categorie == "*") {
+		var url = "recherche/" + idrecherche + "/telecharger/"; }
+	else {
+		var url = "recherche/" + idrecherche + "/telecharger/" + categorie; }
+    $.get(url,
         function(data, status) {
             if (status == "success") {
                 console.log("OK envoyer_sab");
