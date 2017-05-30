@@ -17,9 +17,10 @@
         <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
         <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
         {% if item.recherche_resultat|length > 0 %}
+		<h3> {{ item.recherche_resultat[0].categorie_sabnzbd }} </h3>
         <select name="Categorie">
           {% for item_categorie in categorie_sabnzbd %}
-            {% if item.categorie_sabnzbd == item_categorie %}
+            {% if item_categorie == item.recherche_resultat[0].categorie_sabnzbd %}
                 <option value="{{ item_categorie }}" selected>{{ item_categorie }}</option>
             {% else %}
                 <option value="{{ item_categorie }}">{{ item_categorie }}</option>

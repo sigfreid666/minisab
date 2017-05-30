@@ -41,6 +41,7 @@ def marquer_article_favoris(id_article=None):
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.favorie = True
         ar.lancer_recherche()
+        newminisab.logger.info('marquer favoris %d nb recherche %d', id_article, len(ar.recherche_resultat))
         ar.save()
         return render_template('./article.html', item=ar,
                                categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
@@ -82,25 +83,8 @@ def recherche_article(id_article=None):
 def lancer_telecharger(id_recherche, categorie):
     try:
         rec = newminisab.recherche.get(newminisab.recherche.id == id_recherche)
-        param = {'apikey': sabnzbd_nc_cle_api,
-                 'output': 'json',
-                 'mode': 'addurl',
-                 'name': rec.url,
-                 'nzbname': rec.article.title,
-                 'cat': categorie}
-        myurl = "http://{0}:{1}/sabnzbd/api".format(
-                host_sabG,
-                9000)
-        r = requests.get(myurl, params=param)
-        # sab = sabnzbd.sabnzbd(serveur=host_sabG, port=9000, cle_api=sabnzbd_nc_cle_api)
-        print(rec.url, rec.article.title)
-        print(r.status_code)
-        resultat = r.json()
-        print(r.headers)
-        if resultat['status']:
-            print('status ok')
-            rec.id_sabnzbd = resultat['nzo_ids'][0]
-            rec.save()
+        rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title, rec.url, categorie)
+        rec.save()
         return 'OK'
     except newminisab.article.DoesNotExist:
         abort(404)
@@ -113,6 +97,22 @@ def categorie_lu(str_categorie=None):
         print(x.title)
     return 'OK'
 
+def telechargement_sabnzbd(title, url, categorie):
+    param = {'apikey': sabnzbd_nc_cle_api,
+             'output': 'json',
+             'mode': 'addurl',
+             'name': url,
+             'nzbname': title,
+             'cat': categorie}
+    myurl = "http://{0}:{1}/sabnzbd/api".format(
+            host_sabG,
+                9000)
+    r = requests.get(myurl, params=param)
+    resultat = r.json()
+    if resultat['status']:
+        return resultat['nzo_ids'][0]
+    else:
+        return ''
 
 def status_sabnzbd():
     param = {'apikey': sabnzbd_nc_cle_api,
@@ -147,13 +147,6 @@ def delete_history_sab(id_sab):
     r = requests.get(myurl, params=param)
     return r.status_code
 
-
-app = Flask(__name__)
-app.register_blueprint(bp, prefix='/minisab')
-
-if __name__ == "__main__":
-    # app.run(host="0.0.0.0", port=9030)
-    app.run()
 
 app = Flask(__name__)
 app.register_blueprint(bp, prefix='/minisab')

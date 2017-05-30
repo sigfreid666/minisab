@@ -99,6 +99,8 @@ class article(Model):
     def lancer_recherche(self):
         url_nzbindex = 'http://www.nzbindex.nl/search/?q={0}&max=100'
         url_binsearch = 'https://binsearch.info/?q={0}&max=100'
+        
+        self.calculer_categorie_favoris()
 
         ret = recherche_indexeur(url_nzbindex, self.fichier, parseur=MyParserNzbIndex)
         if len(ret) == 0:
@@ -112,7 +114,8 @@ class article(Model):
                                     url=item['url'],
                                     taille=item['taille'] if 'taille' in item else 'Vide',
                                     title=item['title'],
-                                    article=self)
+                                    article=self,
+                                    categorie_sabnzbd = self.categorie_sabnzbd)
                     rec.save()
                 except IntegrityError:
                     logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
