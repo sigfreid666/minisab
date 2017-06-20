@@ -1,3 +1,4 @@
+<div class="col-md-4">
 {% if item.recherche_resultat|length > 0 %}
     {% if item.status_sabnzbd == 'Completed' %}
         <div class="article article_recherche telechargement_reussi" id="art_{{ item.id }}">
@@ -45,4 +46,5 @@
     <h3>Annee : {{ item.annee }}</h3>
     Fichier : "{{ item.fichier }}"
     <a href="{{ item.nfo }}">Nfo</a>
+</div>
 </div>
