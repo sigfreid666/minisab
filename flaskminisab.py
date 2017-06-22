@@ -24,10 +24,10 @@ def index():
             if y.id_sabnzbd in status_sab:
                 x.status_sabnzbd = status_sab[y.id_sabnzbd]
                 newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
-    articles_preferes = [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
+    articles_preferes = [(x[0], len(x[1]), x[1])
                          for x in articles.items() if x[0] in categorie_preferee]
     articles = (articles_preferes +
-                [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
+                [(x[0], len(x[1]), x[1])
                  for x in articles.items() if x[0] not in categorie_preferee])
     # articles = [[x.title, x.taille, x.categorie] for x in articles]
     return render_template('./minifluxlist.html', titlepage='Miniflux',

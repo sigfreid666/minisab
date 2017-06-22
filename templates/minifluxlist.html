@@ -24,27 +24,38 @@
 </head>
 <body>
     <div class="container-fluid" id="app">
+        <div class="page-header">
+        <h1>Minisab</h1>
+        </div>
         <div class="row categorie" id="cat_favoris">
-            <span>
-                <h1>Favoris ({{ favoris|length }})</h1>
-                <button onclick="marquer_lu([{% for item in favoris %}{{ item.id }},{% endfor %}])">Marquer comme lu</button>
-            </span>
-            <div class="row">
+        <div class="col-md-8">
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <div class="btn-group" role="group" aria-label="...">
+                        <h1>Favoris <span class="badge">{{ favoris|length }}</span>
+                            <button class="btn btn-danger" onclick="marquer_lu([{% for item in favoris %}{{ item.id }},{% endfor %}])">
+                                <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+                            </button>
+                        </h1>
+                    </div>
+                </div>
+                <!-- <div class="panel-body"/> -->
+            </div>
+        </div>
+        </div>
+        <div class="row">
             {% for item in favoris %}
                 {% include 'article.html' %}
             {% endfor %}
-            </div>
         </div>
         {% for categorie, taille, items in articles %}
             <div class="categorie row">
             <span>
                 <h1>{{ categorie }} ({{ taille }})</h1>
-                <button onclick="marquer_lu([{% for ligne_items in items %}{% for item in ligne_items %}{{ item.id }},{% endfor %}{% endfor %}])">Marquer comme lu</button>
+                <button onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}])">Marquer comme lu</button>
             </span>
-            {% for ligne_items in items %}
-                {% for item in ligne_items %}
-                        {% include 'article.html' %}
-                {% endfor %}
+            {% for item in items %}
+                {% include 'article.html' %}
             {% endfor %}
             </div>
         {% endfor %}

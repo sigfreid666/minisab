@@ -1,35 +1,58 @@
 <div class="col-md-4">
 {% if item.recherche_resultat|length > 0 %}
     {% if item.status_sabnzbd == 'Completed' %}
-        <div class="article article_recherche telechargement_reussi" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche telechargement_reussi" id="art_{{ item.id }}">
     {% elif item.status_sabnzbd == 'Failed' %}
-        <div class="article article_recherche telechargement_echoue" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche telechargement_echoue" id="art_{{ item.id }}">
     {% elif item.status_sabnzbd == 'Downloading' %}
-        <div class="article article_recherche telechargement_encours" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche telechargement_encours" id="art_{{ item.id }}">
     {% else %}
-        <div class="article article_recherche" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche" id="art_{{ item.id }}">
     {% endif %}
 {% else %}
-<div class="article" id="art_{{ item.id }}">
+<div class="panel panel-default article" id="art_{{ item.id }}">
 {% endif %}
-    <span>
-        <h2><a href="{{ item.link }}" target="_blank">{{ item.title }}</a></h2>
-        <button onclick="marquer_lu([{{ item.id }}])">Marquer comme lu</button>
-        <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
-        <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
+<div class="panel-heading">
+    <div class="btn-group" role="group" aria-label="...">
+        <h3><a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
+        <button class="btn btn-default" onclick="marquer_lu([{{ item.id }}])">
+            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+        </button>
+        <button class="btn btn-default" onclick="marquer_favoris({{ item.id }})">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"/>
+        </button>
+        <button class="btn btn-default" onclick="lancer_recherche({{ item.id }})">
+            <span class="glyphicon glyphicon-search" aria-hidden="true"/>               
+        </button>
         {% if item.recherche_resultat|length > 0 %}
-		<h3> {{ item.recherche_resultat[0].categorie_sabnzbd }} </h3>
-        <select name="Categorie">
-          {% for item_categorie in categorie_sabnzbd %}
-            {% if item_categorie == item.recherche_resultat[0].categorie_sabnzbd %}
-                <option value="{{ item_categorie }}" selected>{{ item_categorie }}</option>
-            {% else %}
-                <option value="{{ item_categorie }}">{{ item_categorie }}</option>
-            {% endif %}
-          {% endfor %}
-        </select>
+        <div class="btn-group">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                {{ item.recherche_resultat[0].categorie_sabnzbd }} <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                {% for item_categorie in categorie_sabnzbd %}
+                    <li><a href="#">{{ item_categorie }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
         {% endif %}
-    </span><br>
+        </h3>
+    </div>
+</div>
+<div class="panel-body">
+    {% if item.recherche_resultat|length > 0 %}
+	<h4> {{ item.recherche_resultat[0].categorie_sabnzbd }} </h4>
+    <select name="Categorie">
+      {% for item_categorie in categorie_sabnzbd %}
+        {% if item_categorie == item.recherche_resultat[0].categorie_sabnzbd %}
+            <option value="{{ item_categorie }}" selected>{{ item_categorie }}</option>
+        {% else %}
+            <option value="{{ item_categorie }}">{{ item_categorie }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+    {% endif %}
+    <br>
     <button onclick="deplier_recherche({{ item.id }})">...</button>
     {% if item.recherche_resultat|length < 4 %}
     <ul class=recherche style="display: block;">
@@ -46,5 +69,6 @@
     <h3>Annee : {{ item.annee }}</h3>
     Fichier : "{{ item.fichier }}"
     <a href="{{ item.nfo }}">Nfo</a>
+</div>   
 </div>
 </div>
