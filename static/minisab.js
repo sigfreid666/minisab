@@ -66,11 +66,11 @@ function envoyer_sab(idrecherche, idarticle) {
 }
 
 function deplier_recherche(idarticle) {
-    val = $("#art_"+idarticle+" > ul.recherche").css("display")
+    val = $("#art_"+idarticle+" > div.list-group").css("display")
     if (val == "block") {
-        $("#art_"+idarticle+" > ul.recherche").css("display", "none");
+        $("#art_"+idarticle+" > div.list-group").css("display", "none");
     }
     else {
-        $("#art_"+idarticle+" > ul.recherche").css("display", "block");
+        $("#art_"+idarticle+" > div.list-group").css("display", "block");
     }
 }
