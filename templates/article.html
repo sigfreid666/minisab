@@ -27,31 +27,32 @@
         <button class="btn btn-default" onclick="deplier_recherche({{ item.id }})">
             <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"/>               
         </button>
-        {% if item.recherche_resultat|length > 0 %}
-        <div class="btn-group">
-            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                {{ item.recherche_resultat[0].categorie_sabnzbd }} <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu">
-                {% for item_categorie in categorie_sabnzbd %}
-                    <li><a href="#">{{ item_categorie }}</a></li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
         </h4>
     </div>
+    {% if item.recherche_resultat|length > 0 %}
+    <div class="btn-group recherche" role="group" aria-label="...">
+        {% for item_categorie in categorie_sabnzbd %}
+            {% if item_categorie == item.recherche_resultat[0].categorie_sabnzbd %}
+            <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+            {% else %}
+            <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
 <div class="panel-body">
-    <h5><p>Taille  <span class="label label-default">{{ item.taille }}</span>
-    Annee  <span class="label label-default">{{ item.annee }}</span>
-    Fichier <span class="label label-default">{{ item.fichier }}</span><br>
-    <a href="{{ item.nfo }}">Nfo</a></p></h5>
+    <p>
+        <span class="label label-default">{{ item.taille }}</span>
+        <span class="label label-default">{{ item.annee }}</span><br>
+        {{ item.fichier|truncate(40) }}<br>
+        <a href="{{ item.nfo }}">Nfo</a>
+    </p>
 </div>   
     {% if item.recherche_resultat|length > 0 %}
-    <div class="list-group">
+    <div class="list-group" style="display: none;">
         {% for item_recherche in item.recherche_resultat %}
-          <button type="button" class="list-group-item" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title }}</button>
+          <button type="button" class="list-group-item" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
         {% endfor %}
     </div>
     {% endif %}

@@ -49,11 +49,23 @@
             {% endfor %}
         </div>
         {% for categorie, taille, items in articles %}
-            <div class="categorie row">
-            <span>
-                <h1>{{ categorie }} ({{ taille }})</h1>
-                <button onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}])">Marquer comme lu</button>
-            </span>
+            <div class="row categorie" id="cat_favoris">
+                <div class="col-md-8">
+                    <div class="panel panel-danger">
+                        <div class="panel-heading">
+                            <div class="btn-group" role="group" aria-label="...">
+                                <h1>{{ categorie }} <span class="badge">{{ taille }}</span>
+                                    <button class="btn btn-danger" onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}])">
+                                        <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+                                    </button>
+                                </h1>
+                            </div>
+                        </div>
+                        <!-- <div class="panel-body"/> -->
+                    </div>
+                </div>
+            </div>
+            <div class="row">
             {% for item in items %}
                 {% include 'article.html' %}
             {% endfor %}
