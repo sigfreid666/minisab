@@ -135,6 +135,12 @@ class article(Model):
             self.annee = int(reg.groups()[0])
         logger.debug('analyse_annee fin : %d', self.annee)
 
+    def liste_categorie():
+        a = (article.select(article.categorie, fn.Count(article.categorie).alias('nb'))
+                    .where(article.lu == False)
+                    .group_by(article.categorie))
+        return [(x.categorie, x.nb) for x in a]
+
 
     def categorie_preferee(self):
         return (not self.favorie) and (self.categorie in categorie_preferee)
@@ -226,6 +232,12 @@ def base_de_donnee(wrap):
 def cli():
     pass
 
+
+@cli.command('test')
+@base_de_donnee
+def test():
+    a = article.select(article.categorie, fn.Count(article.categorie).alias('nb')).where(article.lu == False).group_by(article.categorie)
+    print([(x.categorie, x.nb) for x in a])
 
 @cli.command('check')
 @base_de_donnee

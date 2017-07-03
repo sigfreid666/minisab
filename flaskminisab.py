@@ -4,6 +4,7 @@ import newminisab
 import requests
 import logging
 import itertools
+from peewee import fn
 
 categorie_preferee = ['Films HD']
 host_sabG = '192.168.0.8'
@@ -32,7 +33,8 @@ def index():
     # articles = [[x.title, x.taille, x.categorie] for x in articles]
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles, favoris=favoris,
-                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
+                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd],
+                           categorie = newminisab.article.liste_categorie())
 
 
 @bp.route('/article/<id_article>/favoris')
@@ -96,6 +98,11 @@ def categorie_lu(str_categorie=None):
     for x in cat:
         print(x.title)
     return 'OK'
+
+@bp.route('/categorie/liste')
+def categorie_liste():
+    listecategorie = newminisab.article.liste_categorie()
+    return render_template('./barre_categorie.html', categorie=listecategorie)
 
 def telechargement_sabnzbd(title, url, categorie):
     param = {'apikey': sabnzbd_nc_cle_api,

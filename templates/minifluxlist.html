@@ -27,6 +27,9 @@
         <div class="page-header">
         <h1>Minisab</h1>
         </div>
+        <div class="row">
+            {% include 'barre_categorie.html' %}
+        </div>
         <div class="row categorie">
         <div class="col-md-8">
             <div class="panel panel-danger">
@@ -49,7 +52,7 @@
             {% endfor %}
         </div>
         {% for categorie, taille, items in articles %}
-            <div class="row categorie" id="cat_favoris">
+            <div class="row categorie" id="cat_{{ categorie }}">
                 <div class="col-md-8">
                     <div class="panel panel-danger">
                         <div class="panel-heading">
