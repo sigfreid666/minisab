@@ -51,8 +51,8 @@
                 {% include 'article.html' %}
             {% endfor %}
         </div>
-        {% for categorie, taille, items in articles %}
-            <div class="row categorie" id="cat_{{ categorie }}">
+        {% for categorie, taille, items, categorie_id in articles %}
+            <div class="row categorie" id="cat_{{ categorie_id }}">
                 <div class="col-md-8">
                     <div class="panel panel-danger">
                         <div class="panel-heading">
