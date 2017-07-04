@@ -50,7 +50,7 @@ function lancer_recherche(idarticle) {
 }
 
 function envoyer_sab(idrecherche, idarticle) {
-    var categorie = $("#art_"+idarticle+" select option:selected").text()
+    var categorie = $("#art_"+idarticle+" div.recherche button.btn-danger").text()
     console.log("envoyer_sab " + categorie);
 	if (categorie == "*") {
 		var url = "recherche/" + idrecherche + "/telecharger/"; }
@@ -66,11 +66,17 @@ function envoyer_sab(idrecherche, idarticle) {
 }
 
 function deplier_recherche(idarticle) {
-    val = $("#art_"+idarticle+" > ul.recherche").css("display")
+    val = $("#art_"+idarticle+" > div.list-group").css("display")
     if (val == "block") {
-        $("#art_"+idarticle+" > ul.recherche").css("display", "none");
+        $("#art_"+idarticle+" > div.list-group").css("display", "none");
     }
     else {
-        $("#art_"+idarticle+" > ul.recherche").css("display", "block");
+        $("#art_"+idarticle+" > div.list-group").css("display", "block");
     }
+}
+
+function test(idarticle, categorie){
+    $("#art_"+idarticle+" div.recherche button.btn-danger").removeClass('btn-danger').addClass('btn-default');
+    $("#art_"+idarticle+" div.recherche button." + categorie).removeClass('btn-default').addClass('btn-danger');
+    console.log('Test <' + categorie + '>');
 }

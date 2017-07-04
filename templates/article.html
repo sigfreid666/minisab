@@ -1,48 +1,60 @@
+<div class="col-md-4">
 {% if item.recherche_resultat|length > 0 %}
     {% if item.status_sabnzbd == 'Completed' %}
-        <div class="article article_recherche telechargement_reussi" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche telechargement_reussi" id="art_{{ item.id }}">
     {% elif item.status_sabnzbd == 'Failed' %}
-        <div class="article article_recherche telechargement_echoue" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche telechargement_echoue" id="art_{{ item.id }}">
     {% elif item.status_sabnzbd == 'Downloading' %}
-        <div class="article article_recherche telechargement_encours" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche telechargement_encours" id="art_{{ item.id }}">
     {% else %}
-        <div class="article article_recherche" id="art_{{ item.id }}">
+        <div class="panel panel-default article article_recherche" id="art_{{ item.id }}">
     {% endif %}
 {% else %}
-<div class="article" id="art_{{ item.id }}">
+<div class="panel panel-default article" id="art_{{ item.id }}">
 {% endif %}
-    <span>
-        <h2><a href="{{ item.link }}" target="_blank">{{ item.title }}</a></h2>
-        <button onclick="marquer_lu([{{ item.id }}])">Marquer comme lu</button>
-        <button onclick="marquer_favoris({{ item.id }})">Favoris</button>
-        <button onclick="lancer_recherche({{ item.id }})">Rechercher</button>
-        {% if item.recherche_resultat|length > 0 %}
-		<h3> {{ item.recherche_resultat[0].categorie_sabnzbd }} </h3>
-        <select name="Categorie">
-          {% for item_categorie in categorie_sabnzbd %}
+<div class="panel-heading">
+    <div class="btn-group" role="group" aria-label="...">
+        <h4><a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
+        <button class="btn btn-default" onclick="marquer_lu([{{ item.id }}])">
+            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+        </button>
+        <button class="btn btn-default" onclick="marquer_favoris({{ item.id }})">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"/>
+        </button>
+        <button class="btn btn-default" onclick="lancer_recherche({{ item.id }})">
+            <span class="glyphicon glyphicon-search" aria-hidden="true"/>               
+        </button>
+        <button class="btn btn-default" onclick="deplier_recherche({{ item.id }})">
+            <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"/>               
+        </button>
+        </h4>
+    </div>
+    {% if item.recherche_resultat|length > 0 %}
+    <div class="btn-group recherche" role="group" aria-label="...">
+        {% for item_categorie in categorie_sabnzbd %}
             {% if item_categorie == item.recherche_resultat[0].categorie_sabnzbd %}
-                <option value="{{ item_categorie }}" selected>{{ item_categorie }}</option>
+            <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
             {% else %}
-                <option value="{{ item_categorie }}">{{ item_categorie }}</option>
+            <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
             {% endif %}
-          {% endfor %}
-        </select>
-        {% endif %}
-    </span><br>
-    <button onclick="deplier_recherche({{ item.id }})">...</button>
-    {% if item.recherche_resultat|length < 4 %}
-    <ul class=recherche style="display: block;">
-    {% else %}
-    <ul class=recherche style="display: none;">
+        {% endfor %}
+    </div>
     {% endif %}
-    {% for item_recherche in item.recherche_resultat %}
-        <li>{{ item_recherche.taille }} {{ item_recherche.title }} {{ item_recherche.id_check }}
-        <button id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})">Télécharger</button>
-        </li>
-    {% endfor %}
-    </ul>
-    <h3>Taille : {{ item.taille }}</h3>
-    <h3>Annee : {{ item.annee }}</h3>
-    Fichier : "{{ item.fichier }}"
-    <a href="{{ item.nfo }}">Nfo</a>
+</div>
+<div class="panel-body">
+    <p>
+        <span class="label label-default">{{ item.taille }}</span>
+        <span class="label label-default">{{ item.annee }}</span><br>
+        {{ item.fichier|truncate(40) }}<br>
+        <a href="{{ item.nfo }}">Nfo</a>
+    </p>
+</div>   
+    {% if item.recherche_resultat|length > 0 %}
+    <div class="list-group" style="display: none;">
+        {% for item_recherche in item.recherche_resultat %}
+          <button type="button" class="list-group-item" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
 </div>
