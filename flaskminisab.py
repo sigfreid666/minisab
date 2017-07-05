@@ -9,7 +9,7 @@ from peewee import fn
 categorie_preferee = ['Films HD']
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
-
+version = '2.1'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
 
@@ -34,7 +34,8 @@ def index():
     # articles = [[x.title, x.taille, x.categorie] for x in articles]
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles, favoris=favoris,
-                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
+                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd],
+                           version=version)
 
 
 @bp.route('/article/<id_article>/favoris')
