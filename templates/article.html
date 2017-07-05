@@ -1,13 +1,12 @@
-<div class="col-md-4">
 {% if item.recherche_resultat|length > 0 %}
     {% if item.status_sabnzbd == 'Completed' %}
-        <div class="panel panel-default article article_recherche telechargement_reussi" id="art_{{ item.id }}">
+        <div class="panel panel-success article article_recherche telechargement_reussi" id="art_{{ item.id }}">
     {% elif item.status_sabnzbd == 'Failed' %}
-        <div class="panel panel-default article article_recherche telechargement_echoue" id="art_{{ item.id }}">
+        <div class="panel panel-danger article article_recherche telechargement_echoue" id="art_{{ item.id }}">
     {% elif item.status_sabnzbd == 'Downloading' %}
-        <div class="panel panel-default article article_recherche telechargement_encours" id="art_{{ item.id }}">
+        <div class="panel panel-warning article article_recherche telechargement_encours" id="art_{{ item.id }}">
     {% else %}
-        <div class="panel panel-default article article_recherche" id="art_{{ item.id }}">
+        <div class="panel panel-info article article_recherche" id="art_{{ item.id }}">
     {% endif %}
 {% else %}
 <div class="panel panel-default article" id="art_{{ item.id }}">
@@ -52,9 +51,8 @@
     {% if item.recherche_resultat|length > 0 %}
     <div class="list-group" style="display: none;">
         {% for item_recherche in item.recherche_resultat %}
-          <button type="button" class="list-group-item" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
+          <button type="button" class="list-group-item resultat_recherche" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
         {% endfor %}
     </div>
     {% endif %}
-</div>
 </div>

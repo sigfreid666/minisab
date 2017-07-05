@@ -42,7 +42,7 @@ function lancer_recherche(idarticle) {
                 $("#art_"+idarticle).replaceWith(data);
             }
             else {
-                $("#art_"+idarticle+" > span.recherche").text("Erreur !");
+                $("#art_"+idarticle+" > div.resultat_recherche").text('<button type="button" class="list-group-item">Erreur</button>');
             }
 
         })
@@ -75,7 +75,7 @@ function deplier_recherche(idarticle) {
     }
 }
 
-function test(idarticle, categorie){
+function change_selection(idarticle, categorie){
     $("#art_"+idarticle+" div.recherche button.btn-danger").removeClass('btn-danger').addClass('btn-default');
     $("#art_"+idarticle+" div.recherche button." + categorie).removeClass('btn-default').addClass('btn-danger');
     console.log('Test <' + categorie + '>');
