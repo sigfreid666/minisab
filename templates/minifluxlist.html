@@ -48,9 +48,7 @@
         </div>
         <div class="row" id="cat_favoris">
             {% for item in favoris %}
-                <div class="col-md-4">
-                    {% include 'article.html' %}
-                </div>
+                {% include 'article.html' %}
             {% endfor %}
         </div>
         {% for categorie, taille, items, categorie_id in articles %}
@@ -72,9 +70,7 @@
             </div>
             <div class="row">
             {% for item in items %}
-                <div class="col-md-4">
-                    {% include 'article.html' %}
-                </div>
+                {% include 'article.html' %}
             {% endfor %}
             </div>
         {% endfor %}

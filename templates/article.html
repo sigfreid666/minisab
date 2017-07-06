@@ -1,15 +1,16 @@
+<div class="col-md-4" id="art_{{ item.id }}">
 {% if item.recherche_resultat|length > 0 %}
     {% if item.status_sabnzbd == 'Completed' %}
-        <div class="panel panel-success article article_recherche telechargement_reussi" id="art_{{ item.id }}">
+        <div class="panel panel-success article article_recherche telechargement_reussi">
     {% elif item.status_sabnzbd == 'Failed' %}
-        <div class="panel panel-danger article article_recherche telechargement_echoue" id="art_{{ item.id }}">
+        <div class="panel panel-danger article article_recherche telechargement_echoue">
     {% elif item.status_sabnzbd == 'Downloading' %}
-        <div class="panel panel-warning article article_recherche telechargement_encours" id="art_{{ item.id }}">
+        <div class="panel panel-warning article article_recherche telechargement_encours">
     {% else %}
-        <div class="panel panel-info article article_recherche" id="art_{{ item.id }}">
+        <div class="panel panel-info article article_recherche">
     {% endif %}
 {% else %}
-<div class="panel panel-default article" id="art_{{ item.id }}">
+<div class="panel panel-default article">
 {% endif %}
 <div class="panel-heading">
     <div class="btn-group" role="group" aria-label="...">
@@ -55,4 +56,5 @@
         {% endfor %}
     </div>
     {% endif %}
+</div>
 </div>
