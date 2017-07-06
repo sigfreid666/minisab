@@ -6,6 +6,12 @@
 			"name": "Anaconda Python Builder",
 			"selector": "source.python",
 			"shell_cmd": "\"python\" -u \"$file\""
+		},
+		{
+			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
+			"name": "newminisab_check",
+			"selector": "source.python",
+			"shell_cmd": "\"python\" -u \"$file\" check"
 		}
 	],
 	"folders":

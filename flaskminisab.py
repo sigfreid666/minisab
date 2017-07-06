@@ -4,11 +4,12 @@ import newminisab
 import requests
 import logging
 import itertools
+from peewee import fn
 
 categorie_preferee = ['Films HD']
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
-
+version = '2.1'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
 
@@ -24,15 +25,17 @@ def index():
             if y.id_sabnzbd in status_sab:
                 x.status_sabnzbd = status_sab[y.id_sabnzbd]
                 newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
-    articles_preferes = [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
+    id_categorie = 1
+    articles_preferes = [(x[0], len(x[1]), x[1], x[0].replace('/', '_'))
                          for x in articles.items() if x[0] in categorie_preferee]
     articles = (articles_preferes +
-                [(x[0], len(x[1]), [x[1][y:y + 3] for y in range(0, len(x[1]), 3)])
+                [(x[0], len(x[1]), x[1], x[0].replace('/', '_'))
                  for x in articles.items() if x[0] not in categorie_preferee])
     # articles = [[x.title, x.taille, x.categorie] for x in articles]
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles, favoris=favoris,
-                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
+                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd],
+                           version=version)
 
 
 @bp.route('/article/<id_article>/favoris')
@@ -97,6 +100,11 @@ def categorie_lu(str_categorie=None):
         print(x.title)
     return 'OK'
 
+@bp.route('/categorie/liste')
+def categorie_liste():
+    listecategorie = newminisab.article.liste_categorie()
+    return render_template('./barre_categorie.html', categorie=listecategorie)
+
 def telechargement_sabnzbd(title, url, categorie):
     param = {'apikey': sabnzbd_nc_cle_api,
              'output': 'json',
@@ -122,17 +130,20 @@ def status_sabnzbd():
     myurl = "http://{0}:{1}/sabnzbd/api".format(
             host_sabG,
             9000)
-    r = requests.get(myurl, params=param)
-    resultat = r.json()
-    param = {'apikey': sabnzbd_nc_cle_api,
-             'output': 'json',
-             'mode': 'queue'}
-    myurl = "http://{0}:{1}/sabnzbd/api".format(
-            host_sabG,
-            9000)
-    r = requests.get(myurl, params=param)
-    resultat2 = r.json()
-    return {x['nzo_id']: x['status'] for x in itertools.chain(resultat['history']['slots'], resultat2['queue']['slots'])}
+    try:
+        r = requests.get(myurl, params=param)
+        resultat = r.json()
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'mode': 'queue'}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        r = requests.get(myurl, params=param)
+        resultat2 = r.json()
+        return {x['nzo_id']: x['status'] for x in itertools.chain(resultat['history']['slots'], resultat2['queue']['slots'])}
+    except requests.exceptions.ConnectionError:
+        return {}
 
 
 def delete_history_sab(id_sab):
