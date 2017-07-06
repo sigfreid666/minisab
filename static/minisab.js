@@ -65,16 +65,6 @@ function envoyer_sab(idrecherche, idarticle) {
     $("#recherche_"+idrecherche).text($("#recherche_"+idrecherche).text() + " (En cours)");   
 }
 
-function deplier_recherche(idarticle) {
-    val = $("#art_"+idarticle+" > div.list-group").css("display")
-    if (val == "block") {
-        $("#art_"+idarticle+" > div.list-group").css("display", "none");
-    }
-    else {
-        $("#art_"+idarticle+" > div.list-group").css("display", "block");
-    }
-}
-
 function change_selection(idarticle, categorie){
     $("#art_"+idarticle+" div.recherche button.btn-danger").removeClass('btn-danger').addClass('btn-default');
     $("#art_"+idarticle+" div.recherche button." + categorie).removeClass('btn-default').addClass('btn-danger');
