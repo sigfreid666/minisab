@@ -130,17 +130,20 @@ def status_sabnzbd():
     myurl = "http://{0}:{1}/sabnzbd/api".format(
             host_sabG,
             9000)
-    r = requests.get(myurl, params=param)
-    resultat = r.json()
-    param = {'apikey': sabnzbd_nc_cle_api,
-             'output': 'json',
-             'mode': 'queue'}
-    myurl = "http://{0}:{1}/sabnzbd/api".format(
-            host_sabG,
-            9000)
-    r = requests.get(myurl, params=param)
-    resultat2 = r.json()
-    return {x['nzo_id']: x['status'] for x in itertools.chain(resultat['history']['slots'], resultat2['queue']['slots'])}
+    try:
+        r = requests.get(myurl, params=param)
+        resultat = r.json()
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'mode': 'queue'}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        r = requests.get(myurl, params=param)
+        resultat2 = r.json()
+        return {x['nzo_id']: x['status'] for x in itertools.chain(resultat['history']['slots'], resultat2['queue']['slots'])}
+    except requests.exceptions.ConnectionError:
+        return {}
 
 
 def delete_history_sab(id_sab):
