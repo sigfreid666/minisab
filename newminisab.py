@@ -44,6 +44,15 @@ categorie_sabnzbd = [('*', []),
                      ('film', ['Films HD'])]
 
 
+class categorie(Model):
+    nom = CharField(unique=True)
+    categorie_sabnzbd = CharField(default='*')
+    autolu = BooleanField(default=False)
+
+    class Meta:
+        database = db
+
+
 class article(Model):
     title = CharField()
     link = CharField()
@@ -55,16 +64,10 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
-    categorie = CharField()
+    categorie = ForeignKeyField(categorie)
     favorie = BooleanField(index=True, default=False)
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
-
-    def calculer_categorie_favoris(self):
-        self.categorie_sabnzbd = '*'
-        for x in categorie_sabnzbd:
-            if self.categorie in x[1]:
-                self.categorie_sabnzbd = x[0]
 
     def analyse_description(self):
         logger.debug('analyse_description : debut')
@@ -90,7 +93,11 @@ class article(Model):
                 elif decoup[0] == 'Taille':
                     self.taille = decoup[1]
                 elif decoup[0] == 'Catégorie':
-                    self.categorie = decoup[1]
+                    try:
+                        self.categorie = categorie.get(categorie.nom == decoup[1])
+                    except categorie.DoesNotExist:
+                        self.categorie = categorie(nom=self.categorie)
+                        self.categorie.save()
                 elif len(decoup) == 2:
                     meta[decoup[0]] = decoup[1]
         self.meta = str(meta)
@@ -99,7 +106,7 @@ class article(Model):
     def lancer_recherche(self):
         url_nzbindex = 'http://www.nzbindex.nl/search/?q={0}&max=100'
         url_binsearch = 'https://binsearch.info/?q={0}&max=100'
-        
+
         self.calculer_categorie_favoris()
 
         ret = recherche_indexeur(url_nzbindex, self.fichier, parseur=MyParserNzbIndex)
@@ -115,7 +122,7 @@ class article(Model):
                                     taille=item['taille'] if 'taille' in item else 'Vide',
                                     title=item['title'],
                                     article=self,
-                                    categorie_sabnzbd = self.categorie_sabnzbd)
+                                    categorie_sabnzbd=self.categorie_sabnzbd)
                     rec.save()
                 except IntegrityError:
                     logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
@@ -178,7 +185,8 @@ class recherche(Model):
     title = CharField()
     id_sabnzbd = CharField(default='')
     categorie_sabnzbd = CharField(default='')
-    article = ForeignKeyField(article, related_name='recherche_resultat')
+    fichier = CharField(default='')
+    article = ForeignKeyField(article, related_name='recherche')
 
     class Meta:
         database = db

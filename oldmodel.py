@@ -3,6 +3,16 @@ import newminisab
 
 olddb = SqliteDatabase('minisabold.db')
 
+ct_categorie_sabnzbd = [('*', []),
+                        ('livre', ['Ebook']),
+                        ('logiciel', ['Autres OS']),
+                        ('romance', []),
+                        ('anime', ['Anime HD']),
+                        ('musique', ['Mp3', 'Vidéo Zik', 'DVD Zik']),
+                        ('serietv', []),
+                        ('documentaire', ['Docs / Actu', 'Emissions']),
+                        ('film', ['Films HD'])]
+
 
 class article(Model):
     title = CharField()
@@ -17,8 +27,15 @@ class article(Model):
     taille = CharField()
     categorie = CharField()
     favorie = BooleanField(index=True, default=False)
-    sabnzbd = CharField(default='')
-    recherche = CharField(default='')
+    lu = BooleanField(index=True, default=False)
+    annee = IntegerField(default=0)
+
+    def calculer_categorie_favoris(self, categorie):
+        categorie_sabnzbd = '*'
+        for x in ct_categorie_sabnzbd:
+            if categorie in x[1]:
+                categorie_sabnzbd = x[0]
+        return categorie_sabnzbd
 
     def convertold(self):
         ar = newminisab.article()
@@ -34,7 +51,13 @@ class article(Model):
         ar.taille = self.taille
         ar.categorie = self.categorie
         ar.favorie = self.favorie
-        
+        ar.lu = self.lu
+        ar.annee = self.annee
+        try:
+            ar.categorie = newminisab.categorie.get(newminisab.categorie.nom == self.categorie)
+        except newminisab.categorie.DoesNotExist:
+            ar.categorie = newminisab.categorie(nom=self.categorie)
+            ar.categorie.save()
         return ar
 
     class Meta:
@@ -46,6 +69,8 @@ class recherche(Model):
     url = CharField()
     taille = CharField()
     title = CharField()
+    id_sabnzbd = CharField(default='')
+    categorie_sabnzbd = CharField(default='')
     article = ForeignKeyField(article, related_name='recherche_resultat')
 
     def convertold(self):
@@ -54,7 +79,11 @@ class recherche(Model):
         ar.url = self.url
         ar.taille = self.taille
         ar.title = self.title
+        ar.id_sabnzbd = self.id_sabnzbd
+        ar.categorie_sabnzbd = self.categorie_sabnzbd
+        ar.fichier = self.article.fichier
         ar.article = self.article
+        return ar
 
     class Meta:
         database = olddb
@@ -64,7 +93,8 @@ def convert():
     olddb.connect()
     newminisab.db.connect()
     newminisab.db.create_tables([newminisab.article,
-                                 newminisab.recherche], safe=True)
+                                 newminisab.recherche,
+                                 newminisab.categorie], safe=True)
     for y in [ article, recherche ]:
         for x in y.select():
             y = x.convertold()
