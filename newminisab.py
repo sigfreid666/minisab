@@ -33,21 +33,12 @@ logger.addHandler(handlerstd)
 
 db = SqliteDatabase(dbfile)
 
-categorie_sabnzbd = [('*', []),
-                     ('livre', ['Ebook']),
-                     ('logiciel', ['Autres OS']),
-                     ('romance', []),
-                     ('anime', ['Anime HD']),
-                     ('musique', ['Mp3', 'Vidéo Zik', 'DVD Zik']),
-                     ('serietv', []),
-                     ('documentaire', ['Docs / Actu', 'Emissions']),
-                     ('film', ['Films HD'])]
-
 
 class categorie(Model):
     nom = CharField(unique=True)
     categorie_sabnzbd = CharField(default='*')
     autolu = BooleanField(default=False)
+    preferee = IntegerField(default=0)
 
     class Meta:
         database = db
@@ -64,7 +55,7 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
-    categorie = ForeignKeyField(categorie)
+    categorie = ForeignKeyField(categorie, related_name='articles')
     favorie = BooleanField(index=True, default=False)
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
@@ -121,8 +112,7 @@ class article(Model):
                                     url=item['url'],
                                     taille=item['taille'] if 'taille' in item else 'Vide',
                                     title=item['title'],
-                                    article=self,
-                                    categorie_sabnzbd=self.categorie_sabnzbd)
+                                    article=self)
                     rec.save()
                 except IntegrityError:
                     logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
@@ -147,13 +137,6 @@ class article(Model):
                     .where(article.lu == False)
                     .group_by(article.categorie))
         return [(x.categorie, x.nb) for x in a]
-
-
-    def categorie_preferee(self):
-        return (not self.favorie) and (self.categorie in categorie_preferee)
-
-    def categorie_autre(self):
-        return (not self.favorie) and (self.categorie not in categorie_preferee)
 
     def __str__(self):
         return '<%s %s %s>' % (self.title, self.pubDate, self.favorie)
@@ -184,7 +167,6 @@ class recherche(Model):
     taille = CharField()
     title = CharField()
     id_sabnzbd = CharField(default='')
-    categorie_sabnzbd = CharField(default='')
     fichier = CharField(default='')
     article = ForeignKeyField(article, related_name='recherche')
 
@@ -285,9 +267,12 @@ def recuperer_tous_articles_par_categorie():
                                         (article.lu == False))]
     a = [x for x in article.select().where((article.favorie == False) &
                                            (article.lu == False))]
-    a.sort(key=lambda x: (x.categorie, 3000 - x.annee))
-    b = itertools.groupby(a, lambda x: x.categorie)
-    c = {x: [z for z in y] for x, y in b}
+    # a.sort(key=lambda x: (x.categorie, 3000 - x.annee))
+    # b = itertools.groupby(a, lambda x: x.categorie)
+    a = categorie.select()[0]
+    print(type(a))
+    print(dir(a))
+    c = {x: x.articles for x in categorie.select()}
     return (c, favoris)
 
 
