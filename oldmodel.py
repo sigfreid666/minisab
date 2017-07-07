@@ -57,6 +57,7 @@ class article(Model):
             ar.categorie = newminisab.categorie.get(newminisab.categorie.nom == self.categorie)
         except newminisab.categorie.DoesNotExist:
             ar.categorie = newminisab.categorie(nom=self.categorie)
+            ar.categorie.categorie_sabnzbd = self.calculer_categorie_favoris(ar.categorie.nom)
             ar.categorie.save()
         return ar
 
@@ -80,7 +81,6 @@ class recherche(Model):
         ar.taille = self.taille
         ar.title = self.title
         ar.id_sabnzbd = self.id_sabnzbd
-        ar.categorie_sabnzbd = self.categorie_sabnzbd
         ar.fichier = self.article.fichier
         ar.article = self.article
         return ar
