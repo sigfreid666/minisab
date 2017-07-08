@@ -259,20 +259,22 @@ def check_new_article():
 def recuperer_tous_articles():
     return [x for x in article.select()]
 
+@cli.command('test')
+def test():
+    recuperer_tous_articles_par_categorie()
+
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
     favoris = [x for x in article.select()
                                  .where((article.favorie == True) &
                                         (article.lu == False))]
-    a = [x for x in article.select().where((article.favorie == False) &
-                                           (article.lu == False))]
-    # a.sort(key=lambda x: (x.categorie, 3000 - x.annee))
-    # b = itertools.groupby(a, lambda x: x.categorie)
-    a = categorie.select()[0]
-    print(type(a))
-    print(dir(a))
-    c = {x: x.articles for x in categorie.select()}
+    c = {x: x.articles for x in categorie.select(categorie, article)
+                                         .join(article)
+                                         .where((article.favorie == False) & (article.lu == False))
+                                         # .group_by(categorie.nom)
+                                         .order_by(categorie.preferee.desc(), categorie.nom).aggregate_rows() }
+    print([(x.nom, len(c[x])) for x in c])
     return (c, favoris)
 
 

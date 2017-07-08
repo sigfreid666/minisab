@@ -17,20 +17,16 @@ bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_fo
 def index():
     articles, favoris = newminisab.recuperer_tous_articles_par_categorie()
     newminisab.logger.info('index, articles %d, favoris %d', len(articles), len(favoris))
-    status_sab = status_sabnzbd()
-    newminisab.logger.info('index, statut sab %s', str(status_sab))
-    for x in favoris:
-        for y in x.recherche:
-            newminisab.logger.info('index, title %s, id sab %s', x.title, y.id_sabnzbd)
-            if y.id_sabnzbd in status_sab:
-                x.status_sabnzbd = status_sab[y.id_sabnzbd]
-                newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
-    articles_preferes = [(x[0].nom, len(x[1]), x[1], x[0].id)
-                         for x in articles.items() if x[0].nom in categorie_preferee]
-    articles = (articles_preferes +
-                [(x[0].nom, len(x[1]), x[1], x[0].id)
-                 for x in articles.items() if x[0].nom not in categorie_preferee])
-    # articles = [[x.title, x.taille, x.categorie] for x in articles]
+    # status_sab = status_sabnzbd()
+    # newminisab.logger.info('index, statut sab %s', str(status_sab))
+    # for x in favoris:
+    #     for y in x.recherche:
+    #         newminisab.logger.info('index, title %s, id sab %s', x.title, y.id_sabnzbd)
+    #         if y.id_sabnzbd in status_sab:
+    #             x.status_sabnzbd = status_sab[y.id_sabnzbd]
+    #             newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
+    articles = ([(x[0].nom, len(x[1]), x[1], x[0].id)
+                 for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles, favoris=favoris,
                            categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))],
