@@ -98,24 +98,24 @@ class article(Model):
         url_nzbindex = 'http://www.nzbindex.nl/search/?q={0}&max=100'
         url_binsearch = 'https://binsearch.info/?q={0}&max=100'
 
-        self.calculer_categorie_favoris()
-
-        ret = recherche_indexeur(url_nzbindex, self.fichier, parseur=MyParserNzbIndex)
-        if len(ret) == 0:
-            ret = recherche_indexeur(url_binsearch, self.fichier)
-        if len(ret) > 0:
-            self.calculer_categorie_favoris()
-            for item in ret:
-                logger.info('item %s', str(item))
-                try:
-                    rec = recherche(id_check=item['id'],
-                                    url=item['url'],
-                                    taille=item['taille'] if 'taille' in item else 'Vide',
-                                    title=item['title'],
-                                    article=self)
-                    rec.save()
-                except IntegrityError:
-                    logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
+        liste_fichier = self.fichier.split(' / ')
+        for fichier in liste_fichier:
+            ret = recherche_indexeur(url_nzbindex, fichier, parseur=MyParserNzbIndex)
+            if len(ret) == 0:
+                ret = recherche_indexeur(url_binsearch, fichier)
+            if len(ret) > 0:
+                for item in ret:
+                    logger.info('item %s', str(item))
+                    try:
+                        rec = recherche(id_check=item['id'],
+                                        url=item['url'],
+                                        taille=item['taille'] if 'taille' in item else 'Vide',
+                                        title=item['title'],
+                                        fichier=fichier,
+                                        article=self)
+                        rec.save()
+                    except IntegrityError:
+                        logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
 
     def analyse_annee(self):
         if self.annee != 0:

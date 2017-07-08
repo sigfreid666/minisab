@@ -42,7 +42,7 @@ def marquer_article_favoris(id_article=None):
         newminisab.logger.info('marquer favoris %d nb recherche %d', id_article, len(ar.recherche))
         ar.save()
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie_sabnzbd.newminisab))])
+                               categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))])
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -71,7 +71,7 @@ def recherche_article(id_article=None):
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.lancer_recherche()
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
+                               categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))])
     except newminisab.article.DoesNotExist:
         abort(404)
 
