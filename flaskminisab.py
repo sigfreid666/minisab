@@ -17,24 +17,19 @@ bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_fo
 def index():
     articles, favoris = newminisab.recuperer_tous_articles_par_categorie()
     newminisab.logger.info('index, articles %d, favoris %d', len(articles), len(favoris))
-    status_sab = status_sabnzbd()
-    newminisab.logger.info('index, statut sab %s', str(status_sab))
-    for x in favoris:
-        for y in x.recherche_resultat:
-            newminisab.logger.info('index, title %s, id sab %s', x.title, y.id_sabnzbd)
-            if y.id_sabnzbd in status_sab:
-                x.status_sabnzbd = status_sab[y.id_sabnzbd]
-                newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
-    id_categorie = 1
-    articles_preferes = [(x[0], len(x[1]), x[1], x[0].replace('/', '_'))
-                         for x in articles.items() if x[0] in categorie_preferee]
-    articles = (articles_preferes +
-                [(x[0], len(x[1]), x[1], x[0].replace('/', '_'))
-                 for x in articles.items() if x[0] not in categorie_preferee])
-    # articles = [[x.title, x.taille, x.categorie] for x in articles]
+    # status_sab = status_sabnzbd()
+    # newminisab.logger.info('index, statut sab %s', str(status_sab))
+    # for x in favoris:
+    #     for y in x.recherche:
+    #         newminisab.logger.info('index, title %s, id sab %s', x.title, y.id_sabnzbd)
+    #         if y.id_sabnzbd in status_sab:
+    #             x.status_sabnzbd = status_sab[y.id_sabnzbd]
+    #             newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
+    articles = ([(x[0].nom, len(x[1]), x[1], x[0].id)
+                 for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles, favoris=favoris,
-                           categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd],
+                           categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))],
                            version=version)
 
 
@@ -44,10 +39,10 @@ def marquer_article_favoris(id_article=None):
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.favorie = True
         ar.lancer_recherche()
-        newminisab.logger.info('marquer favoris %d nb recherche %d', id_article, len(ar.recherche_resultat))
+        newminisab.logger.info('marquer favoris %d nb recherche %d', id_article, len(ar.recherche))
         ar.save()
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
+                               categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))])
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -60,9 +55,9 @@ def marquer_article_lu():
             for art_id in data_json:
                 ar = newminisab.article.get(newminisab.article.id == art_id)
                 ar.lu = True
-                for y in ar.recherche_resultat:
+                for y in ar.recherche:
                     newminisab.logger.info('article_lu, title %s, id sab %s', ar.title, y.id_sabnzbd)
-                    if y.id_sabnzbd != '': 
+                    if y.id_sabnzbd != '':
                         delete_history_sab(y.id_sabnzbd)
                 ar.save()
         return "OK"
@@ -70,13 +65,16 @@ def marquer_article_lu():
         abort(404)
 
 
-@bp.route('/article/<id_article>/recherche')
-def recherche_article(id_article=None):
+@bp.route('/article/<id_article>/recherche/<int:stop_multi>')
+@bp.route('/article/<id_article>/recherche',
+          defaults={'stop_multi': 0})
+def recherche_article(id_article, stop_multi):
     try:
+        print('lancer recherche %s %d' % (id_article, stop_multi))
         ar = newminisab.article.get(newminisab.article.id == id_article)
-        ar.lancer_recherche()
+        ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=[x[0] for x in newminisab.categorie_sabnzbd])
+                               categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))])
     except newminisab.article.DoesNotExist:
         abort(404)
 

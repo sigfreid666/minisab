@@ -33,15 +33,15 @@ logger.addHandler(handlerstd)
 
 db = SqliteDatabase(dbfile)
 
-categorie_sabnzbd = [('*', []),
-                     ('livre', ['Ebook']),
-                     ('logiciel', ['Autres OS']),
-                     ('romance', []),
-                     ('anime', ['Anime HD']),
-                     ('musique', ['Mp3', 'Vidéo Zik', 'DVD Zik']),
-                     ('serietv', []),
-                     ('documentaire', ['Docs / Actu', 'Emissions']),
-                     ('film', ['Films HD'])]
+
+class categorie(Model):
+    nom = CharField(unique=True)
+    categorie_sabnzbd = CharField(default='*')
+    autolu = BooleanField(default=False)
+    preferee = IntegerField(default=0)
+
+    class Meta:
+        database = db
 
 
 class article(Model):
@@ -55,16 +55,10 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
-    categorie = CharField()
+    categorie = ForeignKeyField(categorie, related_name='articles')
     favorie = BooleanField(index=True, default=False)
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
-
-    def calculer_categorie_favoris(self):
-        self.categorie_sabnzbd = '*'
-        for x in categorie_sabnzbd:
-            if self.categorie in x[1]:
-                self.categorie_sabnzbd = x[0]
 
     def analyse_description(self):
         logger.debug('analyse_description : debut')
@@ -90,35 +84,48 @@ class article(Model):
                 elif decoup[0] == 'Taille':
                     self.taille = decoup[1]
                 elif decoup[0] == 'Catégorie':
-                    self.categorie = decoup[1]
+                    try:
+                        self.categorie = categorie.get(categorie.nom == decoup[1])
+                    except categorie.DoesNotExist:
+                        self.categorie = categorie(nom=self.categorie)
+                        self.categorie.save()
                 elif len(decoup) == 2:
                     meta[decoup[0]] = decoup[1]
         self.meta = str(meta)
         logger.debug('analyse_description : fin')
 
-    def lancer_recherche(self):
+    def lancer_recherche(self, start_multi=0, stop_multi=9):
         url_nzbindex = 'http://www.nzbindex.nl/search/?q={0}&max=100'
         url_binsearch = 'https://binsearch.info/?q={0}&max=100'
-        
-        self.calculer_categorie_favoris()
 
-        ret = recherche_indexeur(url_nzbindex, self.fichier, parseur=MyParserNzbIndex)
-        if len(ret) == 0:
-            ret = recherche_indexeur(url_binsearch, self.fichier)
-        if len(ret) > 0:
-            self.calculer_categorie_favoris()
-            for item in ret:
-                logger.info('item %s', str(item))
-                try:
-                    rec = recherche(id_check=item['id'],
-                                    url=item['url'],
-                                    taille=item['taille'] if 'taille' in item else 'Vide',
-                                    title=item['title'],
-                                    article=self,
-                                    categorie_sabnzbd = self.categorie_sabnzbd)
-                    rec.save()
-                except IntegrityError:
-                    logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
+        liste_fichier = self.fichier.split(' / ')
+        cpt_etoile = self.fichier.find('*')
+        if cpt_etoile != -1:
+            cpt_etoile_fin = self.fichier.find('*', cpt_etoile + 1)
+            if cpt_etoile_fin == -1:
+                cpt_etoile_fin = cpt_etoile
+            for x in range(start_multi, stop_multi + 1, 1):
+                liste_fichier.append(self.fichier[0:cpt_etoile] + 
+                                     (('%0' + str(cpt_etoile_fin - cpt_etoile + 1) + 'd') % x) + 
+                                     self.fichier[cpt_etoile_fin + 1:])
+        print(liste_fichier)
+        for fichier in liste_fichier:
+            ret = recherche_indexeur(url_nzbindex, fichier, parseur=MyParserNzbIndex)
+            if len(ret) == 0:
+                ret = recherche_indexeur(url_binsearch, fichier)
+            if len(ret) > 0:
+                for item in ret:
+                    logger.info('item %s', str(item))
+                    try:
+                        rec = recherche(id_check=item['id'],
+                                        url=item['url'],
+                                        taille=item['taille'] if 'taille' in item else 'Vide',
+                                        title=item['title'],
+                                        fichier=fichier,
+                                        article=self)
+                        rec.save()
+                    except IntegrityError:
+                        logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
 
     def analyse_annee(self):
         if self.annee != 0:
@@ -140,13 +147,6 @@ class article(Model):
                     .where(article.lu == False)
                     .group_by(article.categorie))
         return [(x.categorie, x.nb) for x in a]
-
-
-    def categorie_preferee(self):
-        return (not self.favorie) and (self.categorie in categorie_preferee)
-
-    def categorie_autre(self):
-        return (not self.favorie) and (self.categorie not in categorie_preferee)
 
     def __str__(self):
         return '<%s %s %s>' % (self.title, self.pubDate, self.favorie)
@@ -177,8 +177,8 @@ class recherche(Model):
     taille = CharField()
     title = CharField()
     id_sabnzbd = CharField(default='')
-    categorie_sabnzbd = CharField(default='')
-    article = ForeignKeyField(article, related_name='recherche_resultat')
+    fichier = CharField(default='')
+    article = ForeignKeyField(article, related_name='recherche')
 
     class Meta:
         database = db
@@ -269,17 +269,22 @@ def check_new_article():
 def recuperer_tous_articles():
     return [x for x in article.select()]
 
+@cli.command('test')
+def test():
+    recuperer_tous_articles_par_categorie()
+
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
     favoris = [x for x in article.select()
                                  .where((article.favorie == True) &
                                         (article.lu == False))]
-    a = [x for x in article.select().where((article.favorie == False) &
-                                           (article.lu == False))]
-    a.sort(key=lambda x: (x.categorie, 3000 - x.annee))
-    b = itertools.groupby(a, lambda x: x.categorie)
-    c = {x: [z for z in y] for x, y in b}
+    c = {x: x.articles for x in categorie.select(categorie, article)
+                                         .join(article)
+                                         .where((article.favorie == False) & (article.lu == False))
+                                         # .group_by(categorie.nom)
+                                         .order_by(categorie.preferee.desc(), categorie.nom).aggregate_rows() }
+    print([(x.nom, len(c[x])) for x in c])
     return (c, favoris)
 
 
