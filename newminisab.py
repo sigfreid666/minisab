@@ -94,11 +94,21 @@ class article(Model):
         self.meta = str(meta)
         logger.debug('analyse_description : fin')
 
-    def lancer_recherche(self):
+    def lancer_recherche(self, start_multi=0, stop_multi=9):
         url_nzbindex = 'http://www.nzbindex.nl/search/?q={0}&max=100'
         url_binsearch = 'https://binsearch.info/?q={0}&max=100'
 
         liste_fichier = self.fichier.split(' / ')
+        cpt_etoile = self.fichier.find('*')
+        if cpt_etoile != -1:
+            cpt_etoile_fin = self.fichier.find('*', cpt_etoile + 1)
+            if cpt_etoile_fin == -1:
+                cpt_etoile_fin = cpt_etoile
+            for x in range(start_multi, stop_multi + 1, 1):
+                liste_fichier.append(self.fichier[0:cpt_etoile] + 
+                                     (('%0' + str(cpt_etoile_fin - cpt_etoile + 1) + 'd') % x) + 
+                                     self.fichier[cpt_etoile_fin + 1:])
+        print(liste_fichier)
         for fichier in liste_fichier:
             ret = recherche_indexeur(url_nzbindex, fichier, parseur=MyParserNzbIndex)
             if len(ret) == 0:
