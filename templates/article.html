@@ -1,5 +1,5 @@
 <div class="col-md-4" id="art_{{ item.id }}">
-{% if item.recherche_resultat|length > 0 %}
+{% if item.recherche|length > 0 %}
     {% if item.status_sabnzbd == 'Completed' %}
         <div class="panel panel-success article article_recherche telechargement_reussi">
     {% elif item.status_sabnzbd == 'Failed' %}
@@ -24,12 +24,12 @@
         <button class="btn btn-default" onclick="lancer_recherche({{ item.id }})">
             <span class="glyphicon glyphicon-search" aria-hidden="true"/>               
         </button>
-        <button class="btn btn-default {{ 'disabled' if item.recherche_resultat|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
+        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
             <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"/>               
         </button>
         </h4>
     </div>
-    {% if item.recherche_resultat|length > 0 %}
+    {% if item.recherche|length > 0 %}
     <div class="btn-group recherche" role="group" aria-label="...">
         {% for item_categorie in categorie_sabnzbd %}
             {% if item_categorie == item.categorie.categorie_sabnzbd %}
@@ -49,9 +49,9 @@
         <a href="{{ item.nfo }}">Nfo</a>
     </p>
 </div>   
-    {% if item.recherche_resultat|length > 0 %}
+    {% if item.recherche|length > 0 %}
     <div class="list-group collapse" id="recresult_{{ item.id }}">
-        {% for item_recherche in item.recherche_resultat %}
+        {% for item_recherche in item.recherche %}
           <button type="button" class="list-group-item resultat_recherche" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
         {% endfor %}
     </div>
