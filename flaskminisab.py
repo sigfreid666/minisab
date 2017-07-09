@@ -6,10 +6,9 @@ import logging
 import itertools
 from peewee import fn
 
-categorie_preferee = ['Films HD']
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
-version = '2.1'
+version = '2.2'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
 
@@ -98,10 +97,12 @@ def categorie_lu(str_categorie=None):
         print(x.title)
     return 'OK'
 
+
 @bp.route('/categorie/liste')
 def categorie_liste():
     listecategorie = newminisab.article.liste_categorie()
     return render_template('./barre_categorie.html', categorie=listecategorie)
+
 
 def telechargement_sabnzbd(title, url, categorie):
     param = {'apikey': sabnzbd_nc_cle_api,
@@ -112,13 +113,14 @@ def telechargement_sabnzbd(title, url, categorie):
              'cat': categorie}
     myurl = "http://{0}:{1}/sabnzbd/api".format(
             host_sabG,
-                9000)
+            9000)
     r = requests.get(myurl, params=param)
     resultat = r.json()
     if resultat['status']:
         return resultat['nzo_ids'][0]
     else:
         return ''
+
 
 def status_sabnzbd():
     param = {'apikey': sabnzbd_nc_cle_api,
