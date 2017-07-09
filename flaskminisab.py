@@ -8,7 +8,7 @@ from peewee import fn
 
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
-version = '2.2'
+version = '2.2a'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
 
@@ -16,14 +16,14 @@ bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_fo
 def index():
     articles, favoris = newminisab.recuperer_tous_articles_par_categorie()
     newminisab.logger.info('index, articles %d, favoris %d', len(articles), len(favoris))
-    # status_sab = status_sabnzbd()
-    # newminisab.logger.info('index, statut sab %s', str(status_sab))
-    # for x in favoris:
-    #     for y in x.recherche:
-    #         newminisab.logger.info('index, title %s, id sab %s', x.title, y.id_sabnzbd)
-    #         if y.id_sabnzbd in status_sab:
-    #             x.status_sabnzbd = status_sab[y.id_sabnzbd]
-    #             newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
+    status_sab = status_sabnzbd()
+    newminisab.logger.info('index, statut sab %s', str(status_sab))
+    for x in favoris:
+        for y in x.recherche:
+            newminisab.logger.info('index, title %s, id sab %s', x.title, y.id_sabnzbd)
+            if y.id_sabnzbd in status_sab:
+                x.status_sabnzbd = status_sab[y.id_sabnzbd]
+                newminisab.logger.info('index, trouve %s', x.status_sabnzbd)
     articles = ([(x[0].nom, len(x[1]), x[1], x[0].id)
                  for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
