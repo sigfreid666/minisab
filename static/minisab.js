@@ -35,7 +35,15 @@ function marquer_favoris(idarticle) {
 }
 
 function lancer_recherche(idarticle) {
-    $.get("article/" + idarticle + "/recherche",
+    var stop_multi = $("#rec_multiple_" + idarticle).val();
+    if (stop_multi != '') {
+        url = "article/" + idarticle + "/recherche/" + stop_multi;
+    }
+    else {
+        url = "article/" + idarticle + "/recherche";
+    }
+
+    $.get(url,  
         function(data, status) {
             if (status == "success") {
                 console.log("OK");

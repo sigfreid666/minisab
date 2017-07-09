@@ -1,5 +1,5 @@
 <div class="col-md-4" id="art_{{ item.id }}">
-{% if item.recherche_resultat|length > 0 %}
+{% if item.recherche|length > 0 %}
     {% if item.status_sabnzbd == 'Completed' %}
         <div class="panel panel-success article article_recherche telechargement_reussi">
     {% elif item.status_sabnzbd == 'Failed' %}
@@ -13,8 +13,11 @@
 <div class="panel panel-default article">
 {% endif %}
 <div class="panel-heading">
+    <div class="row">
+    <div class="col-md-12">
     <div class="btn-group" role="group" aria-label="...">
-        <h4><a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
+        <h4>
+        <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
         <button class="btn btn-default" onclick="marquer_lu([{{ item.id }}])">
             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
         </button>
@@ -24,22 +27,33 @@
         <button class="btn btn-default" onclick="lancer_recherche({{ item.id }})">
             <span class="glyphicon glyphicon-search" aria-hidden="true"/>               
         </button>
-        <button class="btn btn-default {{ 'disabled' if item.recherche_resultat|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
+        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
             <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"/>               
         </button>
         </h4>
     </div>
-    {% if item.recherche_resultat|length > 0 %}
+    </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            <div class="input-group">
+              <input type="text" class="form-control" aria-label="..." id="rec_multiple_{{ item.id }}">
+            </div>
+        </div>
+    {% if item.recherche|length > 0 %}
+    <div class="col-md-11">
     <div class="btn-group recherche" role="group" aria-label="...">
         {% for item_categorie in categorie_sabnzbd %}
-            {% if item_categorie == item.recherche_resultat[0].categorie_sabnzbd %}
+            {% if item_categorie == item.categorie.categorie_sabnzbd %}
             <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
             {% else %}
             <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
             {% endif %}
         {% endfor %}
     </div>
+    </div>
     {% endif %}
+    </div>
 </div>
 <div class="panel-body">
     <p>
@@ -49,9 +63,9 @@
         <a href="{{ item.nfo }}">Nfo</a>
     </p>
 </div>   
-    {% if item.recherche_resultat|length > 0 %}
+    {% if item.recherche|length > 0 %}
     <div class="list-group collapse" id="recresult_{{ item.id }}">
-        {% for item_recherche in item.recherche_resultat %}
+        {% for item_recherche in item.recherche %}
           <button type="button" class="list-group-item resultat_recherche" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
         {% endfor %}
     </div>
