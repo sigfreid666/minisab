@@ -13,8 +13,11 @@
 <div class="panel panel-default article">
 {% endif %}
 <div class="panel-heading">
+    <div class="row">
+    <div class="col-md-12">
     <div class="btn-group" role="group" aria-label="...">
-        <h4><a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
+        <h4>
+        <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
         <button class="btn btn-default" onclick="marquer_lu([{{ item.id }}])">
             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
         </button>
@@ -29,7 +32,16 @@
         </button>
         </h4>
     </div>
+    </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            <div class="input-group">
+              <input type="text" class="form-control" aria-label="..." id="rec_multiple_{{ item.id }}">
+            </div>
+        </div>
     {% if item.recherche|length > 0 %}
+    <div class="col-md-11">
     <div class="btn-group recherche" role="group" aria-label="...">
         {% for item_categorie in categorie_sabnzbd %}
             {% if item_categorie == item.categorie.categorie_sabnzbd %}
@@ -39,7 +51,9 @@
             {% endif %}
         {% endfor %}
     </div>
+    </div>
     {% endif %}
+    </div>
 </div>
 <div class="panel-body">
     <p>

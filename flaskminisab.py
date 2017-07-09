@@ -57,7 +57,7 @@ def marquer_article_lu():
                 ar.lu = True
                 for y in ar.recherche:
                     newminisab.logger.info('article_lu, title %s, id sab %s', ar.title, y.id_sabnzbd)
-                    if y.id_sabnzbd != '': 
+                    if y.id_sabnzbd != '':
                         delete_history_sab(y.id_sabnzbd)
                 ar.save()
         return "OK"
@@ -65,11 +65,14 @@ def marquer_article_lu():
         abort(404)
 
 
-@bp.route('/article/<id_article>/recherche')
-def recherche_article(id_article=None):
+@bp.route('/article/<id_article>/recherche/<int:stop_multi>')
+@bp.route('/article/<id_article>/recherche',
+          defaults={'stop_multi': 0})
+def recherche_article(id_article, stop_multi):
     try:
+        print('lancer recherche %s %d' % (id_article, stop_multi))
         ar = newminisab.article.get(newminisab.article.id == id_article)
-        ar.lancer_recherche()
+        ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         return render_template('./article.html', item=ar,
                                categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))])
     except newminisab.article.DoesNotExist:
