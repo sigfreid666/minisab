@@ -8,7 +8,7 @@ from peewee import fn
 
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
-version = '2.2a'
+version = '2.3'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
 
