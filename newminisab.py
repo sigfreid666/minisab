@@ -87,8 +87,9 @@ class article(Model):
                     try:
                         self.categorie = categorie.get(categorie.nom == decoup[1])
                     except categorie.DoesNotExist:
-                        self.categorie = categorie(nom=self.categorie)
+                        self.categorie = categorie(nom=decoup[1])
                         self.categorie.save()
+                        logger.info('Creation nouvelle categorie : %s' % self.categorie.nom)
                 elif len(decoup) == 2:
                     meta[decoup[0]] = decoup[1]
         self.meta = str(meta)
@@ -219,7 +220,9 @@ def base_de_donnee(wrap):
         global db
         try:
             db.connect()
-            db.create_tables([article, recherche], safe=True)
+            db.create_tables([article, recherche, categorie], safe=True)
+            #cat = categorie(nom="Vide")
+            #cat.save()
         except OperationalError:
             pass
         ret = wrap()
@@ -249,7 +252,7 @@ def check_new_article():
                 r.status_code, r.headers['content-type'])
     resultat = r.text
     logger.debug('check_new_article: taille reponse <%d>', len(resultat))
-    parse = ParserArticle()
+    parse = ParserArticle(convert_charrefs=True)
     parse.resetin()
     parse.feed(resultat)
     logger.info('check_new_article: article detecte <%d>', len(parse.data))
@@ -259,9 +262,12 @@ def check_new_article():
             ar = article.get(article.guid == x.guid)
             logger.debug('check_new_article: article existant <%s>', ar.guid)
         except article.DoesNotExist:
-            x.save()
-            logger.debug('check_new_article: nouvel article <%s>', x.title)
-            nb_nouveau_article = nb_nouveau_article + 1
+            try:
+                x.save()
+                logger.debug('check_new_article: nouvel article <%s>', x.title)
+                nb_nouveau_article = nb_nouveau_article + 1
+            except IntegrityError as e:
+                logger.error('Impossible de sauver l''article : %s %s (%s)' % (x.title, x.guid, str(e)))
     logger.info('check_new_article: %d nouveau(x) article(s)', nb_nouveau_article)
 
 
