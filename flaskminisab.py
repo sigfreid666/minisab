@@ -1,15 +1,16 @@
-from flask import Flask, render_template, abort, redirect, url_for, Blueprint, request
+from flask import Flask, render_template, abort, redirect, Blueprint, request
 import newminisab
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
 import itertools
-from peewee import fn
 
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
 version = '2.3'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
+
+categorie_sabnzbd = []
 
 
 @bp.route("/")
@@ -28,7 +29,7 @@ def index():
                  for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles, favoris=favoris,
-                           categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))],
+                           categorie_sabnzbd=get_categorie_sabnzbd(),
                            version=version)
 
 
@@ -41,7 +42,7 @@ def marquer_article_favoris(id_article=None):
         newminisab.logger.info('marquer favoris %d nb recherche %d', id_article, len(ar.recherche))
         ar.save()
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))])
+                               categorie_sabnzbd=get_categorie_sabnzbd())
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -73,7 +74,7 @@ def recherche_article(id_article, stop_multi):
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=[x.categorie_sabnzbd for x in newminisab.categorie.select(fn.Distinct(newminisab.categorie.categorie_sabnzbd))])
+                               categorie_sabnzbd=get_categorie_sabnzbd())
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -102,6 +103,21 @@ def categorie_lu(str_categorie=None):
 def categorie_liste():
     listecategorie = newminisab.article.liste_categorie()
     return render_template('./barre_categorie.html', categorie=listecategorie)
+
+
+def get_categorie_sabnzbd():
+    param = {'apikey': sabnzbd_nc_cle_api,
+             'output': 'json',
+             'mode': 'get_cats'}
+    myurl = "http://{0}:{1}/sabnzbd/api".format(
+            host_sabG,
+            9000)
+    r = requests.get(myurl, params=param)
+    resultat = r.json()
+    if 'categories' in resultat:
+        return resultat['categories']
+    else:
+        return ''
 
 
 def telechargement_sabnzbd(title, url, categorie):
