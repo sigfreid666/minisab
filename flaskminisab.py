@@ -4,6 +4,7 @@ import newminisab
 import requests
 import logging
 import itertools
+import redis
 
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
@@ -11,7 +12,6 @@ version = '2.3'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
 categorie_sabnzbd = []
-
 
 @bp.route("/")
 def index():
@@ -106,18 +106,27 @@ def categorie_liste():
 
 
 def get_categorie_sabnzbd():
-    param = {'apikey': sabnzbd_nc_cle_api,
-             'output': 'json',
-             'mode': 'get_cats'}
-    myurl = "http://{0}:{1}/sabnzbd/api".format(
-            host_sabG,
-            9000)
-    r = requests.get(myurl, params=param)
-    resultat = r.json()
-    if 'categories' in resultat:
-        return resultat['categories']
+    r = redis.StrictRedis()
+    categorie_sabnzbd = [x.decode('utf-8') for x in r.lrange('minisab_categorie_sabnzbd', 0, -1)]
+    print(categorie_sabnzbd)
+    print('get')
+    if len(categorie_sabnzbd) == 0:
+        print('push')
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'mode': 'get_cats'}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        r = requests.get(myurl, params=param)
+        resultat = r.json()
+        if 'categories' in resultat:
+            r.lpush('minisab_categorie_sabnzbd', *[x.encode('ascii') for x in categorie_sabnzbd])
+            return resultat['categories']
+        else:
+            return ''
     else:
-        return ''
+        return categorie_sabnzbd
 
 
 def telechargement_sabnzbd(title, url, categorie):
