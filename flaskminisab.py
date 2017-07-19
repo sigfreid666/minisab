@@ -70,7 +70,7 @@ def marquer_article_lu():
           defaults={'stop_multi': 0})
 def recherche_article(id_article, stop_multi):
     try:
-        print('lancer recherche %s %d' % (id_article, stop_multi))
+        # print('lancer recherche %s %d' % (id_article, stop_multi))
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         return render_template('./article.html', item=ar,

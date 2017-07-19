@@ -109,7 +109,7 @@ class article(Model):
                 liste_fichier.append(self.fichier[0:cpt_etoile] + 
                                      (('%0' + str(cpt_etoile_fin - cpt_etoile + 1) + 'd') % x) + 
                                      self.fichier[cpt_etoile_fin + 1:])
-        print(liste_fichier)
+        # print(liste_fichier)
         for fichier in liste_fichier:
             ret = recherche_indexeur(url_nzbindex, fichier, parseur=MyParserNzbIndex)
             if len(ret) == 0:
@@ -290,7 +290,7 @@ def recuperer_tous_articles_par_categorie():
                                          .where((article.favorie == False) & (article.lu == False))
                                          # .group_by(categorie.nom)
                                          .order_by(categorie.preferee.desc(), categorie.nom).aggregate_rows() }
-    print([(x.nom, len(c[x])) for x in c])
+    # print([(x.nom, len(c[x])) for x in c])
     return (c, favoris)
 
 
