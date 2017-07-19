@@ -3,7 +3,6 @@ from peewee import *
 import html.parser
 import re
 import logging
-import itertools
 from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
 from settings import dbfile, logfile
@@ -27,7 +26,7 @@ handler.setFormatter(formatter)
 # add the handlers to the logger
 logger.addHandler(handler)
 logger.addHandler(handlerstd)
-#logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', 
+# logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', 
 #                    filename='/var/services/homes/admin/minisab/minisab.log', 
 #                    level=logger.info)
 
@@ -106,10 +105,10 @@ class article(Model):
             if cpt_etoile_fin == -1:
                 cpt_etoile_fin = cpt_etoile
             for x in range(start_multi, stop_multi + 1, 1):
-                liste_fichier.append(self.fichier[0:cpt_etoile] + 
-                                     (('%0' + str(cpt_etoile_fin - cpt_etoile + 1) + 'd') % x) + 
+                liste_fichier.append(self.fichier[0:cpt_etoile] +
+                                     (('%0' + str(cpt_etoile_fin - cpt_etoile + 1) + 'd') % x) +
                                      self.fichier[cpt_etoile_fin + 1:])
-        print(liste_fichier)
+        # print(liste_fichier)
         for fichier in liste_fichier:
             ret = recherche_indexeur(url_nzbindex, fichier, parseur=MyParserNzbIndex)
             if len(ret) == 0:
@@ -221,8 +220,8 @@ def base_de_donnee(wrap):
         try:
             db.connect()
             db.create_tables([article, recherche, categorie], safe=True)
-            #cat = categorie(nom="Vide")
-            #cat.save()
+            # cat = categorie(nom="Vide")
+            # cat.save()
         except OperationalError:
             pass
         ret = wrap()
@@ -241,6 +240,7 @@ def cli():
 def test():
     a = article.select(article.categorie, fn.Count(article.categorie).alias('nb')).where(article.lu == False).group_by(article.categorie)
     print([(x.categorie, x.nb) for x in a])
+
 
 @cli.command('check')
 @base_de_donnee
@@ -290,7 +290,7 @@ def recuperer_tous_articles_par_categorie():
                                          .where((article.favorie == False) & (article.lu == False))
                                          # .group_by(categorie.nom)
                                          .order_by(categorie.preferee.desc(), categorie.nom).aggregate_rows() }
-    print([(x.nom, len(c[x])) for x in c])
+    # print([(x.nom, len(c[x])) for x in c])
     return (c, favoris)
 
 
