@@ -106,12 +106,13 @@ def categorie_liste():
 
 
 def get_categorie_sabnzbd():
-    r = redis.StrictRedis()
-    categorie_sabnzbd = [x.decode('utf-8') for x in r.lrange('minisab_categorie_sabnzbd', 0, -1)]
-    print(categorie_sabnzbd)
-    print('get')
+    categorie_sabnzbd = []
+    try:
+        r = redis.StrictRedis()
+        categorie_sabnzbd = [x.decode('utf-8') for x in r.lrange('minisab_categorie_sabnzbd', 0, -1)]
+    except redis.exceptions.ConnectionError as e:
+        logging.error('Impossible de se connecter à Redis : %s', str(e))
     if len(categorie_sabnzbd) == 0:
-        print('push')
         param = {'apikey': sabnzbd_nc_cle_api,
                  'output': 'json',
                  'mode': 'get_cats'}
