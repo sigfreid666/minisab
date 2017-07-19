@@ -8,8 +8,10 @@ import redis
 
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
-version = '2.4'
+version = '2.4a'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
+host_redis='localhost'
+port_redis=9020
 
 categorie_sabnzbd = []
 
@@ -109,7 +111,7 @@ def categorie_liste():
 def get_categorie_sabnzbd():
     categorie_sabnzbd = []
     try:
-        red = redis.StrictRedis()
+        red = redis.StrictRedis(host=host_redis, port=port_redis)
         categorie_sabnzbd = [x.decode('utf-8') for x in red.lrange('minisab_categorie_sabnzbd', 0, -1)]
     except redis.exceptions.ConnectionError as e:
         logging.error('Impossible de se connecter à Redis : %s', str(e))
