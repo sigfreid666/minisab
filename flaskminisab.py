@@ -5,13 +5,13 @@ import requests
 import logging
 import itertools
 import redis
+from settings import host_redis, port_redis
+
 
 host_sabG = '192.168.0.8'
 sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
 version = '2.4a'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
-host_redis='localhost'
-port_redis=9020
 
 categorie_sabnzbd = []
 
