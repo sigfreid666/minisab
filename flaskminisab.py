@@ -5,11 +5,9 @@ import requests
 import logging
 import itertools
 import redis
-from settings import host_redis, port_redis
+from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 
 
-host_sabG = '192.168.0.8'
-sabnzbd_nc_cle_api = '6f8af3c4c4487edf93d96979ed7d2321'
 version = '2.4a'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static', static_folder='static')
 
@@ -110,12 +108,14 @@ def categorie_liste():
 
 def get_categorie_sabnzbd():
     categorie_sabnzbd = []
-    try:
-        red = redis.StrictRedis(host=host_redis, port=port_redis)
-        categorie_sabnzbd = [x.decode('utf-8') for x in red.lrange('minisab_categorie_sabnzbd', 0, -1)]
-    except redis.exceptions.ConnectionError as e:
-        logging.error('Impossible de se connecter à Redis : %s', str(e))
-    if len(categorie_sabnzbd) == 0:
+    if host_redis is not None:
+        red = None
+        try:
+            red = redis.StrictRedis(host=host_redis, port=port_redis)
+            categorie_sabnzbd = [x.decode('utf-8') for x in red.lrange('minisab_categorie_sabnzbd', 0, -1)]
+        except redis.exceptions.ConnectionError as e:
+            logging.error('Impossible de se connecter à Redis : %s', str(e))
+    if (len(categorie_sabnzbd) == 0) and (host_sabG is not None):
         param = {'apikey': sabnzbd_nc_cle_api,
                  'output': 'json',
                  'mode': 'get_cats'}
@@ -125,9 +125,10 @@ def get_categorie_sabnzbd():
         r = requests.get(myurl, params=param)
         resultat = r.json()
         if 'categories' in resultat:
-            # red = redis.StrictRedis()
-            red.lpush('minisab_categorie_sabnzbd', *[x.encode('ascii') for x in resultat['categories']])
-            red.expire('minisab_categorie_sabnzbd', 600)
+            if (host_redis is not None) and\
+               (red is not None):
+                red.lpush('minisab_categorie_sabnzbd', *[x.encode('ascii') for x in resultat['categories']])
+                red.expire('minisab_categorie_sabnzbd', 600)
             return resultat['categories']
         else:
             return ''
@@ -136,58 +137,67 @@ def get_categorie_sabnzbd():
 
 
 def telechargement_sabnzbd(title, url, categorie):
-    param = {'apikey': sabnzbd_nc_cle_api,
-             'output': 'json',
-             'mode': 'addurl',
-             'name': url,
-             'nzbname': title,
-             'cat': categorie}
-    myurl = "http://{0}:{1}/sabnzbd/api".format(
-            host_sabG,
-            9000)
-    r = requests.get(myurl, params=param)
-    resultat = r.json()
-    if resultat['status']:
-        return resultat['nzo_ids'][0]
+    if host_sabG is not None:
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'mode': 'addurl',
+                 'name': url,
+                 'nzbname': title,
+                 'cat': categorie}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        r = requests.get(myurl, params=param)
+        resultat = r.json()
+        if resultat['status']:
+            return resultat['nzo_ids'][0]
+        else:
+            return ''
     else:
         return ''
 
 
 def status_sabnzbd():
-    param = {'apikey': sabnzbd_nc_cle_api,
-             'output': 'json',
-             'limit': '100',
-             'mode': 'history'}
-    myurl = "http://{0}:{1}/sabnzbd/api".format(
-            host_sabG,
-            9000)
-    try:
-        r = requests.get(myurl, params=param)
-        resultat = r.json()
+    if host_sabG is not None:
         param = {'apikey': sabnzbd_nc_cle_api,
                  'output': 'json',
-                 'mode': 'queue'}
+                 'limit': '100',
+                 'mode': 'history'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
                 9000)
-        r = requests.get(myurl, params=param)
-        resultat2 = r.json()
-        return {x['nzo_id']: x['status'] for x in itertools.chain(resultat['history']['slots'], resultat2['queue']['slots'])}
-    except requests.exceptions.ConnectionError:
+        try:
+            r = requests.get(myurl, params=param)
+            resultat = r.json()
+            param = {'apikey': sabnzbd_nc_cle_api,
+                     'output': 'json',
+                     'mode': 'queue'}
+            myurl = "http://{0}:{1}/sabnzbd/api".format(
+                    host_sabG,
+                    9000)
+            r = requests.get(myurl, params=param)
+            resultat2 = r.json()
+            return {x['nzo_id']: x['status'] for x in itertools.chain(resultat['history']['slots'], resultat2['queue']['slots'])}
+        except requests.exceptions.ConnectionError:
+            return {}
+    else:
         return {}
 
 
 def delete_history_sab(id_sab):
-    param = {'apikey': sabnzbd_nc_cle_api,
-             'output': 'json',
-             'name': 'delete',
-             'value': id_sab,
-             'mode': 'history'}
-    myurl = "http://{0}:{1}/sabnzbd/api".format(
-            host_sabG,
-            9000)
-    r = requests.get(myurl, params=param)
-    return r.status_code
+    if host_sabG is not None:
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'name': 'delete',
+                 'value': id_sab,
+                 'mode': 'history'}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        r = requests.get(myurl, params=param)
+        return r.status_code
+    else:
+        return 0
 
 
 app = Flask(__name__)
