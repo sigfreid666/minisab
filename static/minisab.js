@@ -24,13 +24,25 @@ function marquer_lu_categorie(strcategorie) {
 }
 
 
-function marquer_favoris(idarticle) {
+function marquer_favoris(idarticle, idcatdepart, idcatarrivee) {
     $.get("article/" + idarticle + "/favoris",
         function(data, status) {
             if (status == "success") {
-                $("#cat_favoris").append(data)
+                $("#items_" + idcatarrivee).append(data)
+                $.get("categorie/" + idcatdepart,
+                    function(data, status) {
+                        if (status == "success") {
+                            $("#cat_" + idcatdepart).replaceWith(data);
+                            $.get("categorie/" + idcatarrivee,
+                                function(data, status) {
+                                    if (status == "success") {
+                                        $("#cat_" + idcatarrivee).replaceWith(data);
+                                    }
+                                });
+                        }
+                    });
             }
-        })
+        });
     $("#art_"+idarticle).remove();
 }
 
