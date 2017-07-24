@@ -8,7 +8,7 @@ import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 
 
-version = '2.4a'
+version = '2.5'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
                static_folder='static')
 
