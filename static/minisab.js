@@ -13,16 +13,6 @@ function marquer_lu(tabarticle) {
     });
 }
 
-function marquer_lu_categorie(strcategorie) {
-    $.get("categorie/" + strcategorie + "/lu",
-        function(data, status) {
-            if (status == "success") {
-                console.log("OK");
-                $("div.categorie > table").remove();
-            }
-        })
-}
-
 
 function marquer_favoris(idarticle, idcatdepart, idcatarrivee) {
     $.get("article/" + idarticle + "/favoris",
@@ -66,7 +56,6 @@ function lancer_recherche(idarticle) {
             }
 
         })
-    $("#art_"+idarticle+" > span.recherche").text("Recherche...");
 }
 
 function envoyer_sab(idrecherche, idarticle) {
