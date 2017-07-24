@@ -14,6 +14,24 @@ ct_categorie_sabnzbd = [('*', []),
                         ('film', ['Films HD'])]
 
 
+class categorie(Model):
+    nom = CharField(unique=True)
+    categorie_sabnzbd = CharField(default='*')
+    autolu = BooleanField(default=False)
+    preferee = IntegerField(default=0)
+
+    class Meta:
+        database = olddb
+
+    def convertold(self):
+        ar = newminisab.categorie()
+        ar.nom = self.nom
+        ar.categorie_sabnzbd = self.categorie_sabnzbd
+        ar.autolu = self.autolu
+        ar.preferee = self.preferee
+        return ar
+
+
 class article(Model):
     title = CharField()
     link = CharField()
@@ -25,7 +43,7 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
-    categorie = CharField()
+    categorie = ForeignKeyField(categorie, related_name='articles')
     favorie = BooleanField(index=True, default=False)
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
@@ -49,16 +67,13 @@ class article(Model):
         ar.nfo = self.nfo
         ar.fichier = self.fichier
         ar.taille = self.taille
-        ar.categorie = self.categorie
-        ar.favorie = self.favorie
         ar.lu = self.lu
         ar.annee = self.annee
-        try:
-            ar.categorie = newminisab.categorie.get(newminisab.categorie.nom == self.categorie)
-        except newminisab.categorie.DoesNotExist:
-            ar.categorie = newminisab.categorie(nom=self.categorie)
-            ar.categorie.categorie_sabnzbd = self.calculer_categorie_favoris(ar.categorie.nom)
-            ar.categorie.save()
+        ar.categorie_str = self.categorie.nom
+        if self.favorie:
+            ar.categorie = newminisab.categorie.get(newminisab.categorie.nom == 'Favoris')
+        else:
+            ar.categorie = self.categorie
         return ar
 
     class Meta:
@@ -71,8 +86,8 @@ class recherche(Model):
     taille = CharField()
     title = CharField()
     id_sabnzbd = CharField(default='')
-    categorie_sabnzbd = CharField(default='')
-    article = ForeignKeyField(article, related_name='recherche_resultat')
+    fichier = CharField(default='')
+    article = ForeignKeyField(article, related_name='recherche')
 
     def convertold(self):
         ar = newminisab.recherche()
@@ -95,10 +110,15 @@ def convert():
     newminisab.db.create_tables([newminisab.article,
                                  newminisab.recherche,
                                  newminisab.categorie], safe=True)
-    for y in [ article, recherche ]:
+    cat = newminisab.categorie(nom="Favoris", preferee=99)
+    cat.save()
+    for y in [categorie, article, recherche]:
         for x in y.select():
-            y = x.convertold()
-            y.save()
+            try:
+                y = x.convertold()
+                y.save()
+            except IntegrityError as e:
+                print('erreur sur %s (%s)' % (str(y), str(x), str(e)))
     newminisab.db.close()
     olddb.close()
 

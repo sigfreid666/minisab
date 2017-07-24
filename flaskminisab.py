@@ -17,37 +17,40 @@ nom_cat_sab = 'minisab_categorie_sabnzbd'
 
 @bp.route("/")
 def index():
-    articles, favoris = newminisab.recuperer_tous_articles_par_categorie()
-    newminisab.logger.debug('index, articles %d, favoris %d',
-                            len(articles), len(favoris))
+    articles = newminisab.recuperer_tous_articles_par_categorie()
+    newminisab.logger.debug('index, articles %d',
+                            len(articles))
     status_sab = status_sabnzbd()
     newminisab.logger.debug('index, statut sab %s', str(status_sab))
-    for x in favoris:
-        for y in x.recherche:
-            newminisab.logger.debug('index, title %s, id sab %s',
-                                    x.title, y.id_sabnzbd)
-            if y.id_sabnzbd in status_sab:
-                x.status_sabnzbd = status_sab[y.id_sabnzbd]
-                newminisab.logger.debug('index, trouve %s', x.status_sabnzbd)
-    articles = ([(x[0].nom, len(x[1]), x[1], x[0].id)
-                 for x in articles.items()])
+    for z in articles:
+        for x in z.articles:
+            for y in x.recherche:
+                newminisab.logger.debug('index, title %s, id sab %s',
+                                        x.title, y.id_sabnzbd)
+                if y.id_sabnzbd in status_sab:
+                    x.status_sabnzbd = status_sab[y.id_sabnzbd]
+                    newminisab.logger.debug('index, trouve %s', x.status_sabnzbd)
+    articles = ([(x[0], x[1]) for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
-                           articles=articles, favoris=favoris,
+                           articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
-                           version=version)
+                           version=version,
+                           categorie_favoris_id=newminisab.categorie.get_favoris().id)
 
 
-@bp.route('/article/<id_article>/favoris')
+@bp.route('/article/<int:id_article>/favoris')
 def marquer_article_favoris(id_article=None):
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
-        ar.favorie = True
-        ar.lancer_recherche()
+        ar.marquer_favoris()
+        # ar.lancer_recherche()
         newminisab.logger.info('marquer favoris %d nb recherche %d',
                                id_article, len(ar.recherche))
         ar.save()
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=get_categorie_sabnzbd())
+                               categorie=ar.categorie,
+                               categorie_sabnzbd=get_categorie_sabnzbd(),
+                               categorie_favoris_id=newminisab.categorie.get_favoris().id)
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -80,7 +83,8 @@ def recherche_article(id_article, stop_multi):
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=get_categorie_sabnzbd())
+                               categorie_sabnzbd=get_categorie_sabnzbd(),
+                               categorie_favoris_id=newminisab.categorie.get_favoris().id)
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -99,14 +103,17 @@ def lancer_telecharger(id_recherche, categorie):
         abort(404)
 
 
-@bp.route('/categorie/<str_categorie>/lu')
-def categorie_lu(str_categorie=None):
-    cat = (newminisab.article
-           .select()
-           .where(newminisab.article.categorie == str_categorie))
-    for x in cat:
-        print(x.title)
-    return 'OK'
+@bp.route('/categorie/<int:id_categorie>')
+def get_categorie(id_categorie=None):
+    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
+    if cat is not None:
+        items = (newminisab.recuperer_tous_articles_pour_une_categorie(
+                 cat.nom))
+        return render_template('./categorie.html',
+                               categorie=cat,
+                               items=items)
+    else:
+        abort(404)
 
 
 @bp.route('/categorie/liste')
