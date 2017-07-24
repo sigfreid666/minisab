@@ -224,7 +224,7 @@ class ParserArticle(html.parser.HTMLParser):
 
 def base_de_donnee(wrap):
     @wraps(wrap)
-    def wrapper():
+    def wrapper(*args):
         global db
         try:
             db.connect()
@@ -236,7 +236,7 @@ def base_de_donnee(wrap):
                 cat.save()
         except OperationalError:
             pass
-        ret = wrap()
+        ret = wrap(*args)
         db.close()
         return ret
     return wrapper
@@ -306,6 +306,19 @@ def recuperer_tous_articles_par_categorie():
     # print([(x.nom, len(c[x])) for x in c])
     return c
 
+
+@base_de_donnee
+def recuperer_tous_articles_pour_une_categorie(nom_categorie):
+    c = []
+    try:
+        cat = categorie.get(categorie.nom == nom_categorie)
+        c = [x for x in article.select()
+                               .where((article.lu == False) &
+                                      (article.categorie == cat))]
+    except DoesNotExist as e:
+        logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
+
+    return c
 
 @cli.command()
 @base_de_donnee

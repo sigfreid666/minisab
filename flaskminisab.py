@@ -30,8 +30,7 @@ def index():
                 if y.id_sabnzbd in status_sab:
                     x.status_sabnzbd = status_sab[y.id_sabnzbd]
                     newminisab.logger.debug('index, trouve %s', x.status_sabnzbd)
-    articles = ([(x[0].nom, x[1], x[0].id)
-                 for x in articles.items()])
+    articles = ([(x[0], x[1]) for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
@@ -39,7 +38,7 @@ def index():
                            categorie_favoris_id=newminisab.categorie.get_favoris().id)
 
 
-@bp.route('/article/<id_article>/favoris')
+@bp.route('/article/<int:id_article>/favoris')
 def marquer_article_favoris(id_article=None):
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
@@ -49,6 +48,7 @@ def marquer_article_favoris(id_article=None):
                                id_article, len(ar.recherche))
         ar.save()
         return render_template('./article.html', item=ar,
+                               categorie=ar.categorie,
                                categorie_sabnzbd=get_categorie_sabnzbd(),
                                categorie_favoris_id=newminisab.categorie.get_favoris().id)
     except newminisab.article.DoesNotExist:
@@ -105,14 +105,13 @@ def lancer_telecharger(id_recherche, categorie):
 
 @bp.route('/categorie/<int:id_categorie>')
 def get_categorie(id_categorie=None):
-    cat = (newminisab.categorie
-           .select()
-           .where(newminisab.categorie.id == id_categorie))
-    if len(cat) == 1:
+    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
+    if cat is not None:
+        items = (newminisab.recuperer_tous_articles_pour_une_categorie(
+                 cat.nom))
         return render_template('./categorie.html',
-                               categorie=cat[0].nom,
-                               items=cat[0].articles,
-                               categorie_id=cat[0].id)
+                               categorie=cat,
+                               items=items)
     else:
         abort(404)
 

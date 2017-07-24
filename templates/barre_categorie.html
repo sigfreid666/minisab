@@ -1,5 +1,5 @@
-{% for categorie, items, categorie_id in articles %}
+{% for categorie, items in articles %}
 	<div class="col-md-2">
-		<a href="#cat_{{ categorie_id }}"><h4>{{ categorie }}  <span class="badge">{{ items|length }}</span></h4></a>
+		<a href="#cat_{{ categorie.id }}"><h4>{{ categorie.nom }}  <span class="badge">{{ items|length }}</span></h4></a>
 	</div>
 {% endfor %}
