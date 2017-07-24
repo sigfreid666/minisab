@@ -1,0 +1,15 @@
+<div class="row" id="cat_{{ categorie.id }}">
+    <div class="col-md-8">
+        <div class="panel panel-danger">
+            <div class="panel-heading">
+                <div class="btn-group" role="group" aria-label="...">
+                    <h1>{{ categorie.nom }} <span class="badge">{{ items|length }}</span>
+                        <button class="btn btn-danger" onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}])">
+                            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+                        </button>
+                    </h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

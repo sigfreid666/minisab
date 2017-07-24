@@ -39,6 +39,9 @@ class categorie(Model):
     autolu = BooleanField(default=False)
     preferee = IntegerField(default=0)
 
+    def get_favoris():
+        return categorie.get(categorie.nom == 'Favoris')
+
     class Meta:
         database = db
 
@@ -55,7 +58,7 @@ class article(Model):
     fichier = CharField()
     taille = CharField()
     categorie = ForeignKeyField(categorie, related_name='articles')
-    favorie = BooleanField(index=True, default=False)
+    categorie_str = CharField()
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
 
@@ -84,6 +87,7 @@ class article(Model):
                     self.taille = decoup[1]
                 elif decoup[0] == 'Catégorie':
                     try:
+                        self.categorie_str = decoup[1]
                         self.categorie = categorie.get(categorie.nom == decoup[1])
                     except categorie.DoesNotExist:
                         self.categorie = categorie(nom=decoup[1])
@@ -142,6 +146,11 @@ class article(Model):
             self.annee = int(reg.groups()[0])
         logger.debug('analyse_annee fin : %d', self.annee)
 
+    def marquer_favoris(self):
+        logger.debug('marquer_favorie')
+        self.categorie = categorie.get(categorie.nom == 'Favoris')
+        self.save()
+
     def liste_categorie():
         a = (article.select(article.categorie, fn.Count(article.categorie).alias('nb'))
                     .where(article.lu == False)
@@ -149,7 +158,7 @@ class article(Model):
         return [(x.categorie, x.nb) for x in a]
 
     def __str__(self):
-        return '<%s %s %s>' % (self.title, self.pubDate, self.favorie)
+        return '<%s %s %s>' % (self.title, self.pubDate, self.lu)
 
     def printall(self):
         return ('<' + '<' + str(self.title) + '>,\n' +
@@ -163,7 +172,7 @@ class article(Model):
                 '<' + str(self.fichier) + '>,\n' +
                 '<' + str(self.taille) + '>,\n' +
                 '<' + str(self.categorie) + '>,\n' +
-                '<' + str(self.favorie) + '>,\n' +
+                '<' + str(self.categorie_str) + '>,\n' +
                 '<' + str(self.lu) + '>' + '>,\n' +
                 '<' + (str(self.status_nzbd) if 'status_nzbd' in dir(self) else '') + '>')
 
@@ -215,16 +224,19 @@ class ParserArticle(html.parser.HTMLParser):
 
 def base_de_donnee(wrap):
     @wraps(wrap)
-    def wrapper():
+    def wrapper(*args):
         global db
         try:
             db.connect()
             db.create_tables([article, recherche, categorie], safe=True)
-            # cat = categorie(nom="Vide")
-            # cat.save()
+            try:
+                pass
+            except DoesNotExist:
+                cat = categorie(nom="Favoris")
+                cat.save()
         except OperationalError:
             pass
-        ret = wrap()
+        ret = wrap(*args)
         db.close()
         return ret
     return wrapper
@@ -282,17 +294,31 @@ def test():
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
-    favoris = [x for x in article.select()
-                                 .where((article.favorie == True) &
-                                        (article.lu == False))]
+    # favoris = [x for x in article.select()
+    #                              .where(article.lu == False)
+    #                              .join(categorie)
+    #                              .where(categorie.nom == 'Favoris')]
     c = {x: x.articles for x in categorie.select(categorie, article)
                                          .join(article)
-                                         .where((article.favorie == False) & (article.lu == False))
-                                         # .group_by(categorie.nom)
-                                         .order_by(categorie.preferee.desc(), categorie.nom).aggregate_rows() }
+                                         .where(article.lu == False)
+                                         .order_by(categorie.preferee.desc(), categorie.nom)
+                                         .aggregate_rows()}
     # print([(x.nom, len(c[x])) for x in c])
-    return (c, favoris)
+    return c
 
+
+@base_de_donnee
+def recuperer_tous_articles_pour_une_categorie(nom_categorie):
+    c = []
+    try:
+        cat = categorie.get(categorie.nom == nom_categorie)
+        c = [x for x in article.select()
+                               .where((article.lu == False) &
+                                      (article.categorie == cat))]
+    except DoesNotExist as e:
+        logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
+
+    return c
 
 @cli.command()
 @base_de_donnee

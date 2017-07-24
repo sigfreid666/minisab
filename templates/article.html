@@ -21,7 +21,7 @@
         <button class="btn btn-default" onclick="marquer_lu([{{ item.id }}])">
             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
         </button>
-        <button class="btn btn-default" onclick="marquer_favoris({{ item.id }})">
+        <button class="btn btn-default" onclick="marquer_favoris({{ item.id }}, {{categorie.id}}, {{ categorie_favoris_id }})">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"/>
         </button>
         <button class="btn btn-default" onclick="lancer_recherche({{ item.id }})">
