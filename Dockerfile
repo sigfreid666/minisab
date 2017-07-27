@@ -1,19 +1,19 @@
-FROM debian:stretch
+FROM python:3.5
+
+#RUN apt-get update \
+#    && apt-get install -y python3 python3-pip python3-requests
 
 RUN apt-get update \
-    && apt-get install -y python3 python3-pip python3-requests
+    && apt-get install -y cron sudo
 
 RUN pip3 install requests peewee flask gunicorn redis
 
 ENV DB_FILE="/data/minisab.db" LOG_FILE="/data/minisab.log" REDIS_IP="192.168.0.8" REDIS_PORT="9020" SAB_IP="192.168.0.8" SAB_CLE_API="6f8af3c4c4487edf93d96979ed7d2321"
 
-RUN addgroup minisab; \
-    adduser --no-create-home --ingroup minisab minisab
-
+RUN groupadd -r minisab && useradd --no-log-init -r -g minisab minisab
 RUN mkdir /app
 
 RUN mkdir /data
-
 
 WORKDIR /app
 
@@ -21,11 +21,8 @@ ADD src.tar .
 
 ADD start.sh /app
 
-RUN chown -R minisab:minisab /data;\
-    chown -R minisab:minisab /app;\
-    chmod 0755 /app/start.sh
 
-USER minisab:minisab
+# USER minisab:minisab
 
 RUN echo "dbfile = '${DB_FILE}'" > /app/settings_local.py; \
     echo "logfile = '${LOG_FILE}'" >> /app/settings_local.py; \
@@ -35,6 +32,10 @@ RUN echo "dbfile = '${DB_FILE}'" > /app/settings_local.py; \
     echo "sabnzbd_nc_cle_api = '${SAB_CLE_API}'" >> /app/settings_local.py
 
 #RUN export LC_ALL=C.UTF-8 && export LANG=C.UTF-8 && python3 ./newminisab.py check
+
+RUN chown -R minisab:minisab /data;\
+    chown -R minisab:minisab /app;\
+    chmod 0755 /app/start.sh
 
 VOLUME /data
 
