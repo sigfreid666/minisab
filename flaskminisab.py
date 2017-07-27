@@ -8,7 +8,7 @@ import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 
 
-version = '2.5'
+version = '2.5a'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
                static_folder='static')
 
@@ -23,14 +23,15 @@ def index():
     status_sab = status_sabnzbd()
     newminisab.logger.debug('index, statut sab %s', str(status_sab))
     for z in articles:
-        for x in z.articles:
-            for y in x.recherche:
-                newminisab.logger.debug('index, title %s, id sab %s',
-                                        x.title, y.id_sabnzbd)
-                if y.id_sabnzbd in status_sab:
-                    x.status_sabnzbd = status_sab[y.id_sabnzbd]
-                    newminisab.logger.debug('index, trouve %s', x.status_sabnzbd)
-    articles = ([(x[0], x[1]) for x in articles.items()])
+        if z[0].nom == 'Favoris':
+            for x in z[1]:
+                for y in x.recherche:
+                    newminisab.logger.debug('index, title %s, id sab %s',
+                                            x.title, y.id_sabnzbd)
+                    if y.id_sabnzbd in status_sab:
+                        x.status_sabnzbd = status_sab[y.id_sabnzbd]
+                        newminisab.logger.debug('index, trouve %s', x.status_sabnzbd)
+    # articles = ([(x[0], x[1]) for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
@@ -43,7 +44,7 @@ def marquer_article_favoris(id_article=None):
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.marquer_favoris()
-        # ar.lancer_recherche()
+        ar.lancer_recherche()
         newminisab.logger.info('marquer favoris %d nb recherche %d',
                                id_article, len(ar.recherche))
         ar.save()
