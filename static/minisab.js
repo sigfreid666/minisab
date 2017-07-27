@@ -1,5 +1,4 @@
-function marquer_lu(tabarticle) {
-    console.log(tabarticle);
+function marquer_lu(tabarticle, idcatdepart) {
     $.ajax({
         url: 'articles/lu',
         type: 'POST',
@@ -9,6 +8,13 @@ function marquer_lu(tabarticle) {
             for (i = 0; i < tabarticle.length; i++) {
                 $("#art_"+tabarticle[i]).remove();
             }
+            $.get("categorie/" + idcatdepart,
+                function(data, status) {
+                    if (status == "success") {
+                        $("#cat_" + idcatdepart).replaceWith(data);
+                    }
+                }
+            );
         }
     });
 }

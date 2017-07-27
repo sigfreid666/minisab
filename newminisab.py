@@ -230,9 +230,9 @@ def base_de_donnee(wrap):
             db.connect()
             db.create_tables([article, recherche, categorie], safe=True)
             try:
-                pass
+                cat = categorie.get(categorie.nom == 'Favoris')
             except DoesNotExist:
-                cat = categorie(nom="Favoris")
+                cat = categorie(nom="Favoris", preferee=99)
                 cat.save()
         except OperationalError:
             pass
@@ -298,11 +298,12 @@ def recuperer_tous_articles_par_categorie():
     #                              .where(article.lu == False)
     #                              .join(categorie)
     #                              .where(categorie.nom == 'Favoris')]
-    c = {x: x.articles for x in categorie.select(categorie, article)
-                                         .join(article)
-                                         .where(article.lu == False)
-                                         .order_by(categorie.preferee.desc(), categorie.nom)
-                                         .aggregate_rows()}
+    c = [(x, x.articles) for x in categorie.select(categorie, article)
+                                           .join(article)
+                                           .where(article.lu == False)
+                                           .order_by(categorie.preferee.desc(),
+                                                     categorie.nom)
+                                           .aggregate_rows()]
     # print([(x.nom, len(c[x])) for x in c])
     return c
 
