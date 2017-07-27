@@ -4,7 +4,7 @@
             <div class="panel-heading">
                 <div class="btn-group" role="group" aria-label="...">
                     <h1>{{ categorie.nom }} <span class="badge">{{ items|length }}</span>
-                        <button class="btn btn-danger" onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}])">
+                        <button class="btn btn-danger" onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}], {{ categorie.id}})">
                             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
                         </button>
                     </h1>
