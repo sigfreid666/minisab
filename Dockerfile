@@ -4,11 +4,13 @@ FROM python:3.5
 #    && apt-get install -y python3 python3-pip python3-requests
 
 RUN apt-get update \
-    && apt-get install -y cron sudo
+    && apt-get install -y cron sudo supervisor
 
 RUN pip3 install requests peewee flask gunicorn redis
 
 ENV DB_FILE="/data/minisab.db" LOG_FILE="/data/minisab.log" REDIS_IP="192.168.0.8" REDIS_PORT="9020" SAB_IP="192.168.0.8" SAB_CLE_API="6f8af3c4c4487edf93d96979ed7d2321"
+
+RUN export LC_ALL=C.UTF-8 LANG=C.UTF-8
 
 RUN groupadd -r minisab && useradd --no-log-init -r -g minisab minisab
 RUN mkdir /app
@@ -21,6 +23,9 @@ ADD src.tar .
 
 ADD start.sh /app
 
+ADD supervisor.conf /app
+
+ADD cronfile /app
 
 # USER minisab:minisab
 
@@ -37,8 +42,12 @@ RUN chown -R minisab:minisab /data;\
     chown -R minisab:minisab /app;\
     chmod 0755 /app/start.sh
 
+RUN cat /app/cronfile | crontab - -u minisab
+
+RUN crontab -l -u minisab
+
 VOLUME /data
 
 EXPOSE 3000
 
-CMD /app/start.sh
+CMD supervisord -c /app/supervisor.conf -n
