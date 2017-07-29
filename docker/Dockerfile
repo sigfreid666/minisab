@@ -21,8 +21,6 @@ WORKDIR /app
 
 ADD src.tar .
 
-ADD start.sh /app
-
 ADD supervisor.conf /app
 
 ADD cronfile /app
@@ -39,8 +37,7 @@ RUN echo "dbfile = '${DB_FILE}'" > /app/settings_local.py; \
 #RUN export LC_ALL=C.UTF-8 && export LANG=C.UTF-8 && python3 ./newminisab.py check
 
 RUN chown -R minisab:minisab /data;\
-    chown -R minisab:minisab /app;\
-    chmod 0755 /app/start.sh
+    chown -R minisab:minisab /app;
 
 RUN cat /app/cronfile | crontab - -u minisab
 
