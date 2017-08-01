@@ -7,6 +7,8 @@ import itertools
 import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 
+logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
 
 version = '2.5a'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
@@ -18,19 +20,18 @@ nom_cat_sab = 'minisab_categorie_sabnzbd'
 @bp.route("/")
 def index():
     articles = newminisab.recuperer_tous_articles_par_categorie()
-    newminisab.logger.debug('index, articles %d',
-                            len(articles))
+    logger.debug('index, articles %d', len(articles))
     status_sab = status_sabnzbd()
-    newminisab.logger.debug('index, statut sab %s', str(status_sab))
+    logger.debug('index, statut sab %s', str(status_sab))
     for z in articles:
         if z[0].nom == 'Favoris':
             for x in z[1]:
                 for y in x.recherche:
-                    newminisab.logger.debug('index, title %s, id sab %s',
+                    logger.debug('index, title %s, id sab %s',
                                             x.title, y.id_sabnzbd)
                     if y.id_sabnzbd in status_sab:
                         x.status_sabnzbd = status_sab[y.id_sabnzbd]
-                        newminisab.logger.debug('index, trouve %s', x.status_sabnzbd)
+                        logger.debug('index, trouve %s', x.status_sabnzbd)
     # articles = ([(x[0], x[1]) for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
@@ -45,7 +46,7 @@ def marquer_article_favoris(id_article=None):
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.marquer_favoris()
         ar.lancer_recherche()
-        newminisab.logger.info('marquer favoris %d nb recherche %d',
+        logger.info('marquer favoris %d nb recherche %d',
                                id_article, len(ar.recherche))
         ar.save()
         return render_template('./article.html', item=ar,
@@ -65,7 +66,7 @@ def marquer_article_lu():
                 ar = newminisab.article.get(newminisab.article.id == art_id)
                 ar.lu = True
                 for y in ar.recherche:
-                    newminisab.logger.info('article_lu, title %s, id sab %s',
+                    logger.info('article_lu, title %s, id sab %s',
                                            ar.title, y.id_sabnzbd)
                     if y.id_sabnzbd != '':
                         delete_history_sab(y.id_sabnzbd)
