@@ -9,7 +9,6 @@ from settings import dbfile, logfile
 from functools import wraps
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 # # create a file handler
 # handler = logging.FileHandler(logfile, encoding='utf-8')
@@ -294,6 +293,7 @@ def test():
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
+    logger.debug('recuperer_tous_articles_par_categorie')
     # favoris = [x for x in article.select()
     #                              .where(article.lu == False)
     #                              .join(categorie)
