@@ -6,9 +6,10 @@ import logging
 import logging.config
 import itertools
 import redis
-from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
+from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api,
+from settings import log_config
 
-logging.config.dictConfig({'version': 1, 'loggers' : {'flaskminisab': {'level': 'INFO'}, 'newminisab': {'level': 'DEBUG'}}})
+logging.config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
@@ -72,7 +73,7 @@ def marquer_article_lu():
                 ar.lu = True
                 for y in ar.recherche:
                     logger.info('article_lu, title %s, id sab %s',
-                                           ar.title, y.id_sabnzbd)
+                                ar.title, y.id_sabnzbd)
                     if y.id_sabnzbd != '':
                         delete_history_sab(y.id_sabnzbd)
                 ar.save()
