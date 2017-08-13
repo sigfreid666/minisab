@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, Blueprint, request
+from flask import Flask, render_template, abort, Blueprint, request, jsonify
 import newminisab
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
@@ -6,7 +6,7 @@ import logging
 import logging.config
 import itertools
 import redis
-from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api,
+from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config
 
 logging.config.dictConfig(log_config)
@@ -18,6 +18,18 @@ bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
                static_folder='static')
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
+
+
+def render_template_categorie(id_categorie):
+    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
+    if cat is not None:
+        items = (newminisab.recuperer_tous_articles_pour_une_categorie(
+                 cat.nom))
+        return render_template('./categorie.html',
+                               categorie=cat,
+                               items=items)
+    else:
+        return ''
 
 
 @bp.route("/")
@@ -44,15 +56,39 @@ def index():
                            categorie_favoris_id=newminisab.categorie.get_favoris().id)
 
 
+@bp.route('/article/<int:id_article>/favoris/categorie')
+def marquer_article_favoris_categorie(id_article=None):
+    logger.info('Requete %s', request.url)
+    try:
+        ar = newminisab.article.get(newminisab.article.id == id_article)
+        id_cat_ar = ar.categorie.id
+        ar.marquer_favoris()
+        # ar.lancer_recherche()
+        logger.info('marquer favoris %d nb recherche %d',
+                    id_article, len(ar.recherche))
+        ar.save()
+
+        cat_fav = newminisab.categorie.get_favoris()
+        cat_sab = get_categorie_sabnzbd()
+        fav_html = render_template_categorie(cat_fav.id)
+        sab_html = render_template_categorie(id_cat_ar)
+        article_html = render_template('./article.html', item=ar,
+                                       categorie=ar.categorie,
+                                       categorie_sabnzbd=cat_sab,
+                                       categorie_favoris_id=cat_fav.id)
+        return jsonify((article_html, fav_html, sab_html))
+    except newminisab.article.DoesNotExist:
+        abort(404)
+
+
 @bp.route('/article/<int:id_article>/favoris')
 def marquer_article_favoris(id_article=None):
     logger.info('Requete %s', request.url)
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.marquer_favoris()
-        ar.lancer_recherche()
-        logger.info('marquer favoris %d nb recherche %d',
-                    id_article, len(ar.recherche))
+        logger.info('marquer favoris %d',
+                    id_article)
         ar.save()
         return render_template('./article.html', item=ar,
                                categorie=ar.categorie,
@@ -114,15 +150,21 @@ def lancer_telecharger(id_recherche, categorie):
 
 
 @bp.route('/categorie/<int:id_categorie>')
-def get_categorie(id_categorie=None):
+@bp.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
+def get_categorie(id_categorie=None, id_categorie2=None):
     logger.info('Requete %s', request.url)
-    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
-    if cat is not None:
-        items = (newminisab.recuperer_tous_articles_pour_une_categorie(
-                 cat.nom))
-        return render_template('./categorie.html',
-                               categorie=cat,
-                               items=items)
+    template = []
+    for id_cat in (id_categorie, id_categorie2):
+        if id_cat is None:
+            continue
+        cat = newminisab.categorie.get(newminisab.categorie.id == id_cat)
+        if cat is not None:
+            items = (newminisab.recuperer_tous_articles_pour_une_categorie(
+                     cat.nom))
+            template.append(render_template('./categorie.html',
+                                            categorie=cat,
+                                            items=items))
+        return jsonify(template)
     else:
         abort(404)
 

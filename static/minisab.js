@@ -21,25 +21,15 @@ function marquer_lu(tabarticle, idcatdepart) {
 
 
 function marquer_favoris(idarticle, idcatdepart, idcatarrivee) {
-    $.get("article/" + idarticle + "/favoris",
+    $.get("article/" + idarticle + "/favoris/categorie",
         function(data, status) {
             if (status == "success") {
-                $("#items_" + idcatarrivee).append(data)
-                $.get("categorie/" + idcatdepart,
-                    function(data, status) {
-                        if (status == "success") {
-                            $("#cat_" + idcatdepart).replaceWith(data);
-                            $.get("categorie/" + idcatarrivee,
-                                function(data, status) {
-                                    if (status == "success") {
-                                        $("#cat_" + idcatarrivee).replaceWith(data);
-                                    }
-                                });
-                        }
-                    });
+                $("#art_"+idarticle).remove();
+                $("#items_" + idcatarrivee).append(data[0]);
+                $("#cat_" + idcatarrivee).replaceWith(data[1]);
+                $("#cat_" + idcatdepart).replaceWith(data[2]);
             }
         });
-    $("#art_"+idarticle).remove();
 }
 
 function lancer_recherche(idarticle) {
