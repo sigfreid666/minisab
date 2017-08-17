@@ -25,9 +25,12 @@ def render_template_categorie(id_categorie):
     if cat is not None:
         items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                  cat.nom))
-        return render_template('./categorie.html',
-                               categorie=cat,
-                               items=items)
+        return (render_template('./categorie.html',
+                                categorie=cat,
+                                items=items),
+                render_template('./categorie_end.html',
+                                categorie=cat,
+                                items=items))
     else:
         return ''
 
@@ -76,7 +79,7 @@ def marquer_article_favoris_categorie(id_article=None):
                                        categorie=ar.categorie,
                                        categorie_sabnzbd=cat_sab,
                                        categorie_favoris_id=cat_fav.id)
-        return jsonify((article_html, fav_html, sab_html))
+        return jsonify((article_html, *fav_html, *sab_html))
     except newminisab.article.DoesNotExist:
         abort(404)
 

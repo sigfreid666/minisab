@@ -27,7 +27,9 @@ function marquer_favoris(idarticle, idcatdepart, idcatarrivee) {
                 $("#art_"+idarticle).remove();
                 $("#items_" + idcatarrivee).append(data[0]);
                 $("#cat_" + idcatarrivee).replaceWith(data[1]);
-                $("#cat_" + idcatdepart).replaceWith(data[2]);
+                $("#cat_" + idcatarrivee + '_end').replaceWith(data[2]);
+                $("#cat_" + idcatdepart).replaceWith(data[3]);
+                $("#cat_" + idcatdepart + '_end').replaceWith(data[4]);
             }
         });
 }
