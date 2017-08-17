@@ -1,5 +1,7 @@
-{% for categorie, items in articles %}
-	<div class="col-md-2">
-		<a href="#cat_{{ categorie.id }}"><h4>{{ categorie.nom }}  <span class="badge">{{ items|length }}</span></h4></a>
-	</div>
-{% endfor %}
+<div class="row" id='barre_categorie'>
+    {% for categorie, items in articles %}
+    	<div class="col-md-2">
+    		<a href="#cat_{{ categorie.id }}"><h4>{{ categorie.nom }}  <span class="badge">{{ items|length }}</span></h4></a>
+    	</div>
+    {% endfor %}
+</div>

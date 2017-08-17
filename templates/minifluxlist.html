@@ -27,9 +27,7 @@
         <div class="page-header">
         <h1>Minisab <span class="badge">{{ version }}</span></h1>
         </div>
-        <div class="row">
-            {% include 'barre_categorie.html' %}
-        </div>
+        {% include 'barre_categorie.html' %}
         {% for categorie, items in articles %}
             {% include 'categorie.html' %}
             <div class="row" id="items_{{categorie.id}}">

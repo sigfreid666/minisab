@@ -172,10 +172,10 @@ def get_categorie(id_categorie=None, id_categorie2=None):
         abort(404)
 
 
-@bp.route('/categorie/liste')
+@bp.route('/categorie/')
 def categorie_liste():
-    listecategorie = newminisab.article.liste_categorie()
-    return render_template('./barre_categorie.html', categorie=listecategorie)
+    articles = newminisab.recuperer_tous_articles_par_categorie()
+    return render_template('./barre_categorie.html', articles=articles)
 
 
 def get_categorie_sabnzbd():
