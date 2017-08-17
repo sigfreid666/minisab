@@ -5,30 +5,16 @@ import re
 import logging
 from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
-from settings import dbfile, logfile
+from settings import dbfile
 from functools import wraps
 
+# if __name__ == "__main__":
+#     import logging.config
+#     from settings import log_config
+#     print(log_config)
+#     logging.config.dictConfig(log_config)
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-# create a file handler
-handler = logging.FileHandler(logfile, encoding='utf-8')
-handler.setLevel(logging.DEBUG)
-
-# create stderr handler
-handlerstd = logging.StreamHandler()
-handlerstd.setLevel(logging.DEBUG)
-
-# create a logging format
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-
-# add the handlers to the logger
-logger.addHandler(handler)
-logger.addHandler(handlerstd)
-# logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', 
-#                    filename='/var/services/homes/admin/minisab/minisab.log', 
-#                    level=logger.info)
 
 db = SqliteDatabase(dbfile)
 
@@ -294,6 +280,7 @@ def test():
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
+    logger.debug('recuperer_tous_articles_par_categorie')
     # favoris = [x for x in article.select()
     #                              .where(article.lu == False)
     #                              .join(categorie)
@@ -321,6 +308,7 @@ def recuperer_tous_articles_pour_une_categorie(nom_categorie):
 
     return c
 
+
 @cli.command()
 @base_de_donnee
 def patch_annee():
@@ -330,4 +318,7 @@ def patch_annee():
 
 
 if __name__ == "__main__":
+    import logging.config
+    from settings import log_config
+    logging.config.dictConfig(log_config)
     cli()

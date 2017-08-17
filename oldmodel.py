@@ -118,7 +118,7 @@ def convert():
                 y = x.convertold()
                 y.save()
             except IntegrityError as e:
-                print('erreur sur %s (%s)' % (str(y), str(x), str(e)))
+                print('erreur sur %s %s (%s)' % (str(y), str(x), str(e)))
     newminisab.db.close()
     olddb.close()
 

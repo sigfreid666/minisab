@@ -1,36 +1,56 @@
-from flask import Flask, render_template, abort, Blueprint, request
+from flask import Flask, render_template, abort, Blueprint, request, jsonify
 import newminisab
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
+import logging.config
 import itertools
 import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
+from settings import log_config
 
+logging.config.dictConfig(log_config)
+logger = logging.getLogger(__name__)
+# logger.setLevel(logging.DEBUG)
 
-version = '2.5a'
+version = '2.5b'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
                static_folder='static')
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
 
 
+def render_template_categorie(id_categorie):
+    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
+    if cat is not None:
+        items = (newminisab.recuperer_tous_articles_pour_une_categorie(
+                 cat.nom))
+        return (render_template('./categorie.html',
+                                categorie=cat,
+                                items=items),
+                render_template('./categorie_end.html',
+                                categorie=cat,
+                                items=items))
+    else:
+        return ''
+
+
 @bp.route("/")
 def index():
+    logger.info('Requete /')
     articles = newminisab.recuperer_tous_articles_par_categorie()
-    newminisab.logger.debug('index, articles %d',
-                            len(articles))
+    logger.debug('index, articles %d', len(articles))
     status_sab = status_sabnzbd()
-    newminisab.logger.debug('index, statut sab %s', str(status_sab))
+    logger.debug('index, statut sab %s', str(status_sab))
     for z in articles:
         if z[0].nom == 'Favoris':
             for x in z[1]:
                 for y in x.recherche:
-                    newminisab.logger.debug('index, title %s, id sab %s',
-                                            x.title, y.id_sabnzbd)
+                    logger.debug('index, title %s, id sab %s',
+                                 x.title, y.id_sabnzbd)
                     if y.id_sabnzbd in status_sab:
                         x.status_sabnzbd = status_sab[y.id_sabnzbd]
-                        newminisab.logger.debug('index, trouve %s', x.status_sabnzbd)
+                        logger.debug('index, trouve %s', x.status_sabnzbd)
     # articles = ([(x[0], x[1]) for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
@@ -39,14 +59,39 @@ def index():
                            categorie_favoris_id=newminisab.categorie.get_favoris().id)
 
 
+@bp.route('/article/<int:id_article>/favoris/categorie')
+def marquer_article_favoris_categorie(id_article=None):
+    logger.info('Requete %s', request.url)
+    try:
+        ar = newminisab.article.get(newminisab.article.id == id_article)
+        id_cat_ar = ar.categorie.id
+        ar.marquer_favoris()
+        # ar.lancer_recherche()
+        logger.info('marquer favoris %d nb recherche %d',
+                    id_article, len(ar.recherche))
+        ar.save()
+
+        cat_fav = newminisab.categorie.get_favoris()
+        cat_sab = get_categorie_sabnzbd()
+        fav_html = render_template_categorie(cat_fav.id)
+        sab_html = render_template_categorie(id_cat_ar)
+        article_html = render_template('./article.html', item=ar,
+                                       categorie=ar.categorie,
+                                       categorie_sabnzbd=cat_sab,
+                                       categorie_favoris_id=cat_fav.id)
+        return jsonify((article_html, *fav_html, *sab_html))
+    except newminisab.article.DoesNotExist:
+        abort(404)
+
+
 @bp.route('/article/<int:id_article>/favoris')
 def marquer_article_favoris(id_article=None):
+    logger.info('Requete %s', request.url)
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
         ar.marquer_favoris()
-        ar.lancer_recherche()
-        newminisab.logger.info('marquer favoris %d nb recherche %d',
-                               id_article, len(ar.recherche))
+        logger.info('marquer favoris %d',
+                    id_article)
         ar.save()
         return render_template('./article.html', item=ar,
                                categorie=ar.categorie,
@@ -58,6 +103,7 @@ def marquer_article_favoris(id_article=None):
 
 @bp.route('/articles/lu', methods=['GET', 'POST'])
 def marquer_article_lu():
+    logger.info('Requete /article/lu %s', request.method)
     try:
         if request.method == 'POST':
             data_json = request.get_json()
@@ -65,8 +111,8 @@ def marquer_article_lu():
                 ar = newminisab.article.get(newminisab.article.id == art_id)
                 ar.lu = True
                 for y in ar.recherche:
-                    newminisab.logger.info('article_lu, title %s, id sab %s',
-                                           ar.title, y.id_sabnzbd)
+                    logger.info('article_lu, title %s, id sab %s',
+                                ar.title, y.id_sabnzbd)
                     if y.id_sabnzbd != '':
                         delete_history_sab(y.id_sabnzbd)
                 ar.save()
@@ -79,6 +125,7 @@ def marquer_article_lu():
 @bp.route('/article/<id_article>/recherche',
           defaults={'stop_multi': 0})
 def recherche_article(id_article, stop_multi):
+    logger.info('Requete %s', request.url)
     try:
         # print('lancer recherche %s %d' % (id_article, stop_multi))
         ar = newminisab.article.get(newminisab.article.id == id_article)
@@ -94,6 +141,7 @@ def recherche_article(id_article, stop_multi):
 @bp.route('/recherche/<id_recherche>/telecharger/',
           defaults={'categorie': '*'})
 def lancer_telecharger(id_recherche, categorie):
+    logger.info('Requete %s', request.url)
     try:
         rec = newminisab.recherche.get(newminisab.recherche.id == id_recherche)
         rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
@@ -105,22 +153,29 @@ def lancer_telecharger(id_recherche, categorie):
 
 
 @bp.route('/categorie/<int:id_categorie>')
-def get_categorie(id_categorie=None):
-    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
-    if cat is not None:
-        items = (newminisab.recuperer_tous_articles_pour_une_categorie(
-                 cat.nom))
-        return render_template('./categorie.html',
-                               categorie=cat,
-                               items=items)
+@bp.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
+def get_categorie(id_categorie=None, id_categorie2=None):
+    logger.info('Requete %s', request.url)
+    template = []
+    for id_cat in (id_categorie, id_categorie2):
+        if id_cat is None:
+            continue
+        cat = newminisab.categorie.get(newminisab.categorie.id == id_cat)
+        if cat is not None:
+            items = (newminisab.recuperer_tous_articles_pour_une_categorie(
+                     cat.nom))
+            template.append(render_template('./categorie.html',
+                                            categorie=cat,
+                                            items=items))
+        return jsonify(template)
     else:
         abort(404)
 
 
-@bp.route('/categorie/liste')
+@bp.route('/categorie/')
 def categorie_liste():
-    listecategorie = newminisab.article.liste_categorie()
-    return render_template('./barre_categorie.html', categorie=listecategorie)
+    articles = newminisab.recuperer_tous_articles_par_categorie()
+    return render_template('./barre_categorie.html', articles=articles)
 
 
 def get_categorie_sabnzbd():
