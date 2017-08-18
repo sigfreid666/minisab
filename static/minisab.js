@@ -11,7 +11,8 @@ function marquer_lu(tabarticle, idcatdepart) {
             $.get("categorie/" + idcatdepart,
                 function(data, status) {
                     if (status == "success") {
-                        $("#cat_" + idcatdepart).replaceWith(data);
+                        $("#cat_" + idcatdepart).replaceWith(data[0]);
+                        $("#cat_" + idcatdepart + '_end').replaceWith(data[1]);
                     }
                 }
             );

@@ -13,7 +13,7 @@ logging.config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.5b'
+version = '2.5c'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
                static_folder='static')
 
@@ -165,6 +165,9 @@ def get_categorie(id_categorie=None, id_categorie2=None):
             items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                      cat.nom))
             template.append(render_template('./categorie.html',
+                                            categorie=cat,
+                                            items=items))
+            template.append(render_template('./categorie_end.html',
                                             categorie=cat,
                                             items=items))
         return jsonify(template)
