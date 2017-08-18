@@ -13,7 +13,7 @@ logging.config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.5b'
+version = '2.5c'
 bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
                static_folder='static')
 
