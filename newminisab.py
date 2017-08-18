@@ -289,7 +289,8 @@ def recuperer_tous_articles_par_categorie():
                                            .join(article)
                                            .where(article.lu == False)
                                            .order_by(categorie.preferee.desc(),
-                                                     categorie.nom)
+                                                     categorie.nom,
+                                                     article.annee.desc())
                                            .aggregate_rows()]
     # print([(x.nom, len(c[x])) for x in c])
     return c
