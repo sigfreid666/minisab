@@ -167,6 +167,9 @@ def get_categorie(id_categorie=None, id_categorie2=None):
             template.append(render_template('./categorie.html',
                                             categorie=cat,
                                             items=items))
+            template.append(render_template('./categorie_end.html',
+                                            categorie=cat,
+                                            items=items))
         return jsonify(template)
     else:
         abort(404)
