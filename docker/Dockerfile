@@ -23,6 +23,8 @@ ADD src.tar .
 
 ADD supervisor.conf /app
 
+ADD gunicorn.py /app
+
 ADD cronfile /app
 
 # USER minisab:minisab
