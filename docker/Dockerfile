@@ -4,7 +4,7 @@ FROM python:3.5
 #    && apt-get install -y python3 python3-pip python3-requests
 
 RUN apt-get update \
-    && apt-get install -y cron sudo supervisor
+    && apt-get install -y cron sudo supervisor nginx
 
 RUN pip3 install requests peewee flask gunicorn redis
 
@@ -17,11 +17,16 @@ RUN mkdir /app
 
 RUN mkdir /data
 
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY minisab.nginx.conf /etc/nginx/sites-available/default
+
 WORKDIR /app
 
 ADD src.tar .
 
 ADD supervisor.conf /app
+
+ADD gunicorn.py /app
 
 ADD cronfile /app
 
@@ -45,6 +50,6 @@ RUN crontab -l -u minisab
 
 VOLUME /data
 
-EXPOSE 3000
+EXPOSE 80
 
 CMD supervisord -c /app/supervisor.conf -n

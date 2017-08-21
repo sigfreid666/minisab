@@ -13,9 +13,10 @@ logging.config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.5c'
-bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
-               static_folder='static')
+version = '2.5d'
+# bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
+#                static_folder='static')
+app = Flask(__name__)
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
 
@@ -35,7 +36,7 @@ def render_template_categorie(id_categorie):
         return ''
 
 
-@bp.route("/")
+@app.route("/")
 def index():
     logger.info('Requete /')
     articles = newminisab.recuperer_tous_articles_par_categorie()
@@ -59,14 +60,14 @@ def index():
                            categorie_favoris_id=newminisab.categorie.get_favoris().id)
 
 
-@bp.route('/article/<int:id_article>/favoris/categorie')
+@app.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
     try:
         ar = newminisab.article.get(newminisab.article.id == id_article)
         id_cat_ar = ar.categorie.id
         ar.marquer_favoris()
-        # ar.lancer_recherche()
+        ar.lancer_recherche()
         logger.info('marquer favoris %d nb recherche %d',
                     id_article, len(ar.recherche))
         ar.save()
@@ -84,7 +85,7 @@ def marquer_article_favoris_categorie(id_article=None):
         abort(404)
 
 
-@bp.route('/article/<int:id_article>/favoris')
+@app.route('/article/<int:id_article>/favoris')
 def marquer_article_favoris(id_article=None):
     logger.info('Requete %s', request.url)
     try:
@@ -101,7 +102,7 @@ def marquer_article_favoris(id_article=None):
         abort(404)
 
 
-@bp.route('/articles/lu', methods=['GET', 'POST'])
+@app.route('/articles/lu', methods=['GET', 'POST'])
 def marquer_article_lu():
     logger.info('Requete /article/lu %s', request.method)
     try:
@@ -121,9 +122,9 @@ def marquer_article_lu():
         abort(404)
 
 
-@bp.route('/article/<id_article>/recherche/<int:stop_multi>')
-@bp.route('/article/<id_article>/recherche',
-          defaults={'stop_multi': 0})
+@app.route('/article/<id_article>/recherche/<int:stop_multi>')
+@app.route('/article/<id_article>/recherche',
+           defaults={'stop_multi': 0})
 def recherche_article(id_article, stop_multi):
     logger.info('Requete %s', request.url)
     try:
@@ -137,9 +138,9 @@ def recherche_article(id_article, stop_multi):
         abort(404)
 
 
-@bp.route('/recherche/<id_recherche>/telecharger/<categorie>')
-@bp.route('/recherche/<id_recherche>/telecharger/',
-          defaults={'categorie': '*'})
+@app.route('/recherche/<id_recherche>/telecharger/<categorie>')
+@app.route('/recherche/<id_recherche>/telecharger/',
+           defaults={'categorie': '*'})
 def lancer_telecharger(id_recherche, categorie):
     logger.info('Requete %s', request.url)
     try:
@@ -152,8 +153,8 @@ def lancer_telecharger(id_recherche, categorie):
         abort(404)
 
 
-@bp.route('/categorie/<int:id_categorie>')
-@bp.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
+@app.route('/categorie/<int:id_categorie>')
+@app.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
 def get_categorie(id_categorie=None, id_categorie2=None):
     logger.info('Requete %s', request.url)
     template = []
@@ -175,7 +176,7 @@ def get_categorie(id_categorie=None, id_categorie2=None):
         abort(404)
 
 
-@bp.route('/categorie/')
+@app.route('/categorie/')
 def categorie_liste():
     articles = newminisab.recuperer_tous_articles_par_categorie()
     return render_template('./barre_categorie.html', articles=articles)
@@ -280,8 +281,7 @@ def delete_history_sab(id_sab):
         return 0
 
 
-app = Flask(__name__)
-app.register_blueprint(bp, prefix='/minisab')
+# app.register_blueprint(bp, prefix='/minisab')
 
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=9030)
