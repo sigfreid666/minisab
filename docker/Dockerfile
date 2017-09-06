@@ -42,7 +42,8 @@ RUN echo "dbfile = '${DB_FILE}'" > /app/settings_local.py; \
 #RUN export LC_ALL=C.UTF-8 && export LANG=C.UTF-8 && python3 ./newminisab.py check
 
 RUN chown -R minisab:minisab /data;\
-    chown -R minisab:minisab /app;
+    chown -R minisab:minisab /app;\
+    chmod -R 0755 static
 
 RUN cat /app/cronfile | crontab - -u minisab
 
