@@ -44,7 +44,7 @@
     <div class="col-md-11">
     <div class="btn-group recherche" role="group" aria-label="...">
         {% for item_categorie in categorie_sabnzbd %}
-            {% if item_categorie == item.categorie.categorie_sabnzbd %}
+            {% if item_categorie == item.categorie_origine.categorie_sabnzbd %}
             <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
             {% else %}
             <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>

@@ -44,7 +44,7 @@ class article(Model):
     fichier = CharField()
     taille = CharField()
     categorie = ForeignKeyField(categorie, related_name='articles')
-    favorie = BooleanField(index=True, default=False)
+    categorie_str = CharField()
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
 
@@ -69,11 +69,9 @@ class article(Model):
         ar.taille = self.taille
         ar.lu = self.lu
         ar.annee = self.annee
-        ar.categorie_str = self.categorie.nom
-        if self.favorie:
-            ar.categorie = newminisab.categorie.get(newminisab.categorie.nom == 'Favoris')
-        else:
-            ar.categorie = self.categorie
+        ar.categorie = self.categorie
+        ar.categorie_origine = newminisab.categorie.get(newminisab.categorie.nom == self.categorie_str)
+        ar.categorie_str = self.categorie_str
         return ar
 
     class Meta:
@@ -110,8 +108,8 @@ def convert():
     newminisab.db.create_tables([newminisab.article,
                                  newminisab.recherche,
                                  newminisab.categorie], safe=True)
-    cat = newminisab.categorie(nom="Favoris", preferee=99)
-    cat.save()
+    # cat = newminisab.categorie(nom="Favoris", preferee=99)
+    # cat.save()
     for y in [categorie, article, recherche]:
         for x in y.select():
             try:

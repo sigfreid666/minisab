@@ -44,6 +44,7 @@ class article(Model):
     fichier = CharField()
     taille = CharField()
     categorie = ForeignKeyField(categorie, related_name='articles')
+    categorie_origine = ForeignKeyField(categorie, related_name='articles_2')
     categorie_str = CharField()
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
@@ -75,6 +76,7 @@ class article(Model):
                     try:
                         self.categorie_str = decoup[1]
                         self.categorie = categorie.get(categorie.nom == decoup[1])
+                        self.categorie_origine = categorie.get(categorie.nom == decoup[1])
                     except categorie.DoesNotExist:
                         self.categorie = categorie(nom=decoup[1])
                         self.categorie.save()
