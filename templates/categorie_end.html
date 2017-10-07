@@ -1,5 +1,5 @@
 <div class="row" id="cat_{{ categorie.id }}_end">
-    <div class="col-md-1">
+    <div class="col-md-2">
         <div class="panel panel-danger">
             <div class="panel-heading">
                 <div class="btn-group" role="group" aria-label="...">
@@ -7,7 +7,7 @@
                         <button class="btn btn-danger btn-xs" onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}], {{ categorie.id}})">
                             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
                         </button>
-                    </h1>
+                    </h6>
                 </div>
             </div>
         </div>
