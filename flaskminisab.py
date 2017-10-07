@@ -22,7 +22,7 @@ nom_cat_sab = 'minisab_categorie_sabnzbd'
 
 
 def render_template_categorie(id_categorie):
-    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
+    cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     if cat is not None:
         items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                  cat.nom))
@@ -57,7 +57,7 @@ def index():
                            articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
                            version=version,
-                           categorie_favoris_id=newminisab.categorie.get_favoris().id)
+                           categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
 @app.route('/article/<int:id_article>/favoris/categorie')
@@ -72,7 +72,7 @@ def marquer_article_favoris_categorie(id_article=None):
                     id_article, len(ar.recherche))
         ar.save()
 
-        cat_fav = newminisab.categorie.get_favoris()
+        cat_fav = newminisab.Categorie.get_favoris()
         cat_sab = get_categorie_sabnzbd()
         fav_html = render_template_categorie(cat_fav.id)
         sab_html = render_template_categorie(id_cat_ar)
@@ -97,7 +97,7 @@ def marquer_article_favoris(id_article=None):
         return render_template('./article.html', item=ar,
                                categorie=ar.categorie,
                                categorie_sabnzbd=get_categorie_sabnzbd(),
-                               categorie_favoris_id=newminisab.categorie.get_favoris().id)
+                               categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -133,7 +133,7 @@ def recherche_article(id_article, stop_multi):
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         return render_template('./article.html', item=ar,
                                categorie_sabnzbd=get_categorie_sabnzbd(),
-                               categorie_favoris_id=newminisab.categorie.get_favoris().id)
+                               categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.article.DoesNotExist:
         abort(404)
 
@@ -161,7 +161,7 @@ def get_categorie(id_categorie=None, id_categorie2=None):
     for id_cat in (id_categorie, id_categorie2):
         if id_cat is None:
             continue
-        cat = newminisab.categorie.get(newminisab.categorie.id == id_cat)
+        cat = newminisab.Categorie.get(newminisab.Categorie.id == id_cat)
         if cat is not None:
             items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                      cat.nom))

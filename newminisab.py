@@ -19,14 +19,17 @@ logger = logging.getLogger(__name__)
 db = SqliteDatabase(dbfile)
 
 
-class categorie(Model):
+class Categorie(Model):
     nom = CharField(unique=True)
     categorie_sabnzbd = CharField(default='*')
     autolu = BooleanField(default=False)
     preferee = IntegerField(default=0)
 
     def get_favoris():
-        return categorie.get(categorie.nom == 'Favoris')
+        return Categorie.get(Categorie.nom == 'Favoris')
+
+    def __str__(self):
+        return '<%s> <%d>' % (self.nom, self.preferee)
 
     class Meta:
         database = db
@@ -43,8 +46,8 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
-    categorie = ForeignKeyField(categorie, related_name='articles')
-    categorie_origine = ForeignKeyField(categorie, related_name='articles_2')
+    categorie = ForeignKeyField(Categorie, related_name='articles')
+    categorie_origine = ForeignKeyField(Categorie, related_name='articles_2')
     categorie_str = CharField()
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
@@ -75,10 +78,10 @@ class article(Model):
                 elif decoup[0] == 'Catégorie':
                     try:
                         self.categorie_str = decoup[1]
-                        self.categorie = categorie.get(categorie.nom == decoup[1])
-                        self.categorie_origine = categorie.get(categorie.nom == decoup[1])
-                    except categorie.DoesNotExist:
-                        self.categorie = categorie(nom=decoup[1])
+                        self.categorie = Categorie.get(Categorie.nom == decoup[1])
+                        self.categorie_origine = Categorie.get(Categorie.nom == decoup[1])
+                    except Categorie.DoesNotExist:
+                        self.categorie = Categorie(nom=decoup[1])
                         self.categorie.save()
                         logger.info('Creation nouvelle categorie : %s' % self.categorie.nom)
                 elif len(decoup) == 2:
@@ -136,7 +139,7 @@ class article(Model):
 
     def marquer_favoris(self):
         logger.debug('marquer_favorie')
-        self.categorie = categorie.get(categorie.nom == 'Favoris')
+        self.categorie = Categorie.get(Categorie.nom == 'Favoris')
         self.save()
 
     def liste_categorie():
@@ -216,11 +219,11 @@ def base_de_donnee(wrap):
         global db
         try:
             db.connect()
-            db.create_tables([article, recherche, categorie], safe=True)
+            db.create_tables([article, recherche, Categorie], safe=True)
             try:
-                cat = categorie.get(categorie.nom == 'Favoris')
+                cat = Categorie.get(Categorie.nom == 'Favoris')
             except DoesNotExist:
-                cat = categorie(nom="Favoris", preferee=99)
+                cat = Categorie(nom="Favoris", preferee=99)
                 cat.save()
         except OperationalError:
             pass
@@ -287,11 +290,11 @@ def recuperer_tous_articles_par_categorie():
     #                              .where(article.lu == False)
     #                              .join(categorie)
     #                              .where(categorie.nom == 'Favoris')]
-    c = [(x, x.articles) for x in categorie.select(categorie, article)
+    c = [(x, x.articles) for x in Categorie.select(Categorie, article)
                                            .join(article)
                                            .where(article.lu == False)
-                                           .order_by(categorie.preferee.desc(),
-                                                     categorie.nom,
+                                           .order_by(Categorie.preferee.desc(),
+                                                     Categorie.nom,
                                                      article.annee.desc())
                                            .aggregate_rows()]
     # print([(x.nom, len(c[x])) for x in c])
@@ -302,7 +305,7 @@ def recuperer_tous_articles_par_categorie():
 def recuperer_tous_articles_pour_une_categorie(nom_categorie):
     c = []
     try:
-        cat = categorie.get(categorie.nom == nom_categorie)
+        cat = Categorie.get(Categorie.nom == nom_categorie)
         c = [x for x in article.select()
                                .where((article.lu == False) &
                                       (article.categorie == cat))]

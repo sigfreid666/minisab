@@ -14,7 +14,7 @@ ct_categorie_sabnzbd = [('*', []),
                         ('film', ['Films HD'])]
 
 
-class categorie(Model):
+class Categorie(Model):
     nom = CharField(unique=True)
     categorie_sabnzbd = CharField(default='*')
     autolu = BooleanField(default=False)
@@ -24,7 +24,7 @@ class categorie(Model):
         database = olddb
 
     def convertold(self):
-        ar = newminisab.categorie()
+        ar = newminisab.Categorie()
         ar.nom = self.nom
         ar.categorie_sabnzbd = self.categorie_sabnzbd
         ar.autolu = self.autolu
@@ -43,7 +43,7 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
-    categorie = ForeignKeyField(categorie, related_name='articles')
+    categorie = ForeignKeyField(Categorie, related_name='articles')
     categorie_str = CharField()
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
@@ -70,7 +70,7 @@ class article(Model):
         ar.lu = self.lu
         ar.annee = self.annee
         ar.categorie = self.categorie
-        ar.categorie_origine = newminisab.categorie.get(newminisab.categorie.nom == self.categorie_str)
+        ar.categorie_origine = newminisab.Categorie.get(newminisab.Categorie.nom == self.categorie_str)
         ar.categorie_str = self.categorie_str
         return ar
 
@@ -107,10 +107,10 @@ def convert():
     newminisab.db.connect()
     newminisab.db.create_tables([newminisab.article,
                                  newminisab.recherche,
-                                 newminisab.categorie], safe=True)
-    # cat = newminisab.categorie(nom="Favoris", preferee=99)
+                                 newminisab.Categorie], safe=True)
+    # cat = newminisab.Categorie(nom="Favoris", preferee=99)
     # cat.save()
-    for y in [categorie, article, recherche]:
+    for y in [Categorie, article, recherche]:
         for x in y.select():
             try:
                 y = x.convertold()
