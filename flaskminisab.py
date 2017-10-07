@@ -176,7 +176,7 @@ def get_categorie(id_categorie=None, id_categorie2=None):
         abort(404)
 
 
-@app.route('/categorie')
+@app.route('/categories')
 def categorie_liste():
     logger.info('Requete %s', request.url)
     articles = newminisab.recuperer_tous_articles_par_categorie()

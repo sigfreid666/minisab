@@ -32,7 +32,7 @@ function marquer_lu_barre(tabarticle, idcatdepart) {
             }
             $("#cat_" + idcatdepart).remove();
             $("#cat_" + idcatdepart + '_end').remove();
-            $.get("categorie",
+            $.get("categories",
                 function(data, status) {
                     console.log("barre : " + data[0]);
                     if (status == "success") {
