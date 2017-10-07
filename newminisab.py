@@ -19,20 +19,23 @@ logger = logging.getLogger(__name__)
 db = SqliteDatabase(dbfile)
 
 
-class categorie(Model):
+class Categorie(Model):
     nom = CharField(unique=True)
     categorie_sabnzbd = CharField(default='*')
     autolu = BooleanField(default=False)
     preferee = IntegerField(default=0)
 
     def get_favoris():
-        return categorie.get(categorie.nom == 'Favoris')
+        return Categorie.get(Categorie.nom == 'Favoris')
+
+    def __str__(self):
+        return '<%s> <%d>' % (self.nom, self.preferee)
 
     class Meta:
         database = db
 
 
-class article(Model):
+class Article(Model):
     title = CharField()
     link = CharField()
     description = CharField()
@@ -43,7 +46,8 @@ class article(Model):
     nfo = CharField()
     fichier = CharField()
     taille = CharField()
-    categorie = ForeignKeyField(categorie, related_name='articles')
+    categorie = ForeignKeyField(Categorie, related_name='articles')
+    categorie_origine = ForeignKeyField(Categorie, related_name='articles_2')
     categorie_str = CharField()
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
@@ -74,9 +78,10 @@ class article(Model):
                 elif decoup[0] == 'Catégorie':
                     try:
                         self.categorie_str = decoup[1]
-                        self.categorie = categorie.get(categorie.nom == decoup[1])
-                    except categorie.DoesNotExist:
-                        self.categorie = categorie(nom=decoup[1])
+                        self.categorie = Categorie.get(Categorie.nom == decoup[1])
+                        self.categorie_origine = Categorie.get(Categorie.nom == decoup[1])
+                    except Categorie.DoesNotExist:
+                        self.categorie = Categorie(nom=decoup[1])
                         self.categorie.save()
                         logger.info('Creation nouvelle categorie : %s' % self.categorie.nom)
                 elif len(decoup) == 2:
@@ -107,7 +112,7 @@ class article(Model):
                 for item in ret:
                     logger.info('item %s', str(item))
                     try:
-                        rec = recherche(id_check=item['id'],
+                        rec = Recherche(id_check=item['id'],
                                         url=item['url'],
                                         taille=item['taille'] if 'taille' in item else 'Vide',
                                         title=item['title'],
@@ -134,13 +139,13 @@ class article(Model):
 
     def marquer_favoris(self):
         logger.debug('marquer_favorie')
-        self.categorie = categorie.get(categorie.nom == 'Favoris')
+        self.categorie = Categorie.get(Categorie.nom == 'Favoris')
         self.save()
 
     def liste_categorie():
-        a = (article.select(article.categorie, fn.Count(article.categorie).alias('nb'))
-                    .where(article.lu == False)
-                    .group_by(article.categorie))
+        a = (Article.select(Article.categorie, fn.Count(Article.categorie).alias('nb'))
+                    .where(Article.lu == False)
+                    .group_by(Article.categorie))
         return [(x.categorie, x.nb) for x in a]
 
     def __str__(self):
@@ -166,14 +171,14 @@ class article(Model):
         database = db
 
 
-class recherche(Model):
+class Recherche(Model):
     id_check = IntegerField(unique=True)
     url = CharField()
     taille = CharField()
     title = CharField()
     id_sabnzbd = CharField(default='')
     fichier = CharField(default='')
-    article = ForeignKeyField(article, related_name='recherche')
+    article = ForeignKeyField(Article, related_name='recherche')
 
     class Meta:
         database = db
@@ -189,7 +194,7 @@ class ParserArticle(html.parser.HTMLParser):
     def handle_starttag(self, tag, attr):
         if tag == 'item':
             logger.debug('ParserArticle.handle_starttag : nouvel item')
-            self.data.append(article(link='', description='', pubDate='', comment='',
+            self.data.append(Article(link='', description='', pubDate='', comment='',
                                      fichier='', taille='', nfo='', meta=''))
             self.ondata = True
         else:
@@ -214,11 +219,11 @@ def base_de_donnee(wrap):
         global db
         try:
             db.connect()
-            db.create_tables([article, recherche, categorie], safe=True)
+            db.create_tables([Article, Recherche, Categorie], safe=True)
             try:
-                cat = categorie.get(categorie.nom == 'Favoris')
+                cat = Categorie.get(Categorie.nom == 'Favoris')
             except DoesNotExist:
-                cat = categorie(nom="Favoris", preferee=99)
+                cat = Categorie(nom="Favoris", preferee=99)
                 cat.save()
         except OperationalError:
             pass
@@ -236,7 +241,7 @@ def cli():
 @cli.command('test')
 @base_de_donnee
 def test():
-    a = article.select(article.categorie, fn.Count(article.categorie).alias('nb')).where(article.lu == False).group_by(article.categorie)
+    a = Article.select(Article.categorie, fn.Count(Article.categorie).alias('nb')).where(Article.lu == False).group_by(Article.categorie)
     print([(x.categorie, x.nb) for x in a])
 
 
@@ -257,9 +262,9 @@ def check_new_article():
     nb_nouveau_article = 0
     for x in parse.data:
         try:
-            ar = article.get(article.guid == x.guid)
+            ar = Article.get(Article.guid == x.guid)
             logger.debug('check_new_article: article existant <%s>', ar.guid)
-        except article.DoesNotExist:
+        except Article.DoesNotExist:
             try:
                 x.save()
                 logger.debug('check_new_article: nouvel article <%s>', x.title)
@@ -271,7 +276,7 @@ def check_new_article():
 
 @base_de_donnee
 def recuperer_tous_articles():
-    return [x for x in article.select()]
+    return [x for x in Article.select()]
 
 @cli.command('test')
 def test():
@@ -285,12 +290,12 @@ def recuperer_tous_articles_par_categorie():
     #                              .where(article.lu == False)
     #                              .join(categorie)
     #                              .where(categorie.nom == 'Favoris')]
-    c = [(x, x.articles) for x in categorie.select(categorie, article)
-                                           .join(article)
-                                           .where(article.lu == False)
-                                           .order_by(categorie.preferee.desc(),
-                                                     categorie.nom,
-                                                     article.annee.desc())
+    c = [(x, x.articles) for x in Categorie.select(Categorie, Article)
+                                           .join(Article)
+                                           .where(Article.lu == False)
+                                           .order_by(Categorie.preferee.desc(),
+                                                     Categorie.nom,
+                                                     Article.annee.desc())
                                            .aggregate_rows()]
     # print([(x.nom, len(c[x])) for x in c])
     return c
@@ -300,10 +305,10 @@ def recuperer_tous_articles_par_categorie():
 def recuperer_tous_articles_pour_une_categorie(nom_categorie):
     c = []
     try:
-        cat = categorie.get(categorie.nom == nom_categorie)
-        c = [x for x in article.select()
-                               .where((article.lu == False) &
-                                      (article.categorie == cat))]
+        cat = Categorie.get(Categorie.nom == nom_categorie)
+        c = [x for x in Article.select()
+                               .where((Article.lu == False) &
+                                      (Article.categorie == cat))]
     except DoesNotExist as e:
         logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
 
@@ -313,7 +318,7 @@ def recuperer_tous_articles_pour_une_categorie(nom_categorie):
 @cli.command()
 @base_de_donnee
 def patch_annee():
-    for x in article.select():
+    for x in Article.select():
         x.analyse_annee()
         x.save()
 
