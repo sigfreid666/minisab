@@ -32,7 +32,7 @@ class Categorie(Model):
         return ar
 
 
-class article(Model):
+class Article(Model):
     title = CharField()
     link = CharField()
     description = CharField()
@@ -56,7 +56,7 @@ class article(Model):
         return categorie_sabnzbd
 
     def convertold(self):
-        ar = newminisab.article()
+        ar = newminisab.Article()
         ar.title = self.title
         ar.link = self.link
         ar.description = self.description
@@ -78,17 +78,17 @@ class article(Model):
         database = olddb
 
 
-class recherche(Model):
+class Recherche(Model):
     id_check = IntegerField(unique=True)
     url = CharField()
     taille = CharField()
     title = CharField()
     id_sabnzbd = CharField(default='')
     fichier = CharField(default='')
-    article = ForeignKeyField(article, related_name='recherche')
+    article = ForeignKeyField(Article, related_name='recherche')
 
     def convertold(self):
-        ar = newminisab.recherche()
+        ar = newminisab.Recherche()
         ar.id_check = self.id_check
         ar.url = self.url
         ar.taille = self.taille
@@ -105,12 +105,12 @@ class recherche(Model):
 def convert():
     olddb.connect()
     newminisab.db.connect()
-    newminisab.db.create_tables([newminisab.article,
-                                 newminisab.recherche,
+    newminisab.db.create_tables([newminisab.Article,
+                                 newminisab.Recherche,
                                  newminisab.Categorie], safe=True)
     # cat = newminisab.Categorie(nom="Favoris", preferee=99)
     # cat.save()
-    for y in [Categorie, article, recherche]:
+    for y in [Categorie, Article, Recherche]:
         for x in y.select():
             try:
                 y = x.convertold()
