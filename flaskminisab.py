@@ -22,7 +22,7 @@ nom_cat_sab = 'minisab_categorie_sabnzbd'
 
 
 def render_template_categorie(id_categorie):
-    cat = newminisab.categorie.get(newminisab.categorie.id == id_categorie)
+    cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     if cat is not None:
         items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                  cat.nom))
@@ -57,14 +57,14 @@ def index():
                            articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
                            version=version,
-                           categorie_favoris_id=newminisab.categorie.get_favoris().id)
+                           categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
 @app.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
     try:
-        ar = newminisab.article.get(newminisab.article.id == id_article)
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
         id_cat_ar = ar.categorie.id
         ar.marquer_favoris()
         ar.lancer_recherche()
@@ -72,7 +72,7 @@ def marquer_article_favoris_categorie(id_article=None):
                     id_article, len(ar.recherche))
         ar.save()
 
-        cat_fav = newminisab.categorie.get_favoris()
+        cat_fav = newminisab.Categorie.get_favoris()
         cat_sab = get_categorie_sabnzbd()
         fav_html = render_template_categorie(cat_fav.id)
         sab_html = render_template_categorie(id_cat_ar)
@@ -81,7 +81,7 @@ def marquer_article_favoris_categorie(id_article=None):
                                        categorie_sabnzbd=cat_sab,
                                        categorie_favoris_id=cat_fav.id)
         return jsonify((article_html, *fav_html, *sab_html))
-    except newminisab.article.DoesNotExist:
+    except newminisab.Article.DoesNotExist:
         abort(404)
 
 
@@ -89,7 +89,7 @@ def marquer_article_favoris_categorie(id_article=None):
 def marquer_article_favoris(id_article=None):
     logger.info('Requete %s', request.url)
     try:
-        ar = newminisab.article.get(newminisab.article.id == id_article)
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
         ar.marquer_favoris()
         logger.info('marquer favoris %d',
                     id_article)
@@ -97,8 +97,8 @@ def marquer_article_favoris(id_article=None):
         return render_template('./article.html', item=ar,
                                categorie=ar.categorie,
                                categorie_sabnzbd=get_categorie_sabnzbd(),
-                               categorie_favoris_id=newminisab.categorie.get_favoris().id)
-    except newminisab.article.DoesNotExist:
+                               categorie_favoris_id=newminisab.Categorie.get_favoris().id)
+    except newminisab.Article.DoesNotExist:
         abort(404)
 
 
@@ -109,7 +109,7 @@ def marquer_article_lu():
         if request.method == 'POST':
             data_json = request.get_json()
             for art_id in data_json:
-                ar = newminisab.article.get(newminisab.article.id == art_id)
+                ar = newminisab.Article.get(newminisab.Article.id == art_id)
                 ar.lu = True
                 for y in ar.recherche:
                     logger.info('article_lu, title %s, id sab %s',
@@ -118,7 +118,7 @@ def marquer_article_lu():
                         delete_history_sab(y.id_sabnzbd)
                 ar.save()
         return "OK"
-    except newminisab.article.DoesNotExist:
+    except newminisab.Article.DoesNotExist:
         abort(404)
 
 
@@ -129,12 +129,12 @@ def recherche_article(id_article, stop_multi):
     logger.info('Requete %s', request.url)
     try:
         # print('lancer recherche %s %d' % (id_article, stop_multi))
-        ar = newminisab.article.get(newminisab.article.id == id_article)
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         return render_template('./article.html', item=ar,
                                categorie_sabnzbd=get_categorie_sabnzbd(),
-                               categorie_favoris_id=newminisab.categorie.get_favoris().id)
-    except newminisab.article.DoesNotExist:
+                               categorie_favoris_id=newminisab.Categorie.get_favoris().id)
+    except newminisab.Article.DoesNotExist:
         abort(404)
 
 
@@ -144,12 +144,12 @@ def recherche_article(id_article, stop_multi):
 def lancer_telecharger(id_recherche, categorie):
     logger.info('Requete %s', request.url)
     try:
-        rec = newminisab.recherche.get(newminisab.recherche.id == id_recherche)
+        rec = newminisab.Recherche.get(newminisab.Recherche.id == id_recherche)
         rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
                                                 rec.url, categorie)
         rec.save()
         return 'OK'
-    except newminisab.article.DoesNotExist:
+    except newminisab.Article.DoesNotExist:
         abort(404)
 
 
@@ -161,7 +161,7 @@ def get_categorie(id_categorie=None, id_categorie2=None):
     for id_cat in (id_categorie, id_categorie2):
         if id_cat is None:
             continue
-        cat = newminisab.categorie.get(newminisab.categorie.id == id_cat)
+        cat = newminisab.Categorie.get(newminisab.Categorie.id == id_cat)
         if cat is not None:
             items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                      cat.nom))
