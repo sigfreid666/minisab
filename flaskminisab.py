@@ -178,7 +178,9 @@ def get_categorie(id_categorie=None, id_categorie2=None):
 
 @app.route('/categorie/')
 def categorie_liste():
+    logger.info('Requete %s', request.url)
     articles = newminisab.recuperer_tous_articles_par_categorie()
+    logger.debug('nb articles %d', len(articles))
     return render_template('./barre_categorie.html', articles=articles)
 
 
