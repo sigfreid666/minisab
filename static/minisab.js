@@ -20,6 +20,29 @@ function marquer_lu(tabarticle, idcatdepart) {
     });
 }
 
+function marquer_lu_barre(tabarticle, idcatdepart) {
+    $.ajax({
+        url: 'articles/lu',
+        type: 'POST',
+        data: JSON.stringify(tabarticle),
+        contentType: 'application/json; charset=utf-8',
+        success: function(msg) {
+            for (i = 0; i < tabarticle.length; i++) {
+                $("#art_"+tabarticle[i]).remove();
+            }
+            $("#cat_" + idcatdepart).remove();
+            $("#cat_" + idcatdepart + '_end').remove();
+            $.get("categorie",
+                function(data, status) {
+                    console.log("barre : " + data[0]);
+                    if (status == "success") {
+                        $("#barre_categorie").replaceWith(data);
+                    }
+                }
+            );
+        }
+    });
+}
 
 function marquer_favoris(idarticle, idcatdepart, idcatarrivee) {
     $.get("article/" + idarticle + "/favoris/categorie",
