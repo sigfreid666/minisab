@@ -13,7 +13,7 @@ logging.config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.6'
+version = '2.6a'
 # bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
 #                static_folder='static')
 app = Flask(__name__)
