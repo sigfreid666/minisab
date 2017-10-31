@@ -12,7 +12,6 @@ ENV DB_FILE="/data/minisab.db" LOG_FILE="/data/minisab.log" REDIS_IP="192.168.0.
 
 RUN export LC_ALL=C.UTF-8 LANG=C.UTF-8
 
-RUN groupadd -r minisab && useradd --no-log-init -r -g minisab minisab
 RUN mkdir /app
 
 RUN mkdir /data
@@ -30,8 +29,6 @@ ADD gunicorn.py /app
 
 ADD cronfile /app
 
-# USER minisab:minisab
-
 RUN echo "dbfile = '${DB_FILE}'" > /app/settings_local.py; \
     echo "logfile = '${LOG_FILE}'" >> /app/settings_local.py; \
     echo "host_redis = '${REDIS_IP}'" >> /app/settings_local.py; \
@@ -41,13 +38,9 @@ RUN echo "dbfile = '${DB_FILE}'" > /app/settings_local.py; \
 
 #RUN export LC_ALL=C.UTF-8 && export LANG=C.UTF-8 && python3 ./newminisab.py check
 
-RUN chown -R minisab:minisab /data;\
-    chown -R minisab:minisab /app;\
-    chmod -R 0755 static
+RUN chmod -R 0755 static
 
-RUN cat /app/cronfile | crontab - -u minisab
-
-RUN crontab -l -u minisab
+RUN cat /app/cronfile | crontab -
 
 VOLUME /data
 
