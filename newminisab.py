@@ -82,6 +82,7 @@ class Article(Model):
                         self.categorie_origine = Categorie.get(Categorie.nom == decoup[1])
                     except Categorie.DoesNotExist:
                         self.categorie = Categorie(nom=decoup[1])
+                        self.categorie_origine = self.categorie
                         self.categorie.save()
                         logger.info('Creation nouvelle categorie : %s' % self.categorie.nom)
                 elif len(decoup) == 2:
