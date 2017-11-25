@@ -62,6 +62,13 @@
         {{ item.fichier|truncate(40) }}<br>
         <a href="{{ item.nfo }}">Nfo</a>
     </p>
+    {% if (item.recherche|length > 0) and (item.recherche|length < 4) %}
+    <div class="btn-group" role="group" aria-label="...">
+        {% for item_recherche in item.recherche %}
+            <button type="button" class="btn btn-default" onclick="">{{ item_recherche.taille }}</button>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>   
     {% if item.recherche|length > 0 %}
     <div class="list-group collapse" id="recresult_{{ item.id }}">
