@@ -226,6 +226,11 @@ def base_de_donnee(wrap):
             except DoesNotExist:
                 cat = Categorie(nom="Favoris", preferee=99)
                 cat.save()
+            try:
+                cat = Categorie.get(Categorie.nom == 'Termines')
+            except DoesNotExist:
+                cat = Categorie(nom="Termines", preferee=98)
+                cat.save()
         except OperationalError:
             pass
         ret = wrap(*args)

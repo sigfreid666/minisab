@@ -116,6 +116,8 @@ def marquer_article_lu():
                                 ar.title, y.id_sabnzbd)
                     if y.id_sabnzbd != '':
                         delete_history_sab(y.id_sabnzbd)
+                        y.id_sabnzbd = ''
+                        y.save()
                 ar.save()
         return "OK"
     except newminisab.Article.DoesNotExist:
