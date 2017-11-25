@@ -41,18 +41,6 @@ def index():
     logger.info('Requete /')
     articles = newminisab.recuperer_tous_articles_par_categorie()
     logger.debug('index, articles %d', len(articles))
-    status_sab = status_sabnzbd()
-    logger.debug('index, statut sab %s', str(status_sab))
-    for z in articles:
-        if z[0].nom == 'Favoris':
-            for x in z[1]:
-                for y in x.recherche:
-                    logger.debug('index, title %s, id sab %s',
-                                 x.title, y.id_sabnzbd)
-                    if y.id_sabnzbd in status_sab:
-                        x.status_sabnzbd = status_sab[y.id_sabnzbd]
-                        logger.debug('index, trouve %s', x.status_sabnzbd)
-    # articles = ([(x[0], x[1]) for x in articles.items()])
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
