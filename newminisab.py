@@ -5,8 +5,10 @@ import re
 import logging
 from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
-from settings import dbfile
+from settings import dbfile, host_sabG, sabnzbd_nc_cle_api, host_redis, port_redis
 from functools import wraps
+import redis
+import itertools
 
 # if __name__ == "__main__":
 #     import logging.config
@@ -237,6 +239,53 @@ def base_de_donnee(wrap):
 def cli():
     pass
 
+def status_sabnzbd():
+    if host_sabG is not None:
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'limit': '100',
+                 'mode': 'history'}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        try:
+            r = requests.get(myurl, params=param)
+            resultat = r.json()
+            param = {'apikey': sabnzbd_nc_cle_api,
+                     'output': 'json',
+                     'mode': 'queue'}
+            myurl = "http://{0}:{1}/sabnzbd/api".format(
+                    host_sabG,
+                    9000)
+            r = requests.get(myurl, params=param)
+            resultat2 = r.json()
+            resultat_total = itertools.chain(resultat['history']['slots'],
+                                             resultat2['queue']['slots'])
+            return [ (x['nzo_id'], x['status']) for x in resultat_total ]
+        except requests.exceptions.ConnectionError:
+            return {}
+    else:
+        return {}
+
+@cli.command('check_sab')
+def check_sabnzbd():
+    status_possible = ('Completed', 'Failed', 'Downloading')
+    if host_redis is not None:
+        red = None
+        try:
+            red = redis.StrictRedis(host=host_redis, port=port_redis)
+            st_sb = status_sabnzbd()
+            # st_sb = [('aaaaaa', 'Completed'), ('bbbbbb', 'Failed'), ('ccccccc', 'Downloading'), ('ddddddd', 'Downloading'), ('eeeeeee', 'Failed'), ('ffffffff', 'Completed')]
+            if len(st_sb) > 0: # on pete tous
+                for status in status_possible:
+                    red.srem('sab_' + status, *red.smembers('sab_' + status))
+            for idsab, status in st_sb:
+                if status in status_possible:
+                    red.sadd('sab_' + status, idsab)
+            for status in status_possible:
+                print('status :', status, 'members :', red.smembers('sab_' + status))
+        except redis.exceptions.ConnectionError as e:
+            logging.error('Impossible de se connecter à Redis : %s', str(e))
 
 @cli.command('test')
 @base_de_donnee
