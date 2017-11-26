@@ -9,6 +9,7 @@ from settings import dbfile, host_sabG, sabnzbd_nc_cle_api, host_redis, port_red
 from functools import wraps
 import redis
 import itertools
+import copy
 
 # if __name__ == "__main__":
 #     import logging.config
@@ -365,8 +366,13 @@ def recuperer_tous_articles_par_categorie():
                 for elem in red.smembers('sab_' + status):
                     status_sab[elem.decode()] = status
             # print(status_sab)
+            nouvelle_liste_completed = []
+            nouvelle_liste_other = []
+            liste_id_termine = []
             for z in c:
                 if z[0].nom == 'Favoris':
+                    z[0].ids_termine = []
+                    nouvelle_liste_other = copy.copy(z[1])
                     for x in z[1]:
                         x.status_sabnzbd = ''
                         for y in x.recherche:
@@ -375,6 +381,18 @@ def recuperer_tous_articles_par_categorie():
                             if y.id_sabnzbd in status_sab:
                                 x.status_sabnzbd = status_sab[y.id_sabnzbd]
                                 logger.debug('index, trouve %s', x.status_sabnzbd)
+                        if x.status_sabnzbd != '':
+                            nouvelle_liste_other.remove(x)
+                            if x.status_sabnzbd == 'Completed':
+                                nouvelle_liste_completed.insert(0, x)
+                                liste_id_termine.append(x.id)
+                            else:
+                                nouvelle_liste_other.insert(0, x)
+            if ((len(nouvelle_liste_completed) > 0) or\
+                (len(nouvelle_liste_other) > 0)) and\
+               (c[0][0].nom == 'Favoris') :
+                c[0] = (c[0][0], nouvelle_liste_completed + nouvelle_liste_other)
+                c[0][0].ids_termine = liste_id_termine
 
         except redis.exceptions.ConnectionError as e:
             logging.error('Impossible de se connecter à Redis : %s', str(e))

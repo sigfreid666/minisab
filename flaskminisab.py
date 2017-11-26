@@ -138,6 +138,14 @@ def lancer_telecharger(id_recherche, categorie):
         rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
                                                 rec.url, categorie)
         rec.save()
+        if host_redis is not None:
+            red = None
+            try:
+                red = redis.StrictRedis(host=host_redis, port=port_redis)
+                red.rpush('sabdownload', rec.id_sabnzbd)
+                red.rpush('sabdownload', rec.article.id)
+            except redis.exceptions.ConnectionError as e:
+                logging.error('Impossible de se connecter à Redis : %s', str(e))
         return 'OK'
     except newminisab.Article.DoesNotExist:
         abort(404)
