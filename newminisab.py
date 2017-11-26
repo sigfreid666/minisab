@@ -5,14 +5,19 @@ import re
 import logging
 from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
-from settings import dbfile
+from settings import dbfile, host_sabG, sabnzbd_nc_cle_api, host_redis, port_redis
 from functools import wraps
+import redis
+import itertools
+import copy
 
 # if __name__ == "__main__":
 #     import logging.config
 #     from settings import log_config
 #     print(log_config)
 #     logging.config.dictConfig(log_config)
+
+status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +87,7 @@ class Article(Model):
                         self.categorie_origine = Categorie.get(Categorie.nom == decoup[1])
                     except Categorie.DoesNotExist:
                         self.categorie = Categorie(nom=decoup[1])
+                        self.categorie_origine = self.categorie
                         self.categorie.save()
                         logger.info('Creation nouvelle categorie : %s' % self.categorie.nom)
                 elif len(decoup) == 2:
@@ -225,6 +231,11 @@ def base_de_donnee(wrap):
             except DoesNotExist:
                 cat = Categorie(nom="Favoris", preferee=99)
                 cat.save()
+            try:
+                cat = Categorie.get(Categorie.nom == 'Termines')
+            except DoesNotExist:
+                cat = Categorie(nom="Termines", preferee=98)
+                cat.save()
         except OperationalError:
             pass
         ret = wrap(*args)
@@ -237,8 +248,59 @@ def base_de_donnee(wrap):
 def cli():
     pass
 
+def status_sabnzbd():
+    if host_sabG is not None:
+        param = {'apikey': sabnzbd_nc_cle_api,
+                 'output': 'json',
+                 'limit': '100',
+                 'mode': 'history'}
+        myurl = "http://{0}:{1}/sabnzbd/api".format(
+                host_sabG,
+                9000)
+        try:
+            r = requests.get(myurl, params=param)
+            resultat = r.json()
+            param = {'apikey': sabnzbd_nc_cle_api,
+                     'output': 'json',
+                     'mode': 'queue'}
+            myurl = "http://{0}:{1}/sabnzbd/api".format(
+                    host_sabG,
+                    9000)
+            r = requests.get(myurl, params=param)
+            resultat2 = r.json()
+            resultat_total = itertools.chain(resultat['history']['slots'],
+                                             resultat2['queue']['slots'])
+            # for x in resultat_total:
+            #     print('===================================')
+            #     print(x)
+            return [ (x['nzo_id'], x['status']) for x in resultat_total ]
+        except requests.exceptions.ConnectionError:
+            return {}
+    else:
+        return {}
 
-@cli.command('test')
+@cli.command('check_sab')
+def check_sabnzbd():
+    if host_redis is not None:
+        red = None
+        try:
+            red = redis.StrictRedis(host=host_redis, port=port_redis)
+            st_sb = status_sabnzbd()
+            if len(st_sb) > 0: # on pete tous
+                for status in status_possibleG:
+                    members = red.smembers('sab_' + status)
+                    if len(members) > 0:
+                        red.srem('sab_' + status, *members)
+            for idsab, status in st_sb:
+                if status in status_possibleG:
+                    red.sadd('sab_' + status, idsab)
+                else:
+                    logger.info('Status ignore : %s', status)
+            # for status in status_possibleG:
+            #     print('status :', status, 'members :', red.smembers('sab_' + status))
+        except redis.exceptions.ConnectionError as e:
+            logging.error('Impossible de se connecter à Redis : %s', str(e))
+
 @base_de_donnee
 def test():
     a = Article.select(Article.categorie, fn.Count(Article.categorie).alias('nb')).where(Article.lu == False).group_by(Article.categorie)
@@ -280,16 +342,12 @@ def recuperer_tous_articles():
 
 @cli.command('test')
 def test():
-    recuperer_tous_articles_par_categorie()
+    print([str(z.status_sabnzbd) for x,y in recuperer_tous_articles_par_categorie() if x.nom == 'Favoris' for z in y])
 
 
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
     logger.debug('recuperer_tous_articles_par_categorie')
-    # favoris = [x for x in article.select()
-    #                              .where(article.lu == False)
-    #                              .join(categorie)
-    #                              .where(categorie.nom == 'Favoris')]
     c = [(x, x.articles) for x in Categorie.select(Categorie, Article)
                                            .join(Article)
                                            .where(Article.lu == False)
@@ -297,7 +355,47 @@ def recuperer_tous_articles_par_categorie():
                                                      Categorie.nom,
                                                      Article.annee.desc())
                                            .aggregate_rows()]
-    # print([(x.nom, len(c[x])) for x in c])
+
+    # si redis est dispo on va inserer les infos sur le statut de telechargement
+    if host_redis is not None:
+        red = None
+        try:
+            red = redis.StrictRedis(host=host_redis, port=port_redis)
+            status_sab = {}
+            for status in status_possibleG:
+                for elem in red.smembers('sab_' + status):
+                    status_sab[elem.decode()] = status
+            # print(status_sab)
+            nouvelle_liste_completed = []
+            nouvelle_liste_other = []
+            liste_id_termine = []
+            for z in c:
+                if z[0].nom == 'Favoris':
+                    z[0].ids_termine = []
+                    nouvelle_liste_other = copy.copy(z[1])
+                    for x in z[1]:
+                        x.status_sabnzbd = ''
+                        for y in x.recherche:
+                            logger.debug('index, title %s, id sab %s',
+                                         x.title, y.id_sabnzbd)
+                            if y.id_sabnzbd in status_sab:
+                                x.status_sabnzbd = status_sab[y.id_sabnzbd]
+                                logger.debug('index, trouve %s', x.status_sabnzbd)
+                        if x.status_sabnzbd != '':
+                            nouvelle_liste_other.remove(x)
+                            if x.status_sabnzbd == 'Completed':
+                                nouvelle_liste_completed.insert(0, x)
+                                liste_id_termine.append(x.id)
+                            else:
+                                nouvelle_liste_other.insert(0, x)
+            if ((len(nouvelle_liste_completed) > 0) or\
+                (len(nouvelle_liste_other) > 0)) and\
+               (c[0][0].nom == 'Favoris') :
+                c[0] = (c[0][0], nouvelle_liste_completed + nouvelle_liste_other)
+                c[0][0].ids_termine = liste_id_termine
+
+        except redis.exceptions.ConnectionError as e:
+            logging.error('Impossible de se connecter à Redis : %s', str(e))
     return c
 
 
