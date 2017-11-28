@@ -65,7 +65,7 @@
     {% if (item.recherche|length > 0) and (item.recherche|length < 4) %}
     <div class="btn-group" role="group" aria-label="...">
         {% for item_recherche in item.recherche %}
-            <button type="button" class="btn btn-default" onclick="">{{ item_recherche.taille }}</button>
+            <button type="button" class="btn btn-default" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})">{{ item_recherche.taille }}</button>
         {% endfor %}
     </div>
     {% endif %}
