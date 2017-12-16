@@ -182,6 +182,12 @@ def categorie_liste():
     return render_template('./barre_categorie.html', articles=articles)
 
 
+@app.route('/categories/index/')
+def categories_index():
+    return render_template('./categories_index.html', 
+        categories=[x for x in newminisab.Categorie.select()],
+        categorie_sabnzbd=['bobo', 'toto', 'vovo'])
+
 def get_categorie_sabnzbd():
     categorie_sabnzbd = []
     if host_redis is not None:
