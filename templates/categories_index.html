@@ -9,12 +9,12 @@
     <title>Categories [minisab]</title>
 
     <!-- Bootstrap -->
-    <link href="static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="static/jquery-3.2.1.js"></script>
-    <script src="static/minisab.js"></script>
+    <script src="/static/jquery-3.2.1.js"></script>
+    <script src="/static/minisab.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="static/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -28,27 +28,47 @@
         <h1>Categories <span class="badge">Minisab {{ version }}</span></h1>
         </div>
         {% for categorie in categories %}
-            <div class="row">
+            <div class="row" id="art_{{ categorie.id }}">
                 <div class="panel-heading">
                     <h3>{{ categorie.nom }} {{ categorie.articles_2|length }}/{{ categorie.articles|length }} </h3>
                 </div>
                 <div class="panel-body">
-                    <p>
-                        Categorie : {{ categorie.categorie_sabnzbd }}<br>
-                        Preferee : {{ categorie.preferee }}<br>
-                        <div class="btn-group recherche" role="group" aria-label="...">
-                            {% for item_categorie in categorie_sabnzbd %}
-                                {% if item_categorie == categorie.categorie_sabnzbd %}
-                                <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
-                                {% else %}
-                                <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </p>
+                    Preferee : <button type="button" class="btn-xs btn-primary" data-toggle="modal" data-target="#modalChoisirPreferee">
+                      {{ categorie.preferee}}
+                    </button><br>
+                    <div class="btn-group recherche" role="group" aria-label="...">
+                        {% for item_categorie in categorie_sabnzbd %}
+                            {% if item_categorie == categorie.categorie_sabnzbd %}
+                            <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                            {% else %}
+                            <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         {% endfor %}
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="modalChoisirPreferee" tabindex="-1" role="dialog" aria-labelledby="Choisir categorie">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="modalChoisirPrefereeTitle">Choisir importance</h4>
+          </div>
+          <div class="modal-body">
+            <div class="input-group">
+              <span class="input-group-addon" id="basic-addon1">Preferee</span>
+              <input type="text" class="form-control" placeholder="Valeur entre 0 et 99" aria-describedby="basic-addon1">
+            </div>          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" onclick="console.log('gogo')">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
     </div>
 </body>
 </html>

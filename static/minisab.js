@@ -107,3 +107,16 @@ function change_selection(idarticle, categorie){
     $("#art_"+idarticle+" div.recherche button." + categorie).removeClass('btn-default').addClass('btn-danger');
     console.log('Test <' + categorie + '>');
 }
+
+function change_selection_cat(idarticle, categorie){
+    $("#art_"+idarticle+" div.recherche button.btn-danger").removeClass('btn-danger').addClass('btn-default');
+    $("#art_"+idarticle+" div.recherche button." + categorie).removeClass('btn-default').addClass('btn-danger');
+    console.log('Test <' + categorie + '>');
+    var url = "/categorie/" + idarticle + "/sabnzbd/" + categorie
+    $.get(url,
+        function(data, status) {
+            if (status == "success") {
+                console.log("OK envoyer_sab");
+            }
+        })
+}
