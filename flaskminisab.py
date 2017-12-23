@@ -198,7 +198,7 @@ def change_sab_categorie(id_categorie=None, cat_sab=None):
 
 
 @app.route('/categorie/<int:id_categorie>/preferee/<int:preferee>')
-def change_sab_categorie(id_categorie=None, preferee=0):
+def change_sab_preferee(id_categorie=None, preferee=0):
     cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     cat.preferee = preferee
     cat.save()

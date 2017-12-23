@@ -33,7 +33,7 @@
                     <h3>{{ categorie.nom }} {{ categorie.articles_2|length }}/{{ categorie.articles|length }} </h3>
                 </div>
                 <div class="panel-body">
-                    Preferee : <button type="button" class="btn-xs btn-primary" data-toggle="modal" data-target="#modalChoisirPreferee">
+                    Preferee : <button type="button" class="btn-xs btn-primary preferee" data-toggle="modal" data-target="#modalChoisirPreferee" data-whatever="{{ categorie.id }}">
                       {{ categorie.preferee}}
                     </button><br>
                     <div class="btn-group recherche" role="group" aria-label="...">
@@ -62,13 +62,39 @@
             <div class="input-group">
               <span class="input-group-addon" id="basic-addon1">Preferee</span>
               <input type="text" class="form-control" placeholder="Valeur entre 0 et 99" aria-describedby="basic-addon1">
-            </div>          </div>
+            </div>          
+          </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal" onclick="console.log('gogo')">Close</button>
-            <button type="button" class="btn btn-primary">Save changes</button>
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
     </div>
+    <script type="text/javascript">
+        $('#modalChoisirPreferee').on('show.bs.modal', function (event) {
+          var button = $(event.relatedTarget) // Button that triggered the modal
+          var categorieid = button.data('whatever') // Extract info from data-* attributes
+          console.log('categorie' + categorieid);
+
+          // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+          // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+          var modal = $(this)
+          button_close = modal.find('.modal-footer button')
+          console.log(button_close);
+          button_close.click(function(){
+              var modal = $("#modalChoisirPreferee")
+              preferee = modal.find('.modal-body input').val()
+              modal.find('.modal-body input').val("")
+                var url = "/categorie/" + categorieid + "/preferee/" + preferee
+                $.get(url,
+                    function(data, status) {
+                        if (status == "success") {
+                            $("#art_"+categorieid+" div.panel-body button.preferee").text(preferee);
+                            console.log("OK envoyer_sab");
+                        }
+                    })
+            });
+        });
+    </script>
 </body>
 </html>
