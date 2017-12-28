@@ -186,7 +186,7 @@ def categorie_liste():
 def categories_index():
     return render_template('./categories_index.html', 
         categories=[x for x in newminisab.Categorie.select()],
-        categorie_sabnzbd=['bobo', 'toto', 'vovo', 'serietv', 'film'])
+        categorie_sabnzbd=get_categorie_sabnzbd())
 
 
 @app.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
