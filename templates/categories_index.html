@@ -27,23 +27,32 @@
         <div class="page-header">
         <h1>Categories <span class="badge">Minisab {{ version }}</span></h1>
         </div>
+        <div class="row">
         {% for categorie in categories %}
-            <div class="row" id="art_{{ categorie.id }}">
+            <div class="col-md-4" id="art_{{ categorie.id }}">
                 <div class="panel-heading">
                     <h3>{{ categorie.nom }} {{ categorie.articles_2|length }}/{{ categorie.articles|length }} </h3>
                 </div>
                 <div class="panel-body">
-                    Preferee : <button type="button" class="btn-xs btn-primary preferee" data-toggle="modal" data-target="#modalChoisirPreferee" data-whatever="{{ categorie.id }}">
+                    <div class="row">
+                        <div class="col-md-12">
+                            Preferee : <button type="button" class="btn-xs btn-primary preferee" data-toggle="modal" data-target="#modalChoisirPreferee" data-whatever="{{ categorie.id }}">
                       {{ categorie.preferee}}
-                    </button><br>
-                    <div class="btn-group recherche" role="group" aria-label="...">
-                        {% for item_categorie in categorie_sabnzbd %}
-                            {% if item_categorie == categorie.categorie_sabnzbd %}
-                            <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
-                            {% else %}
-                            <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
-                            {% endif %}
-                        {% endfor %}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="btn-group recherche" role="group" aria-label="...">
+                                {% for item_categorie in categorie_sabnzbd %}
+                                    {% if item_categorie == categorie.categorie_sabnzbd %}
+                                    <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
