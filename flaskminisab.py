@@ -55,7 +55,7 @@ def mise_a_jour():
 
 
 @app.route('/check_sab')
-def mise_a_jour():
+def check_sab():
     logger.info('Requete : /maj')
     return jsonify(newminisab.check_new_article())
 
