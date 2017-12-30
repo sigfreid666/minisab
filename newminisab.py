@@ -279,8 +279,14 @@ def status_sabnzbd():
     else:
         return {}
 
+
 @cli.command('check_sab')
+def cmd_check_sabnzbd():
+    check_sabnzbd();
+
+
 def check_sabnzbd():
+    status = {'resultat' : False }
     if host_redis is not None:
         red = None
         try:
@@ -296,10 +302,13 @@ def check_sabnzbd():
                     red.sadd('sab_' + status, idsab)
                 else:
                     logger.info('Status ignore : %s', status)
+            status = {'resultat' : True, 'nb_result' : len(st_sb) }
             # for status in status_possibleG:
             #     print('status :', status, 'members :', red.smembers('sab_' + status))
         except redis.exceptions.ConnectionError as e:
             logging.error('Impossible de se connecter à Redis : %s', str(e))
+    return status
+
 
 @base_de_donnee
 def test():

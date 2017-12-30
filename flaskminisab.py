@@ -54,6 +54,12 @@ def mise_a_jour():
     return jsonify(newminisab.check_new_article())
 
 
+@app.route('/check_sab')
+def mise_a_jour():
+    logger.info('Requete : /maj')
+    return jsonify(newminisab.check_new_article())
+
+
 @app.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
