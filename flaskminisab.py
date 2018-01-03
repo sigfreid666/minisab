@@ -194,6 +194,29 @@ def categorie_liste():
     return render_template('./barre_categorie.html', articles=articles)
 
 
+@app.route('/categories/index/')
+def categories_index():
+    return render_template('./categories_index.html', 
+        categories=[x for x in newminisab.Categorie.select()],
+        categorie_sabnzbd=get_categorie_sabnzbd())
+
+
+@app.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
+def change_sab_categorie(id_categorie=None, cat_sab=None):
+    cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
+    cat.categorie_sabnzbd = cat_sab
+    cat.save()
+    return 'OK'
+
+
+@app.route('/categorie/<int:id_categorie>/preferee/<int:preferee>')
+def change_sab_preferee(id_categorie=None, preferee=0):
+    cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
+    cat.preferee = preferee
+    cat.save()
+    return 'OK'
+
+
 def get_categorie_sabnzbd():
     categorie_sabnzbd = []
     if host_redis is not None:
@@ -297,4 +320,4 @@ def delete_history_sab(id_sab):
 
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=9030)
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
