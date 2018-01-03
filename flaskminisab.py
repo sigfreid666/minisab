@@ -48,6 +48,18 @@ def index():
                            categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
+@app.route('/maj')
+def mise_a_jour():
+    logger.info('Requete : /maj')
+    return jsonify(newminisab.check_new_article())
+
+
+@app.route('/check_sab')
+def check_sab():
+    logger.info('Requete : /maj')
+    return jsonify(newminisab.check_sabnzbd())
+
+
 @app.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
