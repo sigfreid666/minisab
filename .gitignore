@@ -10,3 +10,5 @@ __pycache__/
 settings_local\.py
 
 *.tar
+
+gunicorn\.py

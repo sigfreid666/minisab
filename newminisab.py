@@ -279,8 +279,14 @@ def status_sabnzbd():
     else:
         return {}
 
+
 @cli.command('check_sab')
+def cmd_check_sabnzbd():
+    check_sabnzbd();
+
+
 def check_sabnzbd():
+    status = {'resultat' : False }
     if host_redis is not None:
         red = None
         try:
@@ -296,10 +302,13 @@ def check_sabnzbd():
                     red.sadd('sab_' + status, idsab)
                 else:
                     logger.info('Status ignore : %s', status)
+            status = {'resultat' : True, 'nb_result' : len(st_sb) }
             # for status in status_possibleG:
             #     print('status :', status, 'members :', red.smembers('sab_' + status))
         except redis.exceptions.ConnectionError as e:
             logging.error('Impossible de se connecter à Redis : %s', str(e))
+    return status
+
 
 @base_de_donnee
 def test():
@@ -309,7 +318,12 @@ def test():
 
 @cli.command('check')
 @base_de_donnee
+def cmd_check_new_article():
+    check_new_article()
+
+
 def check_new_article():
+    status = {'resultat' : False }
     myurl = "http://www.binnews.in/rss/rss_new.php"
     logger.info('check_new_article: debut url <%s>', myurl)
     r = requests.get(myurl)
@@ -322,6 +336,9 @@ def check_new_article():
     parse.feed(resultat)
     logger.info('check_new_article: article detecte <%d>', len(parse.data))
     nb_nouveau_article = 0
+    status['resultat'] = True 
+    status['nombre_resultat'] = len(parse.data)
+    status['nombre_nouveau'] = 0
     for x in parse.data:
         try:
             ar = Article.get(Article.guid == x.guid)
@@ -329,11 +346,13 @@ def check_new_article():
         except Article.DoesNotExist:
             try:
                 x.save()
+                status['nombre_nouveau'] += 1
                 logger.debug('check_new_article: nouvel article <%s>', x.title)
                 nb_nouveau_article = nb_nouveau_article + 1
             except IntegrityError as e:
                 logger.error('Impossible de sauver l''article : %s %s (%s)' % (x.title, x.guid, str(e)))
     logger.info('check_new_article: %d nouveau(x) article(s)', nb_nouveau_article)
+    return status
 
 
 @base_de_donnee

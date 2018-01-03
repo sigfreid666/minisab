@@ -48,6 +48,18 @@ def index():
                            categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
+@app.route('/maj')
+def mise_a_jour():
+    logger.info('Requete : /maj')
+    return jsonify(newminisab.check_new_article())
+
+
+@app.route('/check_sab')
+def check_sab():
+    logger.info('Requete : /maj')
+    return jsonify(newminisab.check_sabnzbd())
+
+
 @app.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
@@ -182,6 +194,29 @@ def categorie_liste():
     return render_template('./barre_categorie.html', articles=articles)
 
 
+@app.route('/categories/index/')
+def categories_index():
+    return render_template('./categories_index.html', 
+        categories=[x for x in newminisab.Categorie.select()],
+        categorie_sabnzbd=get_categorie_sabnzbd())
+
+
+@app.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
+def change_sab_categorie(id_categorie=None, cat_sab=None):
+    cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
+    cat.categorie_sabnzbd = cat_sab
+    cat.save()
+    return 'OK'
+
+
+@app.route('/categorie/<int:id_categorie>/preferee/<int:preferee>')
+def change_sab_preferee(id_categorie=None, preferee=0):
+    cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
+    cat.preferee = preferee
+    cat.save()
+    return 'OK'
+
+
 def get_categorie_sabnzbd():
     categorie_sabnzbd = []
     if host_redis is not None:
@@ -285,4 +320,4 @@ def delete_history_sab(id_sab):
 
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=9030)
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
