@@ -7,7 +7,7 @@ import logging.config
 import itertools
 import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
-from settings import log_config
+from settings import log_config, port_sabG
 
 logging.config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
@@ -234,7 +234,7 @@ def get_categorie_sabnzbd():
                  'mode': 'get_cats'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         r = requests.get(myurl, params=param)
         resultat = r.json()
         if 'categories' in resultat:
@@ -260,7 +260,7 @@ def telechargement_sabnzbd(title, url, categorie):
                  'cat': categorie}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         r = requests.get(myurl, params=param)
         resultat = r.json()
         if resultat['status']:
@@ -279,7 +279,7 @@ def status_sabnzbd():
                  'mode': 'history'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         try:
             r = requests.get(myurl, params=param)
             resultat = r.json()
@@ -288,7 +288,7 @@ def status_sabnzbd():
                      'mode': 'queue'}
             myurl = "http://{0}:{1}/sabnzbd/api".format(
                     host_sabG,
-                    9000)
+                    port_sabG)
             r = requests.get(myurl, params=param)
             resultat2 = r.json()
             resultat_total = itertools.chain(resultat['history']['slots'],
@@ -309,7 +309,7 @@ def delete_history_sab(id_sab):
                  'mode': 'history'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         r = requests.get(myurl, params=param)
         return r.status_code
     else:
