@@ -367,13 +367,15 @@ def test():
 @base_de_donnee
 def recuperer_tous_articles_par_categorie():
     logger.debug('recuperer_tous_articles_par_categorie')
-    c = [(x, x.articles) for x in Categorie.select(Categorie, Article)
-                                           .join(Article)
-                                           .where(Article.lu == False)
-                                           .order_by(Categorie.preferee.desc(),
-                                                     Categorie.nom,
-                                                     Article.annee.desc())
-                                           .aggregate_rows()]
+    les_articles = (Article.select()
+                           .where(Article.lu == False)
+                           .order_by(Article.annee.desc()))
+    les_categories = (Categorie.select()
+                               .order_by(Categorie.preferee.desc(),
+                                         Categorie.nom))
+
+    c = [(x, x.articles) for x in prefetch(les_categories, les_articles) 
+                         if len(x.articles) > 0]
 
     # si redis est dispo on va inserer les infos sur le statut de telechargement
     if host_redis is not None:
