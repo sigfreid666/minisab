@@ -186,6 +186,14 @@ def get_categorie(id_categorie=None, id_categorie2=None):
         abort(404)
 
 
+@app.route('/categorie/historique/<int:id_categorie>')
+def categorie_historique(id_categorie=None):
+    obj_categorie = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
+    return render_template('./minifluxlistcomplete.html',
+                           categorie=obj_categorie.nom,
+                           articles=newminisab.recuperer_tous_articles_pour_une_categorie(obj_categorie.nom))
+
+
 @app.route('/categories')
 def categorie_liste():
     logger.info('Requete %s', request.url)
