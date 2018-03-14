@@ -12,7 +12,7 @@
                             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
                         </button>
                         {% endif %}
-                        <a class="btn btn-warning" href="/categorie/historique/{{ categorie.id }}">
+                        <a class="btn btn-warning" href="{{ url_for('minisab.categorie_historique', id_categorie=categorie.id) }}">
                             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
                         </a>
                     </h1>

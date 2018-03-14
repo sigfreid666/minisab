@@ -13,9 +13,8 @@ logging.config.dictConfig(log_config)
 logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.8'
-# bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
-#                static_folder='static')
+version = '2.9beta'
+bp = Blueprint('minisab', __name__, static_folder='/minisab/static')
 app = Flask(__name__)
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
@@ -36,7 +35,7 @@ def render_template_categorie(id_categorie):
         return ''
 
 
-@app.route("/")
+@bp.route("/")
 def index():
     logger.info('Requete /')
     articles = newminisab.recuperer_tous_articles_par_categorie()
@@ -48,19 +47,19 @@ def index():
                            categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
-@app.route('/maj')
+@bp.route('/maj')
 def mise_a_jour():
     logger.info('Requete : /maj')
     return jsonify(newminisab.check_new_article())
 
 
-@app.route('/check_sab')
+@bp.route('/check_sab')
 def check_sab():
     logger.info('Requete : /maj')
     return jsonify(newminisab.check_sabnzbd())
 
 
-@app.route('/article/<int:id_article>/favoris/categorie')
+@bp.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
     try:
@@ -85,7 +84,7 @@ def marquer_article_favoris_categorie(id_article=None):
         abort(404)
 
 
-@app.route('/article/<int:id_article>/favoris')
+@bp.route('/article/<int:id_article>/favoris')
 def marquer_article_favoris(id_article=None):
     logger.info('Requete %s', request.url)
     try:
@@ -102,7 +101,7 @@ def marquer_article_favoris(id_article=None):
         abort(404)
 
 
-@app.route('/articles/lu', methods=['GET', 'POST'])
+@bp.route('/articles/lu', methods=['GET', 'POST'])
 def marquer_article_lu():
     logger.info('Requete /article/lu %s', request.method)
     try:
@@ -124,9 +123,9 @@ def marquer_article_lu():
         abort(404)
 
 
-@app.route('/article/<id_article>/recherche/<int:stop_multi>')
-@app.route('/article/<id_article>/recherche',
-           defaults={'stop_multi': 0})
+@bp.route('/article/<id_article>/recherche/<int:stop_multi>')
+@bp.route('/article/<id_article>/recherche',
+          defaults={'stop_multi': 0})
 def recherche_article(id_article, stop_multi):
     logger.info('Requete %s', request.url)
     try:
@@ -140,9 +139,9 @@ def recherche_article(id_article, stop_multi):
         abort(404)
 
 
-@app.route('/recherche/<id_recherche>/telecharger/<categorie>')
-@app.route('/recherche/<id_recherche>/telecharger/',
-           defaults={'categorie': '*'})
+@bp.route('/recherche/<id_recherche>/telecharger/<categorie>')
+@bp.route('/recherche/<id_recherche>/telecharger/',
+          defaults={'categorie': '*'})
 def lancer_telecharger(id_recherche, categorie):
     logger.info('Requete %s', request.url)
     try:
@@ -163,8 +162,8 @@ def lancer_telecharger(id_recherche, categorie):
         abort(404)
 
 
-@app.route('/categorie/<int:id_categorie>')
-@app.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
+@bp.route('/categorie/<int:id_categorie>')
+@bp.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
 def get_categorie(id_categorie=None, id_categorie2=None):
     logger.info('Requete %s', request.url)
     template = []
@@ -186,7 +185,7 @@ def get_categorie(id_categorie=None, id_categorie2=None):
         abort(404)
 
 
-@app.route('/categorie/historique/<int:id_categorie>')
+@bp.route('/categorie/historique/<int:id_categorie>')
 def categorie_historique(id_categorie=None):
     obj_categorie = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     return render_template('./minifluxlistcomplete.html',
@@ -194,7 +193,7 @@ def categorie_historique(id_categorie=None):
                            articles=newminisab.recuperer_tous_articles_pour_une_categorie(obj_categorie.nom))
 
 
-@app.route('/categories')
+@bp.route('/categories')
 def categorie_liste():
     logger.info('Requete %s', request.url)
     articles = newminisab.recuperer_tous_articles_par_categorie()
@@ -202,14 +201,14 @@ def categorie_liste():
     return render_template('./barre_categorie.html', articles=articles)
 
 
-@app.route('/categories/index/')
+@bp.route('/categories/index/')
 def categories_index():
-    return render_template('./categories_index.html', 
-        categories=[x for x in newminisab.Categorie.select()],
-        categorie_sabnzbd=get_categorie_sabnzbd())
+    return render_template('./categories_index.html',
+                           categories=[x for x in newminisab.Categorie.select()],
+                           categorie_sabnzbd=get_categorie_sabnzbd())
 
 
-@app.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
+@bp.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
 def change_sab_categorie(id_categorie=None, cat_sab=None):
     cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     cat.categorie_sabnzbd = cat_sab
@@ -217,7 +216,7 @@ def change_sab_categorie(id_categorie=None, cat_sab=None):
     return 'OK'
 
 
-@app.route('/categorie/<int:id_categorie>/preferee/<int:preferee>')
+@bp.route('/categorie/<int:id_categorie>/preferee/<int:preferee>')
 def change_sab_preferee(id_categorie=None, preferee=0):
     cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     cat.preferee = preferee
@@ -324,7 +323,7 @@ def delete_history_sab(id_sab):
         return 0
 
 
-# app.register_blueprint(bp, prefix='/minisab')
+app.register_blueprint(bp, url_prefix='/minisab')
 
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=9030)
