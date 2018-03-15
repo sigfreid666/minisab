@@ -1,6 +1,6 @@
-function marquer_lu(tabarticle, idcatdepart) {
+function marquer_lu(url, tabarticle, idcatdepart) {
     $.ajax({
-        url: 'articles/lu',
+        url: url,
         type: 'POST',
         data: JSON.stringify(tabarticle),
         contentType: 'application/json; charset=utf-8',
