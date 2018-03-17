@@ -1,21 +1,24 @@
 from flask import Flask, render_template, abort, Blueprint, request, jsonify
-import newminisab
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
 import logging.config
 import itertools
+import newminisab
 import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config, port_sabG
 
 logging.config.dictConfig(log_config)
-logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
 version = '2.9beta'
 bp = Blueprint('minisab', __name__, static_folder='/minisab/static')
 app = Flask(__name__)
+logger = app.logger # logging.getLogger('gunicorn.glogging.Logger')
+gunicorn_logger = logging.getLogger('gunicorn.error')
+app.logger.handlers = gunicorn_logger.handlers
+
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
 
@@ -187,10 +190,11 @@ def get_categorie(id_categorie=None, id_categorie2=None):
 
 @bp.route('/categorie/historique/<int:id_categorie>')
 def categorie_historique(id_categorie=None):
+    logger.info('Requete %s %d', request.url, id_categorie)
     obj_categorie = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     return render_template('./minifluxlistcomplete.html',
                            categorie=obj_categorie.nom,
-                           articles=newminisab.recuperer_tous_articles_pour_une_categorie(obj_categorie.nom))
+                           articles=newminisab.recuperer_tous_articles_pour_une_categorie_lu(obj_categorie.nom))
 
 
 @bp.route('/categories')

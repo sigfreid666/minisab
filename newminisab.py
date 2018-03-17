@@ -19,7 +19,7 @@ import copy
 
 status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('flaskminisab')
 
 db = SqliteDatabase(dbfile)
 
@@ -421,13 +421,28 @@ def recuperer_tous_articles_par_categorie():
 
 
 @base_de_donnee
-def recuperer_tous_articles_pour_une_categorie(nom_categorie):
+def recuperer_tous_articles_pour_une_categorie(nom_categorie, lu=False):
     c = []
     try:
         cat = Categorie.get(Categorie.nom == nom_categorie)
         c = [x for x in Article.select()
-                               .where((Article.lu == False) &
-                                      (Article.categorie == cat))]
+                               .where((Article.lu == lu) &
+                                      (Article.categorie_origine == cat))]
+    except DoesNotExist as e:
+        logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
+
+    return c
+
+
+@base_de_donnee
+def recuperer_tous_articles_pour_une_categorie_lu(nom_categorie):
+    c = []
+    try:
+        cat = Categorie.get(Categorie.nom == nom_categorie)
+        logger.debug(str(cat))
+        c = [x for x in Article.select()
+                               .where(Article.categorie_origine == cat)]
+        logger.debug('nombre article : %d' % len(c))
     except DoesNotExist as e:
         logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
 
