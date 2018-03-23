@@ -77,6 +77,7 @@ def marquer_article_favoris_categorie(id_article=None):
         ar.save()
 
         cat_fav = newminisab.Categorie.get_favoris()
+        logger.debug('cat favoris %d %s', cat_fav.id, cat_fav.nom)
         cat_sab = get_categorie_sabnzbd()
         fav_html = render_template_categorie(cat_fav.id)
         sab_html = render_template_categorie(id_cat_ar)
@@ -110,10 +111,12 @@ def marquer_article_favoris(id_article=None):
 def marquer_article_lu():
     logger.info('Requete /article/lu %s', request.method)
     try:
+        cat_id = None
         if request.method == 'POST':
             data_json = request.get_json()
             for art_id in data_json:
                 ar = newminisab.Article.get(newminisab.Article.id == art_id)
+                cat_id = ar.categorie_origine.id
                 ar.lu = True
                 for y in ar.recherche:
                     logger.info('article_lu, title %s, id sab %s',
@@ -123,9 +126,12 @@ def marquer_article_lu():
                         y.id_sabnzbd = ''
                         y.save()
                 ar.save()
-        return "OK"
+        html_categorie = render_template_categorie(cat_id)
+        return jsonify(*html_categorie)
     except newminisab.Article.DoesNotExist:
         abort(404)
+
+
 
 
 @bp.route('/article/<id_article>/recherche/<int:stop_multi>')
@@ -177,8 +183,12 @@ def get_categorie(id_categorie=None, id_categorie2=None):
             continue
         cat = newminisab.Categorie.get(newminisab.Categorie.id == id_cat)
         if cat is not None:
+            logger.debug('Categorie nom : %s', cat.nom)
             items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                      cat.nom))
+            logger.debug('Categorie nombre element : %s', len(items))
+            for x in items:
+                logger.debug('Cat : %s', x.categorie_origine.nom)
             template.append(render_template('./categorie.html',
                                             categorie=cat,
                                             items=items))

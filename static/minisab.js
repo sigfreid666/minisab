@@ -4,25 +4,19 @@ function marquer_lu(url, tabarticle, idcatdepart) {
         type: 'POST',
         data: JSON.stringify(tabarticle),
         contentType: 'application/json; charset=utf-8',
-        success: function(msg) {
+        success: function(data) {
             for (i = 0; i < tabarticle.length; i++) {
                 $("#art_"+tabarticle[i]).remove();
             }
-            $.get("categorie/" + idcatdepart,
-                function(data, status) {
-                    if (status == "success") {
-                        $("#cat_" + idcatdepart).replaceWith(data[0]);
-                        $("#cat_" + idcatdepart + '_end').replaceWith(data[1]);
-                    }
-                }
-            );
+            $("#cat_" + idcatdepart).replaceWith(data[0]);
+            $("#cat_" + idcatdepart + '_end').replaceWith(data[1]);
         }
     });
 }
 
-function marquer_lu_barre(tabarticle, idcatdepart) {
+function marquer_lu_barre(url, tabarticle, idcatdepart) {
     $.ajax({
-        url: 'articles/lu',
+        url: url,
         type: 'POST',
         data: JSON.stringify(tabarticle),
         contentType: 'application/json; charset=utf-8',
@@ -32,20 +26,13 @@ function marquer_lu_barre(tabarticle, idcatdepart) {
             }
             $("#cat_" + idcatdepart).remove();
             $("#cat_" + idcatdepart + '_end').remove();
-            $.get("categories",
-                function(data, status) {
-                    console.log("barre : " + data[0]);
-                    if (status == "success") {
-                        $("#barre_categorie").replaceWith(data);
-                    }
-                }
-            );
+            $("#cat_" + idcatdepart + '_barre').remove();
         }
     });
 }
 
-function marquer_favoris(idarticle, idcatdepart, idcatarrivee) {
-    $.get("article/" + idarticle + "/favoris/categorie",
+function marquer_favoris(url, idarticle, idcatdepart, idcatarrivee) {
+    $.get(url,
         function(data, status) {
             if (status == "success") {
                 $("#art_"+idarticle).remove();
@@ -64,13 +51,10 @@ function marquer_favoris(idarticle, idcatdepart, idcatarrivee) {
         });
 }
 
-function lancer_recherche(idarticle) {
+function lancer_recherche(url, idarticle) {
     var stop_multi = $("#rec_multiple_" + idarticle).val();
     if (stop_multi != '') {
-        url = "article/" + idarticle + "/recherche/" + stop_multi;
-    }
-    else {
-        url = "article/" + idarticle + "/recherche";
+        url = url + "/" + stop_multi;
     }
 
     $.get(url,  
@@ -86,13 +70,11 @@ function lancer_recherche(idarticle) {
         })
 }
 
-function envoyer_sab(idrecherche, idarticle) {
+function envoyer_sab(url, idrecherche, idarticle) {
     var categorie = $("#art_"+idarticle+" div.recherche button.btn-danger").text()
     console.log("envoyer_sab " + categorie);
-	if (categorie == "*") {
-		var url = "recherche/" + idrecherche + "/telecharger/"; }
-	else {
-		var url = "recherche/" + idrecherche + "/telecharger/" + categorie; }
+	if (categorie != "*") {
+		url = url + categorie; }
     $.get(url,
         function(data, status) {
             if (status == "success") {

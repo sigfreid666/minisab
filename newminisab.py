@@ -427,7 +427,10 @@ def recuperer_tous_articles_pour_une_categorie(nom_categorie, lu=False):
         cat = Categorie.get(Categorie.nom == nom_categorie)
         c = [x for x in Article.select()
                                .where((Article.lu == lu) &
-                                      (Article.categorie_origine == cat))]
+                                      (Article.categorie == cat))]
+        logger.debug('recuperer_tous_articles_pour_une_categorie cat %s', nom_categorie)
+        for x in c:
+            logger.debug('lu %d cat or %s title %s', x.lu, x.categorie_origine.nom, x.title)
     except DoesNotExist as e:
         logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
 

@@ -1,9 +1,9 @@
 <div class="row" id='barre_categorie'>
     {% for categorie, items in articles %}
-    	<div class="col-md-2">
+    	<div class="col-md-2" id="cat_{{ categorie.id }}_barre">
             <h4>
-        		<a href="#cat_{{ categorie.id }}">{{ categorie.nom }}  <span class="badge">{{ items|length }}</span></a>
-                <button class="btn btn-danger btn-xs" onclick="marquer_lu_barre([{% for item in items %}{{ item.id }},{% endfor %}], {{ categorie.id}})">
+        		<a href="#cat_{{ categorie.id }}">{{ categorie.nom }}  <span id="cat_{{ categorie.id }}_itemlengthbarre" class="badge">{{ items|length }}</span></a>
+                <button class="btn btn-danger btn-xs" onclick="marquer_lu_barre('{{ url_for('minisab.marquer_article_lu') }}', [{% for item in items %}{{ item.id }},{% endfor %}], {{ categorie.id}})">
                     <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
                 </button>
             </h4>
