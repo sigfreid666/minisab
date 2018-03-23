@@ -1,42 +1,12 @@
 <div class="col-md-4" id="art_{{ item.id }}">
-<div class="panel panel-default article">
-<div class="panel-heading">
-    <div class="row">
-    <div class="col-md-12">
-    <div class="btn-group" role="group" aria-label="...">
-        <h4>
-        <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
-        <button class="btn btn-default" onclick="marquer_lu('{{ url_for('minisab.marquer_article_lu') }}', [{{ item.id }} ], {{ item.categorie.id}})">
-            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
-        </button>
-        <button class="btn btn-default" onclick="marquer_favoris({{ item.id }}, {{ item.categorie.id}}, {{ categorie_favoris_id }})">
-            <span class="glyphicon glyphicon-plus" aria-hidden="true"/>
-        </button>
-        <button class="btn btn-default" onclick="lancer_recherche({{ item.id }})">
-            <span class="glyphicon glyphicon-search" aria-hidden="true"/>               
-        </button>
-        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
-            <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"/>               
-        </button>
-        </h4>
-    </div>
-    </div>
-    </div>
-    <div class="row">
-        <div class="col-md-1">
-            <div class="input-group">
-              <input type="text" class="form-control" aria-label="..." id="rec_multiple_{{ item.id }}">
-            </div>
+    <div class="panel panel-default article">
+        <div class="panel-body">
+            <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
+            <span class="label label-default">{{ item.taille }}</span>
+            <span class="label label-default">{{ item.annee }}</span>
+            <button class="btn btn-xs btn-default" onclick="marquer_lu('{{ url_for('minisab.marquer_article_lu') }}', [{{ item.id }} ], {{ item.categorie.id}})">
+                <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+            </button>
         </div>
     </div>
-</div>
-<div class="panel-body">
-    <p data-toggle="tooltip" title="{{item.fichier|escape()}}">
-        <span class="label label-default">{{ item.taille }}</span>
-        <span class="label label-default">{{ item.annee }}</span><br>
-        {{ item.fichier|truncate(40) }}<br>
-        <a href="{{ item.nfo }}">Nfo</a>
-    </p>
-</div>   
-</div>
 </div>

@@ -43,6 +43,8 @@ def index():
     logger.info('Requete /')
     articles = newminisab.recuperer_tous_articles_par_categorie()
     logger.debug('index, articles %d', len(articles))
+    for cat, x in articles:
+        logger.debug('cat %s nb items %d', cat.nom, len(x))
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
@@ -188,13 +190,18 @@ def get_categorie(id_categorie=None, id_categorie2=None):
         abort(404)
 
 
-@bp.route('/categorie/historique/<int:id_categorie>')
-def categorie_historique(id_categorie=None):
+@bp.route('/categorie/historique/<int:id_categorie>/<int:taille_bloc>/<int:num_bloc>')
+def categorie_historique(id_categorie=None, taille_bloc=100, num_bloc=0):
     logger.info('Requete %s %d', request.url, id_categorie)
     obj_categorie = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
+    articles, nb_bloc = newminisab.recuperer_tous_articles_pour_une_categorie_lu(obj_categorie.nom, num_bloc, taille_bloc)
+
     return render_template('./minifluxlistcomplete.html',
-                           categorie=obj_categorie.nom,
-                           articles=newminisab.recuperer_tous_articles_pour_une_categorie_lu(obj_categorie.nom))
+                           categorie=obj_categorie,
+                           articles=articles,
+                           taille_bloc=taille_bloc,
+                           num_bloc=num_bloc,
+                           nb_bloc=nb_bloc)
 
 
 @bp.route('/categories')

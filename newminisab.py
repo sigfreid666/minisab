@@ -397,8 +397,8 @@ def recuperer_tous_articles_par_categorie():
                     for x in z[1]:
                         x.status_sabnzbd = ''
                         for y in x.recherche:
-                            logger.debug('index, title %s, id sab %s',
-                                         x.title, y.id_sabnzbd)
+                            # logger.debug('index, title %s, id sab %s',
+                            #              x.title, y.id_sabnzbd)
                             if y.id_sabnzbd in status_sab:
                                 x.status_sabnzbd = status_sab[y.id_sabnzbd]
                                 logger.debug('index, trouve %s', x.status_sabnzbd)
@@ -435,18 +435,21 @@ def recuperer_tous_articles_pour_une_categorie(nom_categorie, lu=False):
 
 
 @base_de_donnee
-def recuperer_tous_articles_pour_une_categorie_lu(nom_categorie):
+def recuperer_tous_articles_pour_une_categorie_lu(nom_categorie, numero_bloc=0, nombre_decoupage=100):
     c = []
     try:
         cat = Categorie.get(Categorie.nom == nom_categorie)
         logger.debug(str(cat))
         c = [x for x in Article.select()
                                .where(Article.categorie_origine == cat)]
-        logger.debug('nombre article : %d' % len(c))
+        nb_bloc = int(len(c) / nombre_decoupage)
+        res = c[numero_bloc * nombre_decoupage:(numero_bloc + 1) * nombre_decoupage]
+        logger.debug('nombre de bloc : %d' % nb_bloc)
+        logger.debug('nombre d element : %d' % len(c))
     except DoesNotExist as e:
         logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
 
-    return c
+    return res, nb_bloc
 
 
 @cli.command()
