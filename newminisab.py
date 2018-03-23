@@ -445,7 +445,7 @@ def recuperer_tous_articles_pour_une_categorie_lu(nom_categorie, numero_bloc=0, 
         logger.debug(str(cat))
         c = [x for x in Article.select()
                                .where(Article.categorie_origine == cat)]
-        nb_bloc = int(len(c) / nombre_decoupage)
+        nb_bloc = int(len(c) / nombre_decoupage) + 1
         res = c[numero_bloc * nombre_decoupage:(numero_bloc + 1) * nombre_decoupage]
         logger.debug('nombre de bloc : %d' % nb_bloc)
         logger.debug('nombre d element : %d' % len(c))

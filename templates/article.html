@@ -18,7 +18,7 @@
     <div class="btn-group" role="group" aria-label="...">
         <h4>
         <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
-        <button class="btn btn-default" onclick="marquer_lu('{{ url_for('minisab.marquer_article_lu') }}', [{{ item.id }} ], {{ item.categorie.id}})">
+        <button class="btn btn-default" onclick="marquer_lu('{{ url_for('minisab.marquer_article_lu', lunonlu=0) }}', [{{ item.id }} ], {{ item.categorie.id}})">
             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
         </button>
         <button class="btn btn-default" onclick="marquer_favoris('{{ url_for('minisab.marquer_article_favoris_categorie', id_article=item.id) }}', {{ item.id }}, {{ item.categorie.id}}, {{ categorie_favoris_id }})">

@@ -85,7 +85,10 @@ def marquer_article_favoris_categorie(id_article=None):
                                        categorie=ar.categorie,
                                        categorie_sabnzbd=cat_sab,
                                        categorie_favoris_id=cat_fav.id)
-        return jsonify((article_html, *fav_html, *sab_html))
+        articles = newminisab.recuperer_tous_articles_par_categorie()
+        temp_barre = render_template('./barre_categorie.html', articles=articles)
+
+        return jsonify((article_html, *fav_html, *sab_html, temp_barre))
     except newminisab.Article.DoesNotExist:
         abort(404)
 
@@ -107,8 +110,8 @@ def marquer_article_favoris(id_article=None):
         abort(404)
 
 
-@bp.route('/articles/lu', methods=['GET', 'POST'])
-def marquer_article_lu():
+@bp.route('/articles/lu/<int:lunonlu>', methods=['GET', 'POST'])
+def marquer_article_lu(lunonlu=0):
     logger.info('Requete /article/lu %s', request.method)
     try:
         cat_id = None
@@ -117,7 +120,7 @@ def marquer_article_lu():
             for art_id in data_json:
                 ar = newminisab.Article.get(newminisab.Article.id == art_id)
                 cat_id = ar.categorie_origine.id
-                ar.lu = True
+                ar.lu = True if lunonlu == 0 else False
                 for y in ar.recherche:
                     logger.info('article_lu, title %s, id sab %s',
                                 ar.title, y.id_sabnzbd)
@@ -125,13 +128,12 @@ def marquer_article_lu():
                         delete_history_sab(y.id_sabnzbd)
                         y.id_sabnzbd = ''
                         y.save()
+                ar.categorie = ar.categorie_origine
                 ar.save()
         html_categorie = render_template_categorie(cat_id)
         return jsonify(*html_categorie)
     except newminisab.Article.DoesNotExist:
         abort(404)
-
-
 
 
 @bp.route('/article/<id_article>/recherche/<int:stop_multi>')

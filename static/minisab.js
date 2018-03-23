@@ -41,12 +41,7 @@ function marquer_favoris(url, idarticle, idcatdepart, idcatarrivee) {
                 $("#cat_" + idcatarrivee + '_end').replaceWith(data[2]);
                 $("#cat_" + idcatdepart).replaceWith(data[3]);
                 $("#cat_" + idcatdepart + '_end').replaceWith(data[4]);
-                $.get("categorie/",
-                    function(data, status) {
-                        if (status == "success") {
-                            $("#barre_categorie").replaceWith(data);
-                        }
-                    });
+                $("#barre_categorie").replaceWith(data[5]);
             }
         });
 }
