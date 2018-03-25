@@ -9,6 +9,8 @@
     {% else %}
         <div class="panel panel-info article article_recherche">
     {% endif %}
+{% elif item.filtre == True %}
+    <div class="panel panel-danger article">
 {% else %}
 <div class="panel panel-default article">
 {% endif %}

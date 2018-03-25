@@ -9,6 +9,8 @@ import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config, port_sabG
 
+filtre_article = [ '*** MOT DE PASSE ***' ]
+
 logging.config.dictConfig(log_config)
 # logger.setLevel(logging.DEBUG)
 
@@ -41,7 +43,7 @@ def render_template_categorie(id_categorie):
 @bp.route("/")
 def index():
     logger.info('Requete /')
-    articles = newminisab.recuperer_tous_articles_par_categorie()
+    articles = newminisab.recuperer_tous_articles_par_categorie(filtre_article)
     logger.debug('index, articles %d', len(articles))
     for cat, x in articles:
         logger.debug('cat %s nb items %d', cat.nom, len(x))

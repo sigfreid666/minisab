@@ -365,7 +365,7 @@ def test():
 
 
 @base_de_donnee
-def recuperer_tous_articles_par_categorie():
+def recuperer_tous_articles_par_categorie(filtres_article=[]):
     logger.debug('recuperer_tous_articles_par_categorie')
     les_articles = (Article.select()
                            .where(Article.lu == False)
@@ -376,6 +376,18 @@ def recuperer_tous_articles_par_categorie():
 
     c = [(x, x.articles) for x in prefetch(les_categories, les_articles) 
                          if len(x.articles) > 0]
+
+    # filtrage des articles pour detecter certains sur le titre
+    logger.debug('nombre filtre %d', len(filtres_article))
+    for cat, articles in c:
+        cat.avec_filtre = False
+        for article in articles:
+            article.filtre = False                    
+            for filtre in filtres_article:
+                if article.title.find(filtre) != -1:
+                    logger.debug('filtre article %s %s', filtre, article.title)
+                    article.filtre = True
+                    cat.avec_filtre = True
 
     # si redis est dispo on va inserer les infos sur le statut de telechargement
     if host_redis is not None:
