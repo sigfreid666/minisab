@@ -9,6 +9,8 @@
     {% else %}
         <div class="panel panel-info article article_recherche">
     {% endif %}
+{% elif item.filtre == True %}
+    <div class="panel panel-danger article">
 {% else %}
 <div class="panel panel-default article">
 {% endif %}
@@ -18,13 +20,13 @@
     <div class="btn-group" role="group" aria-label="...">
         <h4>
         <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
-        <button class="btn btn-default" onclick="marquer_lu([{{ item.id }} ], {{ item.categorie.id}})">
+        <button class="btn btn-default" onclick="marquer_lu('{{ url_for('minisab.marquer_article_lu', lunonlu=0) }}', [{{ item.id }} ], {{ item.categorie.id}})">
             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
         </button>
-        <button class="btn btn-default" onclick="marquer_favoris({{ item.id }}, {{ item.categorie.id}}, {{ categorie_favoris_id }})">
+        <button class="btn btn-default" onclick="marquer_favoris('{{ url_for('minisab.marquer_article_favoris_categorie', id_article=item.id) }}', {{ item.id }}, {{ item.categorie.id}}, {{ categorie_favoris_id }})">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"/>
         </button>
-        <button class="btn btn-default" onclick="lancer_recherche({{ item.id }})">
+        <button class="btn btn-default" onclick="lancer_recherche('{{ url_for('minisab.recherche_article', id_article=item.id) }}', {{ item.id }})">
             <span class="glyphicon glyphicon-search" aria-hidden="true"/>               
         </button>
         <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
@@ -65,7 +67,7 @@
     {% if (item.recherche|length > 0) and (item.recherche|length < 4) %}
     <div class="btn-group" role="group" aria-label="...">
         {% for item_recherche in item.recherche %}
-            <button type="button" class="btn btn-default" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})">{{ item_recherche.taille }}</button>
+            <button type="button" class="btn btn-default" onclick="envoyer_sab('{{ url_for('minisab.lancer_telecharger', id_recherche=item_recherche.id) }}', {{ item_recherche.id }}, {{ item.id }})">{{ item_recherche.taille }}</button>
         {% endfor %}
     </div>
     {% endif %}
@@ -76,7 +78,7 @@
             {% if item_recherche.id_sabnzbd != '' %}
           <button type="button" class="list-group-item list-group-item-danger resultat_recherche" id="recherche_{{ item_recherche.id }}" data-toggle="tooltip" title="{{ item_recherche.title|escape() }}"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
             {% else %}
-          <button type="button" class="list-group-item resultat_recherche" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab({{ item_recherche.id }}, {{ item.id }})" data-toggle="tooltip" title="{{ item_recherche.title|escape() }}"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
+          <button type="button" class="list-group-item resultat_recherche" id="recherche_{{ item_recherche.id }}" onclick="envoyer_sab('{{ url_for('minisab.lancer_telecharger', id_recherche=item_recherche.id) }}', {{ item_recherche.id }}, {{ item.id }})" data-toggle="tooltip" title="{{ item_recherche.title|escape() }}"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
             {% endif %}
         {% endfor %}
     </div>

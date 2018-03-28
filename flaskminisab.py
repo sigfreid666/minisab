@@ -1,22 +1,26 @@
 from flask import Flask, render_template, abort, Blueprint, request, jsonify
-import newminisab
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
 import logging.config
 import itertools
+import newminisab
 import redis
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
-from settings import log_config
+from settings import log_config, port_sabG
+
+filtre_article = [ '*** MOT DE PASSE ***' ]
 
 logging.config.dictConfig(log_config)
-logger = logging.getLogger(__name__)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.8'
-# bp = Blueprint('minisab', __name__, static_url_path='/minisab/static',
-#                static_folder='static')
+version = '2.9beta'
+bp = Blueprint('minisab', __name__, static_folder='/minisab/static')
 app = Flask(__name__)
+logger = app.logger # logging.getLogger('gunicorn.glogging.Logger')
+gunicorn_logger = logging.getLogger('gunicorn.error')
+app.logger.handlers = gunicorn_logger.handlers
+
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
 
@@ -36,11 +40,13 @@ def render_template_categorie(id_categorie):
         return ''
 
 
-@app.route("/")
+@bp.route("/")
 def index():
     logger.info('Requete /')
-    articles = newminisab.recuperer_tous_articles_par_categorie()
+    articles = newminisab.recuperer_tous_articles_par_categorie(filtre_article)
     logger.debug('index, articles %d', len(articles))
+    for cat, x in articles:
+        logger.debug('cat %s nb items %d', cat.nom, len(x))
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
                            categorie_sabnzbd=get_categorie_sabnzbd(),
@@ -48,19 +54,19 @@ def index():
                            categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
-@app.route('/maj')
+@bp.route('/maj')
 def mise_a_jour():
     logger.info('Requete : /maj')
     return jsonify(newminisab.check_new_article())
 
 
-@app.route('/check_sab')
+@bp.route('/check_sab')
 def check_sab():
     logger.info('Requete : /maj')
     return jsonify(newminisab.check_sabnzbd())
 
 
-@app.route('/article/<int:id_article>/favoris/categorie')
+@bp.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
     try:
@@ -73,6 +79,7 @@ def marquer_article_favoris_categorie(id_article=None):
         ar.save()
 
         cat_fav = newminisab.Categorie.get_favoris()
+        logger.debug('cat favoris %d %s', cat_fav.id, cat_fav.nom)
         cat_sab = get_categorie_sabnzbd()
         fav_html = render_template_categorie(cat_fav.id)
         sab_html = render_template_categorie(id_cat_ar)
@@ -80,12 +87,15 @@ def marquer_article_favoris_categorie(id_article=None):
                                        categorie=ar.categorie,
                                        categorie_sabnzbd=cat_sab,
                                        categorie_favoris_id=cat_fav.id)
-        return jsonify((article_html, *fav_html, *sab_html))
+        articles = newminisab.recuperer_tous_articles_par_categorie()
+        temp_barre = render_template('./barre_categorie.html', articles=articles)
+
+        return jsonify((article_html, *fav_html, *sab_html, temp_barre))
     except newminisab.Article.DoesNotExist:
         abort(404)
 
 
-@app.route('/article/<int:id_article>/favoris')
+@bp.route('/article/<int:id_article>/favoris')
 def marquer_article_favoris(id_article=None):
     logger.info('Requete %s', request.url)
     try:
@@ -102,15 +112,17 @@ def marquer_article_favoris(id_article=None):
         abort(404)
 
 
-@app.route('/articles/lu', methods=['GET', 'POST'])
-def marquer_article_lu():
+@bp.route('/articles/lu/<int:lunonlu>', methods=['GET', 'POST'])
+def marquer_article_lu(lunonlu=0):
     logger.info('Requete /article/lu %s', request.method)
     try:
+        cat_id = None
         if request.method == 'POST':
             data_json = request.get_json()
             for art_id in data_json:
                 ar = newminisab.Article.get(newminisab.Article.id == art_id)
-                ar.lu = True
+                cat_id = ar.categorie_origine.id
+                ar.lu = True if lunonlu == 0 else False
                 for y in ar.recherche:
                     logger.info('article_lu, title %s, id sab %s',
                                 ar.title, y.id_sabnzbd)
@@ -118,15 +130,17 @@ def marquer_article_lu():
                         delete_history_sab(y.id_sabnzbd)
                         y.id_sabnzbd = ''
                         y.save()
+                ar.categorie = ar.categorie_origine
                 ar.save()
-        return "OK"
+        html_categorie = render_template_categorie(cat_id)
+        return jsonify(*html_categorie)
     except newminisab.Article.DoesNotExist:
         abort(404)
 
 
-@app.route('/article/<id_article>/recherche/<int:stop_multi>')
-@app.route('/article/<id_article>/recherche',
-           defaults={'stop_multi': 0})
+@bp.route('/article/<id_article>/recherche/<int:stop_multi>')
+@bp.route('/article/<id_article>/recherche',
+          defaults={'stop_multi': 0})
 def recherche_article(id_article, stop_multi):
     logger.info('Requete %s', request.url)
     try:
@@ -140,9 +154,9 @@ def recherche_article(id_article, stop_multi):
         abort(404)
 
 
-@app.route('/recherche/<id_recherche>/telecharger/<categorie>')
-@app.route('/recherche/<id_recherche>/telecharger/',
-           defaults={'categorie': '*'})
+@bp.route('/recherche/<id_recherche>/telecharger/<categorie>')
+@bp.route('/recherche/<id_recherche>/telecharger/',
+          defaults={'categorie': '*'})
 def lancer_telecharger(id_recherche, categorie):
     logger.info('Requete %s', request.url)
     try:
@@ -163,8 +177,8 @@ def lancer_telecharger(id_recherche, categorie):
         abort(404)
 
 
-@app.route('/categorie/<int:id_categorie>')
-@app.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
+@bp.route('/categorie/<int:id_categorie>')
+@bp.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
 def get_categorie(id_categorie=None, id_categorie2=None):
     logger.info('Requete %s', request.url)
     template = []
@@ -173,8 +187,12 @@ def get_categorie(id_categorie=None, id_categorie2=None):
             continue
         cat = newminisab.Categorie.get(newminisab.Categorie.id == id_cat)
         if cat is not None:
+            logger.debug('Categorie nom : %s', cat.nom)
             items = (newminisab.recuperer_tous_articles_pour_une_categorie(
                      cat.nom))
+            logger.debug('Categorie nombre element : %s', len(items))
+            for x in items:
+                logger.debug('Cat : %s', x.categorie_origine.nom)
             template.append(render_template('./categorie.html',
                                             categorie=cat,
                                             items=items))
@@ -186,7 +204,21 @@ def get_categorie(id_categorie=None, id_categorie2=None):
         abort(404)
 
 
-@app.route('/categories')
+@bp.route('/categorie/historique/<int:id_categorie>/<int:taille_bloc>/<int:num_bloc>')
+def categorie_historique(id_categorie=None, taille_bloc=100, num_bloc=0):
+    logger.info('Requete %s %d', request.url, id_categorie)
+    obj_categorie = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
+    articles, nb_bloc = newminisab.recuperer_tous_articles_pour_une_categorie_lu(obj_categorie.nom, num_bloc, taille_bloc)
+
+    return render_template('./minifluxlistcomplete.html',
+                           categorie=obj_categorie,
+                           articles=articles,
+                           taille_bloc=taille_bloc,
+                           num_bloc=num_bloc,
+                           nb_bloc=nb_bloc)
+
+
+@bp.route('/categories')
 def categorie_liste():
     logger.info('Requete %s', request.url)
     articles = newminisab.recuperer_tous_articles_par_categorie()
@@ -194,14 +226,14 @@ def categorie_liste():
     return render_template('./barre_categorie.html', articles=articles)
 
 
-@app.route('/categories/index/')
+@bp.route('/categories/index/')
 def categories_index():
-    return render_template('./categories_index.html', 
-        categories=[x for x in newminisab.Categorie.select()],
-        categorie_sabnzbd=get_categorie_sabnzbd())
+    return render_template('./categories_index.html',
+                           categories=[x for x in newminisab.Categorie.select()],
+                           categorie_sabnzbd=get_categorie_sabnzbd())
 
 
-@app.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
+@bp.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
 def change_sab_categorie(id_categorie=None, cat_sab=None):
     cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     cat.categorie_sabnzbd = cat_sab
@@ -209,7 +241,7 @@ def change_sab_categorie(id_categorie=None, cat_sab=None):
     return 'OK'
 
 
-@app.route('/categorie/<int:id_categorie>/preferee/<int:preferee>')
+@bp.route('/categorie/<int:id_categorie>/preferee/<int:preferee>')
 def change_sab_preferee(id_categorie=None, preferee=0):
     cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
     cat.preferee = preferee
@@ -234,7 +266,7 @@ def get_categorie_sabnzbd():
                  'mode': 'get_cats'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         r = requests.get(myurl, params=param)
         resultat = r.json()
         if 'categories' in resultat:
@@ -260,7 +292,7 @@ def telechargement_sabnzbd(title, url, categorie):
                  'cat': categorie}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         r = requests.get(myurl, params=param)
         resultat = r.json()
         if resultat['status']:
@@ -279,7 +311,7 @@ def status_sabnzbd():
                  'mode': 'history'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         try:
             r = requests.get(myurl, params=param)
             resultat = r.json()
@@ -288,7 +320,7 @@ def status_sabnzbd():
                      'mode': 'queue'}
             myurl = "http://{0}:{1}/sabnzbd/api".format(
                     host_sabG,
-                    9000)
+                    port_sabG)
             r = requests.get(myurl, params=param)
             resultat2 = r.json()
             resultat_total = itertools.chain(resultat['history']['slots'],
@@ -309,14 +341,14 @@ def delete_history_sab(id_sab):
                  'mode': 'history'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         r = requests.get(myurl, params=param)
         return r.status_code
     else:
         return 0
 
 
-# app.register_blueprint(bp, prefix='/minisab')
+app.register_blueprint(bp, url_prefix='/minisab')
 
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=9030)

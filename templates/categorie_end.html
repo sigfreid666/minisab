@@ -4,7 +4,7 @@
             <div class="panel-heading">
                 <div class="btn-group" role="group" aria-label="...">
                     <h6>{{ categorie.nom }} <span class="badge">{{ items|length }}</span>
-                        <button class="btn btn-danger btn-xs" onclick="marquer_lu([{% for item in items %}{{ item.id }},{% endfor %}], {{ categorie.id}})">
+                        <button class="btn btn-danger btn-xs" onclick="marquer_lu('{{ url_for('minisab.marquer_article_lu', lunonlu=0) }}', [{% for item in items %}{{ item.id }},{% endfor %}], {{ categorie.id}})">
                             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
                         </button>
                     </h6>

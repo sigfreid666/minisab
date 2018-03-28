@@ -1,7 +1,7 @@
 import logging
 import os
 
-log_config = {'version': 1, 'loggers': {'flaskminisab': {'level': 'DEBUG'},
+log_config = {'version': 1, 'loggers': {'flaskminisab': {'level': 'INFO'},
               'newminisab': {'level': 'INFO'},
               '__main__': {'level': 'INFO'}}}
 

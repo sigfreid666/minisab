@@ -19,7 +19,7 @@ import copy
 
 status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('flaskminisab')
 
 db = SqliteDatabase(dbfile)
 
@@ -365,15 +365,29 @@ def test():
 
 
 @base_de_donnee
-def recuperer_tous_articles_par_categorie():
+def recuperer_tous_articles_par_categorie(filtres_article=[]):
     logger.debug('recuperer_tous_articles_par_categorie')
-    c = [(x, x.articles) for x in Categorie.select(Categorie, Article)
-                                           .join(Article)
-                                           .where(Article.lu == False)
-                                           .order_by(Categorie.preferee.desc(),
-                                                     Categorie.nom,
-                                                     Article.annee.desc())
-                                           .aggregate_rows()]
+    les_articles = (Article.select()
+                           .where(Article.lu == False)
+                           .order_by(Article.annee.desc()))
+    les_categories = (Categorie.select()
+                               .order_by(Categorie.preferee.desc(),
+                                         Categorie.nom))
+
+    c = [(x, x.articles) for x in prefetch(les_categories, les_articles) 
+                         if len(x.articles) > 0]
+
+    # filtrage des articles pour detecter certains sur le titre
+    logger.debug('nombre filtre %d', len(filtres_article))
+    for cat, articles in c:
+        cat.avec_filtre = False
+        for article in articles:
+            article.filtre = False                    
+            for filtre in filtres_article:
+                if article.title.find(filtre) != -1:
+                    logger.debug('filtre article %s %s', filtre, article.title)
+                    article.filtre = True
+                    cat.avec_filtre = True
 
     # si redis est dispo on va inserer les infos sur le statut de telechargement
     if host_redis is not None:
@@ -395,8 +409,8 @@ def recuperer_tous_articles_par_categorie():
                     for x in z[1]:
                         x.status_sabnzbd = ''
                         for y in x.recherche:
-                            logger.debug('index, title %s, id sab %s',
-                                         x.title, y.id_sabnzbd)
+                            # logger.debug('index, title %s, id sab %s',
+                            #              x.title, y.id_sabnzbd)
                             if y.id_sabnzbd in status_sab:
                                 x.status_sabnzbd = status_sab[y.id_sabnzbd]
                                 logger.debug('index, trouve %s', x.status_sabnzbd)
@@ -419,17 +433,38 @@ def recuperer_tous_articles_par_categorie():
 
 
 @base_de_donnee
-def recuperer_tous_articles_pour_une_categorie(nom_categorie):
+def recuperer_tous_articles_pour_une_categorie(nom_categorie, lu=False):
     c = []
     try:
         cat = Categorie.get(Categorie.nom == nom_categorie)
         c = [x for x in Article.select()
-                               .where((Article.lu == False) &
+                               .where((Article.lu == lu) &
                                       (Article.categorie == cat))]
+        logger.debug('recuperer_tous_articles_pour_une_categorie cat %s', nom_categorie)
+        for x in c:
+            logger.debug('lu %d cat or %s title %s', x.lu, x.categorie_origine.nom, x.title)
     except DoesNotExist as e:
         logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
 
     return c
+
+
+@base_de_donnee
+def recuperer_tous_articles_pour_une_categorie_lu(nom_categorie, numero_bloc=0, nombre_decoupage=100):
+    c = []
+    try:
+        cat = Categorie.get(Categorie.nom == nom_categorie)
+        logger.debug(str(cat))
+        c = [x for x in Article.select()
+                               .where(Article.categorie_origine == cat)]
+        nb_bloc = int(len(c) / nombre_decoupage) + 1
+        res = c[numero_bloc * nombre_decoupage:(numero_bloc + 1) * nombre_decoupage]
+        logger.debug('nombre de bloc : %d' % nb_bloc)
+        logger.debug('nombre d element : %d' % len(c))
+    except DoesNotExist as e:
+        logger.error('nom categorie inconnue : %s(%s)', nom_categorie, str(e))
+
+    return res, nb_bloc
 
 
 @cli.command()
