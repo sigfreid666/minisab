@@ -177,6 +177,32 @@ def lancer_telecharger(id_recherche, categorie):
         abort(404)
 
 
+@bp.route('/article/<id_article>/tout_telecharger/<categorie>')
+@bp.route('/article/<id_article>/tout_telecharger/',
+          defaults={'categorie': '*'})
+def lancer_tout_telecharger(id_article, categorie):
+    logger.info('Requete %s', request.url)
+    try:
+        rec = (newminisab.Recherche.select()
+                                   .where(newminisab.Recherche.article == id_article))
+        for r in rec:
+            logger.debug('recherche trouve %s', r.url)
+        # rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
+        #                                         rec.url, categorie)
+        # rec.save()
+        # if host_redis is not None:
+        #     red = None
+        #     try:
+        #         red = redis.StrictRedis(host=host_redis, port=port_redis)
+        #         red.rpush('sabdownload', rec.id_sabnzbd)
+        #         red.rpush('sabdownload', rec.article.id)
+        #     except redis.exceptions.ConnectionError as e:
+        #         logging.error('Impossible de se connecter à Redis : %s', str(e))
+        return 'OK'
+    except newminisab.Article.DoesNotExist:
+        abort(404)
+
+
 @bp.route('/categorie/<int:id_categorie>')
 @bp.route('/categorie/<int:id_categorie>/<int:id_categorie2>')
 def get_categorie(id_categorie=None, id_categorie2=None):
@@ -346,6 +372,11 @@ def delete_history_sab(id_sab):
         return r.status_code
     else:
         return 0
+
+
+def merge_nzb(urls):
+    for url in urls:
+        None
 
 
 app.register_blueprint(bp, url_prefix='/minisab')

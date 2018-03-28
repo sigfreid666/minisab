@@ -79,6 +79,20 @@ function envoyer_sab(url, idrecherche, idarticle) {
     $("#recherche_"+idrecherche).text($("#recherche_"+idrecherche).text() + " (En cours)");   
 }
 
+function envoyer_sab_tous(url, idarticle) {
+    var categorie = $("#art_"+idarticle+" div.recherche button.btn-danger").text()
+    console.log("envoyer_sab " + categorie);
+    if (categorie != "*") {
+        url = url + categorie; }
+    $.get(url,
+        function(data, status) {
+            if (status == "success") {
+                console.log("OK envoyer_sab");
+            }
+        })
+    // $("#recherche_"+idrecherche).text($("#recherche_"+idrecherche).text() + " (En cours)");   
+}
+
 function change_selection(idarticle, categorie){
     $("#art_"+idarticle+" div.recherche button.btn-danger").removeClass('btn-danger').addClass('btn-default');
     $("#art_"+idarticle+" div.recherche button." + categorie).removeClass('btn-default').addClass('btn-danger');
