@@ -74,6 +74,7 @@
 </div>   
     {% if item.recherche|length > 0 %}
     <div class="list-group collapse" id="recresult_{{ item.id }}">
+          <button type="button" class="list-group-item resultat_recherche" id="recherche_tous" onclick="envoyer_sab_tous('{{ url_for('minisab.lancer_telecharger', id_recherche=item_recherche.id) }}', {{ item.id }})" data-toggle="tooltip" title="{{ item_recherche.title|escape() }}">Tous</button>
         {% for item_recherche in item.recherche %}
             {% if item_recherche.id_sabnzbd != '' %}
           <button type="button" class="list-group-item list-group-item-danger resultat_recherche" id="recherche_{{ item_recherche.id }}" data-toggle="tooltip" title="{{ item_recherche.title|escape() }}"><span class="badge">{{ item_recherche.taille }}</span>{{ item_recherche.title|truncate(40) }}</button>
