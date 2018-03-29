@@ -4,9 +4,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_minisab
+    image: minisab:dev
     volumes:
-      - $MINISAB_CODE:/app
-      - $MINISAB_GUNICORN:/app/gunicorn.py
+      - ./minisab:/app
+      - ./gunicorn-dev.py:/app/gunicorn.py
   nginx:
     image: nginx:1.12
     volumes:
