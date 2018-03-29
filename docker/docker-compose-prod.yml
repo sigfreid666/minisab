@@ -12,7 +12,7 @@ services:
       context: .
       args:
         - DEFAULT_NGINX=nginx-prod.conf
-        - STATIC_NGINX=minisab/static
+        - STATIC_NGINX=../minisab/static
       dockerfile: Dockerfile_nginx
   cron:
     build:
