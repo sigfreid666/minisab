@@ -14,3 +14,6 @@ settings_local\.py
 gunicorn\.py
 docker/datadir
 docker/media
+datadir/
+media/
+docker/.env

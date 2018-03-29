@@ -1,4 +1,3 @@
 bind = ":3000"
-logfile = "/data/gunicorn.log"
-# loglevel = "debug"
+logfile = "/app/gunicorn.log"
 threads = 2

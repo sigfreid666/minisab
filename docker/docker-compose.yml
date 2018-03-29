@@ -1,0 +1,33 @@
+version: '2'
+services:
+  minisab:
+    volumes:
+      - data:/data
+    depends_on:
+      - "redis"
+    environment:
+      - MINISAB_DBFILE=$MINISAB_DBFILE
+      - MINISAB_LOGFILE=$MINISAB_LOGFILE
+      - MINISAB_HOST_REDIS=$MINISAB_HOST_REDIS
+      - MINISAB_PORT_REDIS=$MINISAB_PORT_REDIS
+      - MINISAB_HOST_SAB=$MINISAB_HOST_SAB
+      - MINISAB_PORT_SAB=$MINISAB_PORT_SAB
+      - MINISAB_CLE_SAB=$MINISAB_CLE_SAB
+    image: minisab:2.9
+    networks:
+      minisab_default:
+  nginx:
+    depends_on:
+      - "minisab"
+    ports:
+      - "$MINISAB_PORT:80"
+    networks:
+      minisab_default:
+  redis:
+      image: redis:4.0.8
+      networks:
+        minisab_default:
+volumes:
+  data: {}
+networks:
+  minisab_default:
