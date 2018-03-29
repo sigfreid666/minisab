@@ -1,1 +1,0 @@
-cd .. && tar cvf docker/src.tar *.py static templates

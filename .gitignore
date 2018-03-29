@@ -11,4 +11,6 @@ settings_local\.py
 
 *.tar
 
-gunicorn\.py
+datadir/
+media/
+docker/.env
