@@ -11,6 +11,6 @@ settings_local\.py
 
 *.tar
 
-datadir/
-media/
+docker/datadir
+docker/media
 docker/.env
