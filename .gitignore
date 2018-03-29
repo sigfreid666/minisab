@@ -11,4 +11,3 @@ settings_local\.py
 
 *.tar
 
-gunicorn\.py
