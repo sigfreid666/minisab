@@ -1,0 +1,17 @@
+COMPOSE_FILE=docker-compose.yml:docker-compose-prod.yml
+MINISAB_PORT=9100
+SABNZBD_PORT=9101
+SABNZBD_USER=1002
+SABNZBD_GROUP=1002
+SABNZBD_DATADIR=/home/guillaume/Documents/docker/minisab/datadir
+SABNZBD_MEDIA=/home/guillaume/Documents/docker/minisab/media
+DEFAULT_NGINX=/home/guillaume/Documents/docker/minisab/nginx.conf
+STATIC_NGINX=/home/guillaume/Documents/minisab/static
+MINISAB_CODE=/home/guillaume/Documents/minisab
+MINISAB_DBFILE=/data/minisab.db
+MINISAB_LOGFILE=/data/minisab.log
+MINISAB_HOST_REDIS=redis
+MINISAB_PORT_REDIS=6379
+MINISAB_HOST_SAB=192.168.0.8
+MINISAB_PORT_SAB=9000
+MINISAB_CLE_SAB=6f8af3c4c4487edf93d96979ed7d2321

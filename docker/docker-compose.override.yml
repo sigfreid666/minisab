@@ -1,0 +1,26 @@
+version: '2'
+services:
+  minisab:
+    build:
+      context: .
+      dockerfile: Dockerfile_minisab
+    volumes:
+      - $MINISAB_CODE:/app
+      - $MINISAB_GUNICORN:/app/gunicorn.py
+  nginx:
+    image: nginx:1.12
+    volumes:
+      - $DEFAULT_NGINX:/etc/nginx/conf.d/default.conf
+      - $STATIC_NGINX:/usr/share/nginx/html/minisab/static/
+  sabnzbd:
+    image: "sabnzbd/sabnzbd"
+    environment:
+      - SABNZBD_UID=$SABNZBD_USER
+      - SABNZBD_GID=$SABNZBD_GROUP
+    ports:
+      - "$SABNZBD_PORT:$MINISAB_PORT_SAB"
+    volumes:
+      - "$SABNZBD_MEDIA:/media"
+      - "$SABNZBD_DATADIR:/datadir"
+    networks:
+      minisab_default:

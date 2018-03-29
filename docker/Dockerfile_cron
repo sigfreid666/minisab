@@ -1,0 +1,11 @@
+FROM alpine:latest
+
+RUN mkdir /etc/periodic/5min/
+
+RUN echo "*/5    *       *       *       *       run-parts /etc/periodic/5min" >> /etc/crontabs/root
+
+ADD minisab-job /etc/periodic/15min/
+
+ADD minisab2-job /etc/periodic/5min/
+
+CMD crond -f

@@ -1,0 +1,17 @@
+MINISAB_PORT=9200
+SABNZBD_PORT=9201
+SABNZBD_USER=1002
+SABNZBD_GROUP=1002
+SABNZBD_DATADIR=/home/guillaume/Documents/docker/minisab/datadir
+SABNZBD_MEDIA=/home/guillaume/Documents/docker/minisab/media
+DEFAULT_NGINX=/home/guillaume/Documents/docker/minisab/nginx.conf
+STATIC_NGINX=/home/guillaume/Documents/minisab/static
+MINISAB_CODE=/home/guillaume/Documents/minisab
+MINISAB_DBFILE=/app/minisab.db
+MINISAB_LOGFILE=/app/minisab.log
+MINISAB_HOST_REDIS=redis
+MINISAB_PORT_REDIS=6379
+MINISAB_HOST_SAB=sabnzbd
+MINISAB_PORT_SAB=9000
+MINISAB_CLE_SAB=de56cf7c8537c3b9a0ac0471a8bb99bf
+MINISAB_GUNICORN=/home/guillaume/Documents/Developement/docker-minisab/gunicorn.py

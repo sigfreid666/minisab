@@ -1,0 +1,13 @@
+FROM python:3.5
+
+RUN pip3 install flask redis peewee gunicorn requests
+
+RUN export LC_ALL=C.UTF-8 LANG=C.UTF-8
+
+RUN mkdir /app
+
+WORKDIR /app
+
+VOLUME /app
+
+CMD gunicorn -c /app/gunicorn.py flaskminisab:app

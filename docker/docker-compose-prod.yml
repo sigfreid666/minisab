@@ -1,0 +1,24 @@
+version: '2'
+services:
+  minisab:
+    build:
+      context: .
+      dockerfile: Dockerfile_minisab_prod
+  nginx:
+    depends_on:
+      - "minisab"
+    image: minisab_nginx:1.0
+    build:
+      context: .
+      args:
+        - DEFAULT_NGINX=$DEFAULT_NGINX
+        - STATIC_NGINX=$STATIC_NGINX
+      dockerfile: Dockerfile_nginx
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile_cron
+    depends_on:
+      - "nginx"
+    networks:
+      minisab_default:
