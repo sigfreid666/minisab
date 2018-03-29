@@ -5,7 +5,7 @@ import re
 import logging
 from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
-from settings import dbfile, host_sabG, sabnzbd_nc_cle_api, host_redis, port_redis
+from settings import dbfile, host_sabG, sabnzbd_nc_cle_api, host_redis, port_redis, port_sabG
 from functools import wraps
 import redis
 import itertools
@@ -256,7 +256,7 @@ def status_sabnzbd():
                  'mode': 'history'}
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
-                9000)
+                port_sabG)
         try:
             r = requests.get(myurl, params=param)
             resultat = r.json()
@@ -265,7 +265,7 @@ def status_sabnzbd():
                      'mode': 'queue'}
             myurl = "http://{0}:{1}/sabnzbd/api".format(
                     host_sabG,
-                    9000)
+                    port_sabG)
             r = requests.get(myurl, params=param)
             resultat2 = r.json()
             resultat_total = itertools.chain(resultat['history']['slots'],
@@ -287,6 +287,7 @@ def cmd_check_sabnzbd():
 
 def check_sabnzbd():
     status = {'resultat' : False }
+    logger.debug('check_sabnzbd')
     if host_redis is not None:
         red = None
         try:
