@@ -7,7 +7,7 @@ services:
   nginx:
     depends_on:
       - "minisab"
-    image: minisab_nginx:1.0
+    image: minisab_nginx:1.1
     build:
       context: ..
       args:
@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_cron
-    image: minisab_cron:1.0
+    image: minisab_cron:1.1
     depends_on:
       - "nginx"
     networks:
