@@ -6,8 +6,11 @@ import logging.config
 import itertools
 import newminisab
 import redis
+from functools import wraps
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config, port_sabG
+from xml.dom.minidom import parseString
+import xml.dom
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
 
@@ -185,8 +188,9 @@ def lancer_tout_telecharger(id_article, categorie):
     try:
         rec = (newminisab.Recherche.select()
                                    .where(newminisab.Recherche.article == id_article))
-        for r in rec:
-            logger.debug('recherche trouve %s', r.url)
+        urls = [r.url for r in rec]
+        logger.debug('recherche trouve %s', str(urls))
+        merge_nzb(urls)
         # rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
         #                                         rec.url, categorie)
         # rec.save()
@@ -307,6 +311,19 @@ def get_categorie_sabnzbd():
     else:
         return categorie_sabnzbd
 
+def avec_redis(wrap):
+    @wraps(wrap)
+    def wrapper(*args):
+        if host_redis is not None:
+            red_iter = None
+            try:
+                red_iter = redis.StrictRedis(host=host_redis, port=port_redis)
+            except redis.exceptions.ConnectionError as e:
+                logging.error('Impossible de se connecter à Redis : %s', str(e))
+        ret = wrap(red_iter, *args)
+        return ret
+    return wrapper
+
 
 def telechargement_sabnzbd(title, url, categorie):
     if host_sabG is not None:
@@ -373,10 +390,24 @@ def delete_history_sab(id_sab):
     else:
         return 0
 
-
-def merge_nzb(urls):
+@avec_redis
+def merge_nzb(red_iter, urls):
+    # res = red_iter.lrange(nom_cat_sab, 0, -1)
+    # logger.debug('Redis : %s', str(res))
     for url in urls:
-        None
+        logger.debug('Recuperation url %s', url)
+        req = requests.get(url)
+        content =  req.text
+        logger.debug('Taille fichier %d', len(content))
+        if len(content) > 0:
+            with open('/app/dump.xml', 'w') as fichier:
+                fichier.write(content)
+            doc = parseString(content)
+            logger.debug('xml %s', doc.documentElement.tagName)
+            doc.documentElement.childNodes = doc.documentElement.childNodes[3:]
+            for child in doc.documentElement.childNodes:
+                if child.nodeType == child.ELEMENT_NODE:
+                    logger.debug('\t %s %s', child.nodeName, child.nodeType)
 
 
 app.register_blueprint(bp, url_prefix='/minisab')
