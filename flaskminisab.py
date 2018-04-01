@@ -26,6 +26,8 @@ app.logger.handlers = gunicorn_logger.handlers
 
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
+redis_liste_urls = 'minisab_article_urls'
+redis_urls = 'minisab_%d_urls'
 
 
 def render_template_categorie(id_categorie):
@@ -180,8 +182,8 @@ def lancer_telecharger(id_recherche, categorie):
         abort(404)
 
 
-@bp.route('/article/<id_article>/tout_telecharger/<categorie>')
-@bp.route('/article/<id_article>/tout_telecharger/',
+@bp.route('/article/<int:id_article>/tout_telecharger/<categorie>')
+@bp.route('/article/<int:id_article>/tout_telecharger/',
           defaults={'categorie': '*'})
 def lancer_tout_telecharger(id_article, categorie):
     logger.info('Requete %s', request.url)
@@ -190,7 +192,8 @@ def lancer_tout_telecharger(id_article, categorie):
                                    .where(newminisab.Recherche.article == id_article))
         urls = [r.url for r in rec]
         logger.debug('recherche trouve %s', str(urls))
-        merge_nzb(urls)
+        save_urls(id_article, urls)
+        # merge_nzb(urls)
         # rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
         #                                         rec.url, categorie)
         # rec.save()
@@ -391,7 +394,12 @@ def delete_history_sab(id_sab):
         return 0
 
 @avec_redis
-def merge_nzb(red_iter, urls):
+def save_urls(red_iter, num_article, urls):
+    red_iter.lpush(redis_liste_urls, num_article)
+    red_iter.lpush(redis_urls % num_article, *urls)
+
+
+def merge_nzb(urls):
     # res = red_iter.lrange(nom_cat_sab, 0, -1)
     # logger.debug('Redis : %s', str(res))
     for url in urls:
