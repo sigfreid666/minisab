@@ -17,6 +17,9 @@ import copy
 #     print(log_config)
 #     logging.config.dictConfig(log_config)
 
+redis_liste_urls = 'minisab_article_urls'
+redis_urls = 'minisab_%d_urls'
+
 status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
 
 logger = logging.getLogger('flaskminisab')
@@ -244,9 +247,51 @@ def base_de_donnee(wrap):
     return wrapper
 
 
+def avec_redis(wrap):
+    @wraps(wrap)
+    def wrapper(*args):
+        red_iter = None
+        if host_redis is not None:
+            red_iter = None
+            try:
+                red_iter = redis.StrictRedis(host=host_redis, port=port_redis)
+            except redis.exceptions.ConnectionError as e:
+                logging.error('Impossible de se connecter à Redis : %s', str(e))
+        ret = wrap(red_iter, *args)
+        return ret
+    return wrapper
+
+
+
 @click.group()
 def cli():
     pass
+
+
+@avec_redis
+def merge_nzb(redis_iter):
+    # res = red_iter.lrange(nom_cat_sab, 0, -1)
+    # logger.debug('Redis : %s', str(res))
+    ret = { 'article_id' : [] }
+    logger.debug('merge_nzb')
+    for article_id in redis_iter.lrange(redis_liste_urls, 0, -1):
+        logger.debug('Article id <%s>', article_id)
+    # for url in urls:
+    #     logger.debug('Recuperation url %s', url)
+    #     req = requests.get(url)
+    #     content =  req.text
+    #     logger.debug('Taille fichier %d', len(content))
+    #     if len(content) > 0:
+    #         with open('/app/dump.xml', 'w') as fichier:
+    #             fichier.write(content)
+    #         doc = parseString(content)
+    #         logger.debug('xml %s', doc.documentElement.tagName)
+    #         doc.documentElement.childNodes = doc.documentElement.childNodes[3:]
+    #         for child in doc.documentElement.childNodes:
+    #             if child.nodeType == child.ELEMENT_NODE:
+    #                 logger.debug('\t %s %s', child.nodeName, child.nodeType)
+    return {}
+
 
 def status_sabnzbd():
     if host_sabG is not None:
@@ -282,7 +327,7 @@ def status_sabnzbd():
 
 @cli.command('check_sab')
 def cmd_check_sabnzbd():
-    check_sabnzbd();
+    check_sabnzbd()
 
 
 def check_sabnzbd():

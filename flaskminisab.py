@@ -26,8 +26,6 @@ app.logger.handlers = gunicorn_logger.handlers
 
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
-redis_liste_urls = 'minisab_article_urls'
-redis_urls = 'minisab_%d_urls'
 
 
 def render_template_categorie(id_categorie):
@@ -69,6 +67,12 @@ def mise_a_jour():
 def check_sab():
     logger.info('Requete : /maj')
     return jsonify(newminisab.check_sabnzbd())
+
+
+@bp.route('/check_urls')
+def check_urls():
+    logger.info('Requete : /maj')
+    return jsonify(newminisab.merge_nzb())
 
 
 @bp.route('/article/<int:id_article>/favoris/categorie')
@@ -314,20 +318,6 @@ def get_categorie_sabnzbd():
     else:
         return categorie_sabnzbd
 
-def avec_redis(wrap):
-    @wraps(wrap)
-    def wrapper(*args):
-        if host_redis is not None:
-            red_iter = None
-            try:
-                red_iter = redis.StrictRedis(host=host_redis, port=port_redis)
-            except redis.exceptions.ConnectionError as e:
-                logging.error('Impossible de se connecter à Redis : %s', str(e))
-        ret = wrap(red_iter, *args)
-        return ret
-    return wrapper
-
-
 def telechargement_sabnzbd(title, url, categorie):
     if host_sabG is not None:
         param = {'apikey': sabnzbd_nc_cle_api,
@@ -393,29 +383,10 @@ def delete_history_sab(id_sab):
     else:
         return 0
 
-@avec_redis
+@newminisab.avec_redis
 def save_urls(red_iter, num_article, urls):
-    red_iter.lpush(redis_liste_urls, num_article)
-    red_iter.lpush(redis_urls % num_article, *urls)
-
-
-def merge_nzb(urls):
-    # res = red_iter.lrange(nom_cat_sab, 0, -1)
-    # logger.debug('Redis : %s', str(res))
-    for url in urls:
-        logger.debug('Recuperation url %s', url)
-        req = requests.get(url)
-        content =  req.text
-        logger.debug('Taille fichier %d', len(content))
-        if len(content) > 0:
-            with open('/app/dump.xml', 'w') as fichier:
-                fichier.write(content)
-            doc = parseString(content)
-            logger.debug('xml %s', doc.documentElement.tagName)
-            doc.documentElement.childNodes = doc.documentElement.childNodes[3:]
-            for child in doc.documentElement.childNodes:
-                if child.nodeType == child.ELEMENT_NODE:
-                    logger.debug('\t %s %s', child.nodeName, child.nodeType)
+    red_iter.lpush(newminisab.redis_liste_urls, num_article)
+    red_iter.lpush(newminisab.redis_urls % num_article, *urls)
 
 
 app.register_blueprint(bp, url_prefix='/minisab')
