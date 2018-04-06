@@ -29,24 +29,31 @@
                 <div class="col-md-11">
                     <h1>Minisab <span class="badge">{{ version }}</span></h1>
                 </div>
-                <div class="col-md-2">
-                    <h1>
-                        <a class="btn btn-link btn-lg" href="{{ url_for('minisab.categories_index') }}"><span class="glyphicon glyphicon-th" aria-hidden="true"></span></a>
-                        <a class="btn btn-link btn-lg" href="{{ url_for('minisab.affiche_urls') }}"><span class="glyphicon glyphicon-th" aria-hidden="true"></span></a>
-                    </h1>
+                <div class="col-md-1">
+                    <h1><a class="btn btn-link btn-lg" href="{{ url_for('minisab.index') }}"><span class="glyphicon glyphicon-th" aria-hidden="true"></span></a></h1>
                 </div>
             </div>
         </div>
-        {% include 'barre_categorie.html' %}
-        {% for categorie, items in articles %}
-            {% include 'categorie.html' %}
-            <div class="row" id="items_{{categorie.id}}">
-            {% for item in items %}
-                {% include 'article.html' %}
-            {% endfor %}
-            </div>
-            {% include 'categorie_end.html' %}
+        <div class="row"><div class="col-md-5">Numero article</div></div>
+
+        {% for numero in numeros_articles %}
+        <div class="row">
+            <div class="col-md-5">{{ numero }}</div>
+        </div>
         {% endfor %}
+        <br>
+
+        {% for nom_table, urls in table_urls %}
+            <div class="row"><div class="col-md-12">{{nom_table}}</div></div>
+            {% for numero, url in urls %}
+            <div class="row">
+                <div class="col-md-2">{{ numero }}</div>
+                <div class="col-md-10">{{ url }}</div>
+            </div>
+            {% endfor %}
+        {% endfor %}
+        <br>
+
     </div>
 </body>
 </html>

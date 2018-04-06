@@ -75,6 +75,36 @@ def check_urls():
     return jsonify(newminisab.merge_nzb())
 
 
+@newminisab.avec_redis
+def get_info_affiche_urls(red_iter):
+    logger.info('Affichage des urls')
+    num_art = [ x.decode() for x in  red_iter.smembers(newminisab.redis_liste_urls)]
+    table_urls = []
+    for x in num_art:
+        for y in (newminisab.redis_urls % int(x), 
+                  newminisab.redis_urls_termine % int(x), 
+                  newminisab.redis_urls_encours % int(x)):
+            i = 0
+            table_urls.append((y, []))
+            for z in red_iter.lrange(y, 0, -1):
+                table_urls[-1][1].append((i, z))
+                i += 1
+
+    logger.debug('Liste article %s', str(num_art))
+    logger.debug('Liste urls %s', str(table_urls))
+    return num_art, table_urls
+
+
+@bp.route('/affiche_urls')
+def affiche_urls():
+    logger.info('Affichage des urls')
+    num_art, table_urls = get_info_affiche_urls()
+    return render_template('./traitement_en_cours.html',
+                           version=version,
+                           numeros_articles=num_art,
+                           table_urls=table_urls )
+
+
 @bp.route('/article/<int:id_article>/favoris/categorie')
 def marquer_article_favoris_categorie(id_article=None):
     logger.info('Requete %s', request.url)
