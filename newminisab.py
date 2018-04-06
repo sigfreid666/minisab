@@ -19,6 +19,8 @@ import copy
 
 redis_liste_urls = 'minisab_article_urls'
 redis_urls = 'minisab_%d_urls'
+redis_urls_encours = 'minisab_%d_urls_encours'
+redis_urls_termine = 'minisab_%d_urls_termine'
 
 status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
 
@@ -274,8 +276,12 @@ def merge_nzb(redis_iter):
     # logger.debug('Redis : %s', str(res))
     ret = { 'article_id' : [] }
     logger.debug('merge_nzb')
-    for article_id in redis_iter.lrange(redis_liste_urls, 0, -1):
+    for article_id in redis_iter.smembers(redis_liste_urls):
         logger.debug('Article id <%s>', article_id)
+        int_article_id = int(article_id)
+        logger.debug('Article id <%d>', int_article_id)
+        for url in redis_iter.lrange(redis_urls % int_article_id, 0, -1):
+            logger.debug('Url : <%s>', url)
     # for url in urls:
     #     logger.debug('Recuperation url %s', url)
     #     req = requests.get(url)

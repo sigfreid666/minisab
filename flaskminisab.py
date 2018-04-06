@@ -195,6 +195,7 @@ def lancer_tout_telecharger(id_article, categorie):
         rec = (newminisab.Recherche.select()
                                    .where(newminisab.Recherche.article == id_article))
         urls = [r.url for r in rec]
+        logger.debug('Nombre url trouve %d', len(urls))
         logger.debug('recherche trouve %s', str(urls))
         save_urls(id_article, urls)
         # merge_nzb(urls)
@@ -385,8 +386,16 @@ def delete_history_sab(id_sab):
 
 @newminisab.avec_redis
 def save_urls(red_iter, num_article, urls):
-    red_iter.lpush(newminisab.redis_liste_urls, num_article)
+    red_iter.sadd(newminisab.redis_liste_urls, num_article)
+    # if red_iter.exists(newminisab.redis_urls % num_article):
+        # red_iter.del(newminisab.redis_urls % num_article)
+    red_iter.ltrim(newminisab.redis_urls % num_article, 0, 0)    
+    red_iter.lpop(newminisab.redis_urls % num_article)
+    logger.debug('Nombre element %d dans %s', red_iter.llen(newminisab.redis_urls % num_article),
+                 newminisab.redis_urls % num_article)
     red_iter.lpush(newminisab.redis_urls % num_article, *urls)
+    red_iter.rpoplpush(newminisab.redis_urls % num_article,
+                       newminisab.redis_urls_termine % num_article)
 
 
 app.register_blueprint(bp, url_prefix='/minisab')
