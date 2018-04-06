@@ -13,7 +13,7 @@ services:
       - MINISAB_HOST_SAB=$MINISAB_HOST_SAB
       - MINISAB_PORT_SAB=$MINISAB_PORT_SAB
       - MINISAB_CLE_SAB=$MINISAB_CLE_SAB
-    image: minisab:2.9a
+    image: minisab:2.9b
     networks:
       minisab_default:
   nginx:

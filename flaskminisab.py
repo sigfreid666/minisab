@@ -14,7 +14,7 @@ filtre_article = [ '*** MOT DE PASSE ***' ]
 logging.config.dictConfig(log_config)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.9a'
+version = '2.9b'
 bp = Blueprint('minisab', __name__, static_folder='/minisab/static')
 app = Flask(__name__)
 logger = app.logger # logging.getLogger('gunicorn.glogging.Logger')
