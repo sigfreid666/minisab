@@ -9,7 +9,6 @@ import redis
 from functools import wraps
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config, port_sabG
-from xml.dom.minidom import parseString
 import xml.dom
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
@@ -417,15 +416,11 @@ def delete_history_sab(id_sab):
 @newminisab.avec_redis
 def save_urls(red_iter, num_article, urls):
     red_iter.sadd(newminisab.redis_liste_urls, num_article)
-    # if red_iter.exists(newminisab.redis_urls % num_article):
-        # red_iter.del(newminisab.redis_urls % num_article)
-    red_iter.ltrim(newminisab.redis_urls % num_article, 0, 0)    
-    red_iter.lpop(newminisab.redis_urls % num_article)
-    logger.debug('Nombre element %d dans %s', red_iter.llen(newminisab.redis_urls % num_article),
-                 newminisab.redis_urls % num_article)
+    if red_iter.exists(newminisab.redis_urls % num_article):
+        red_iter.delete(newminisab.redis_urls_encours % num_article)
+        red_iter.delete(newminisab.redis_urls_termine % num_article)
+        red_iter.delete(newminisab.redis_urls % num_article)
     red_iter.lpush(newminisab.redis_urls % num_article, *urls)
-    red_iter.rpoplpush(newminisab.redis_urls % num_article,
-                       newminisab.redis_urls_termine % num_article)
 
 
 app.register_blueprint(bp, url_prefix='/minisab')
