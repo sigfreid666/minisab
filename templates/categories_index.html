@@ -46,9 +46,9 @@
                             <div class="btn-group recherche" role="group" aria-label="...">
                                 {% for item_categorie in categorie_sabnzbd %}
                                     {% if item_categorie == categorie.categorie_sabnzbd %}
-                                    <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                                    <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection_cat('{{ url_for('minisab.change_sab_categorie')}}', {{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
                                     {% else %}
-                                    <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection_cat({{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                                    <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection_cat('{{ url_for('minisab.change_sab_categorie')}}', {{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
                                     {% endif %}
                                 {% endfor %}
                             </div>
