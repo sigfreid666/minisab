@@ -9,7 +9,7 @@ import redis
 import sabnzbd_util
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config, port_sabG
-from util import avec_redis
+import util
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
 
@@ -74,15 +74,21 @@ def check_urls():
     return jsonify(sabnzbd_util.merge_nzb())
 
 
-@avec_redis
+@bp.route('/concat_nzb')
+def concat_nzb():
+    logger.info('Requete : /concat_nzb')
+    return jsonify(sabnzbd_util.concat_nzb())
+
+
+@util.avec_redis
 def get_info_affiche_urls(red_iter):
     logger.info('Affichage des urls')
-    num_art = [ x.decode() for x in red_iter.smembers(newminisab.redis_liste_urls)]
+    num_art = [ x.decode() for x in red_iter.smembers(util.redis_liste_urls)]
     table_urls = []
     for x in num_art:
-        for y in (newminisab.redis_urls % int(x),
-                  newminisab.redis_urls_termine % int(x),
-                  newminisab.redis_urls_encours % int(x)):
+        for y in (util.redis_urls % int(x),
+                  util.redis_urls_termine % int(x),
+                  util.redis_urls_encours % int(x)):
             i = 0
             table_urls.append((y, []))
             for z in red_iter.lrange(y, 0, -1):
@@ -403,14 +409,18 @@ def delete_history_sab(id_sab):
         return 0
 
 
-@avec_redis
+@util.avec_redis
 def save_urls(red_iter, num_article, urls):
-    red_iter.sadd(newminisab.redis_liste_urls, num_article)
-    if red_iter.exists(newminisab.redis_urls % num_article):
-        red_iter.delete(newminisab.redis_urls_encours % num_article)
-        red_iter.delete(newminisab.redis_urls_termine % num_article)
-        red_iter.delete(newminisab.redis_urls % num_article)
-    red_iter.lpush(newminisab.redis_urls % num_article, *urls)
+    red_iter.sadd(util.redis_liste_urls, num_article)
+    if red_iter.exists(util.redis_urls % num_article):
+        logger.debug('%s existe', util.redis_urls % num_article)
+        red_iter.ltrim(util.redis_urls_encours % num_article, 1, 0)
+        red_iter.ltrim(util.redis_urls_termine % num_article, 1, 0)
+        red_iter.ltrim(util.redis_urls % num_article, 1, 0)
+        # red_iter.delete(util.redis_urls_encours % num_article)
+        # red_iter.delete(util.redis_urls_termine % num_article)
+        # red_iter.delete(util.redis_urls % num_article)
+    red_iter.lpush(util.redis_urls % num_article, *urls)
 
 
 app.register_blueprint(bp, url_prefix='/minisab')

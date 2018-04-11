@@ -111,3 +111,9 @@ function change_selection_cat(idarticle, categorie){
             }
         })
 }
+
+function lancer_url(url, idsortie) {
+    $.get(url, function(data) {
+        $("#" + idsortie).text(data);
+    })
+}
