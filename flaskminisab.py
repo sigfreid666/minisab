@@ -6,10 +6,10 @@ import logging.config
 import itertools
 import newminisab
 import redis
-from functools import wraps
+import sabnzbd_util
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config, port_sabG
-import xml.dom
+from util import avec_redis
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
 
@@ -71,17 +71,17 @@ def check_sab():
 @bp.route('/check_urls')
 def check_urls():
     logger.info('Requete : /maj')
-    return jsonify(newminisab.merge_nzb())
+    return jsonify(sabnzbd_util.merge_nzb())
 
 
-@newminisab.avec_redis
+@avec_redis
 def get_info_affiche_urls(red_iter):
     logger.info('Affichage des urls')
-    num_art = [ x.decode() for x in  red_iter.smembers(newminisab.redis_liste_urls)]
+    num_art = [ x.decode() for x in red_iter.smembers(newminisab.redis_liste_urls)]
     table_urls = []
     for x in num_art:
-        for y in (newminisab.redis_urls % int(x), 
-                  newminisab.redis_urls_termine % int(x), 
+        for y in (newminisab.redis_urls % int(x),
+                  newminisab.redis_urls_termine % int(x),
                   newminisab.redis_urls_encours % int(x)):
             i = 0
             table_urls.append((y, []))
@@ -227,18 +227,6 @@ def lancer_tout_telecharger(id_article, categorie):
         logger.debug('Nombre url trouve %d', len(urls))
         logger.debug('recherche trouve %s', str(urls))
         save_urls(id_article, urls)
-        # merge_nzb(urls)
-        # rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
-        #                                         rec.url, categorie)
-        # rec.save()
-        # if host_redis is not None:
-        #     red = None
-        #     try:
-        #         red = redis.StrictRedis(host=host_redis, port=port_redis)
-        #         red.rpush('sabdownload', rec.id_sabnzbd)
-        #         red.rpush('sabdownload', rec.article.id)
-        #     except redis.exceptions.ConnectionError as e:
-        #         logging.error('Impossible de se connecter à Redis : %s', str(e))
         return 'OK'
     except newminisab.Article.DoesNotExist:
         abort(404)
@@ -348,6 +336,7 @@ def get_categorie_sabnzbd():
     else:
         return categorie_sabnzbd
 
+
 def telechargement_sabnzbd(title, url, categorie):
     if host_sabG is not None:
         param = {'apikey': sabnzbd_nc_cle_api,
@@ -413,7 +402,8 @@ def delete_history_sab(id_sab):
     else:
         return 0
 
-@newminisab.avec_redis
+
+@avec_redis
 def save_urls(red_iter, num_article, urls):
     red_iter.sadd(newminisab.redis_liste_urls, num_article)
     if red_iter.exists(newminisab.redis_urls % num_article):
