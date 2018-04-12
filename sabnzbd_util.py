@@ -2,6 +2,7 @@
 import logging
 import requests
 import redis
+import os
 from xml.dom.minidom import parseString
 from util import avec_redis
 from util import redis_liste_urls, redis_urls
@@ -24,16 +25,22 @@ def traitement_url(url, nom_fichier):
         return False
 
 
-def traitement_nzb(nom_fichier, nom_fichier_autre, nom_fichier_sortie):
+def traitement_nzb(liste_nom_fichier, nom_fichier_sortie):
+    if len(liste_nom_fichier) == 0:
+        return False
     content = ''
-    with open(nom_fichier, 'r') as fichier:
-        content = fichier.read()
-    logger.debug('Taille fichier %s : %d', nom_fichier, len(content))
+    try:
+        with open(liste_nom_fichier[0], 'r') as fichier:
+            content = fichier.read()
+    except FileNotFoundError:
+        logger.error('Fichier nzb non trouve : %s', liste_nom_fichier[0])
+        return False
+    logger.debug('Taille fichier %s : %d', liste_nom_fichier[0], len(content))
     doc = parseString(content)
     logger.debug('xml %s', doc.documentElement.tagName)
     logger.debug('Nombre de nodes : %d', len(doc.documentElement.childNodes))
     if doc.documentElement.tagName == 'nzb':
-        for ajout_fichier in nom_fichier_autre:
+        for ajout_fichier in liste_nom_fichier[1:]:
             with open(ajout_fichier, 'r') as fichier:
                 ajout_content = fichier.read()
             logger.debug('Taille fichier %s : %d', ajout_fichier, len(ajout_content))
@@ -49,7 +56,8 @@ def traitement_nzb(nom_fichier, nom_fichier_autre, nom_fichier_sortie):
     logger.debug('Nombre de nodes : %d', len(doc.documentElement.childNodes))
     with open(nom_fichier_sortie, mode='w') as fichier:
         doc.writexml(fichier)
-
+        return True
+    return False
 
 
 @avec_redis
@@ -87,8 +95,15 @@ def concat_nzb(redis_iter):
     logger.debug('concat_nzb')
     for article_id in redis_iter.smembers(redis_liste_urls):
         int_article_id = int(article_id)
-        nom_fichier = redis_iter.lindex(redis_urls_termine % int_article_id, 0)
-        logger.debug('Article <%d>, nom fichier <%s>', int_article_id, nom_fichier)
-        nom_fichier_autre = redis_iter.lindex(redis_urls_termine % int_article_id, 1)
-        logger.debug('Article <%d>, nom fichier <%s>', int_article_id, nom_fichier_autre)
-        traitement_nzb(nom_fichier, [nom_fichier_autre], '/app/dump_concat.nzb')
+        liste_nom_fichier = redis_iter.lrange(redis_urls_termine % int_article_id, 0, -1)
+        logger.debug('Article <%d>, nom fichier <%s>', int_article_id, str(liste_nom_fichier))
+        if traitement_nzb(liste_nom_fichier, '/app/dump-%d-concat.nzb' % int_article_id):
+            for fichier in liste_nom_fichier:
+                os.remove(fichier)
+            redis_iter.srem(redis_liste_urls, article_id)
+            redis_iter.ltrim(redis_urls % int_article_id, 1, 0)
+            redis_iter.ltrim(redis_urls_encours % int_article_id, 1, 0)
+            redis_iter.ltrim(redis_urls_termine % int_article_id, 1, 0)
+            redis_iter.delete(redis_urls % int_article_id)
+            redis_iter.delete(redis_urls_encours % int_article_id)
+            redis_iter.delete(redis_urls_termine % int_article_id)
