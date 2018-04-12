@@ -9,12 +9,12 @@
     <title>Categories [minisab]</title>
 
     <!-- Bootstrap -->
-    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('minisab.static', filename='bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="/static/jquery-3.2.1.js"></script>
-    <script src="/static/minisab.js"></script>
+    <script src="{{ url_for('minisab.static', filename='jquery-3.2.1.js') }}"></script>
+    <script src="{{ url_for('minisab.static', filename='minisab.js') }}"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('minisab.static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -25,7 +25,7 @@
 <body>
     <div class="container-fluid" id="app">
         <div class="page-header">
-        <h1>Categories <a href="/"><span class="badge">Minisab {{ version }}</span></a></h1>
+        <h1>Categories <a href="{{ url_for('minisab.index') }}"><span class="badge">Minisab {{ version }}</span></a></h1>
         </div>
         <div class="row">
         {% for categorie in categories %}
@@ -46,9 +46,9 @@
                             <div class="btn-group recherche" role="group" aria-label="...">
                                 {% for item_categorie in categorie_sabnzbd %}
                                     {% if item_categorie == categorie.categorie_sabnzbd %}
-                                    <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection_cat('{{ url_for('minisab.change_sab_categorie')}}', {{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                                    <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection_cat('{{ url_for('minisab.change_sab_categorie', id_categorie=categorie.id, cat_sab=item_categorie)}}', {{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
                                     {% else %}
-                                    <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection_cat('{{ url_for('minisab.change_sab_categorie')}}', {{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                                    <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection_cat('{{ url_for('minisab.change_sab_categorie', id_categorie=categorie.id, cat_sab=item_categorie)}}', {{ categorie.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
                                     {% endif %}
                                 {% endfor %}
                             </div>
