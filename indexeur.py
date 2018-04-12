@@ -110,14 +110,20 @@ class MyParserNzbIndex(html.parser.HTMLParser):
 
     def tri(x):
         res = 0
-        if 'taille' not in x:
+        # on filtre les virgules qui pollue la conversion
+        if 'taille' in x:
+            x['taille'] = x['taille'].replace(',', '')
+        try:
+            if 'taille' not in x:
+                res = 0
+            elif x['taille'].find('GB') > 0:
+                res = float(x['taille'][0:x['taille'].find('GB')]) * 100 * 1000
+            elif x['taille'].find('MB') > 0:
+                res = float(x['taille'][0:x['taille'].find('MB')]) * 100
+            elif x['taille'].find('KB') > 0:
+                res = float(x['taille'][0:x['taille'].find('KB')])
+        except:
             res = 0
-        elif x['taille'].find('GB') > 0:
-            res = float(x['taille'][0:x['taille'].find('GB')]) * 100 * 1000
-        elif x['taille'].find('MB') > 0:
-            res = float(x['taille'][0:x['taille'].find('MB')]) * 100
-        elif x['taille'].find('KB') > 0:
-            res = float(x['taille'][0:x['taille'].find('KB')])
         return res
 
     def getresultat(self):

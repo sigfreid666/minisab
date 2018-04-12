@@ -12,10 +12,10 @@ RUN mkdir /data
 
 WORKDIR /app
 
-ADD gunicorn.py /app
+ADD docker/gunicorn.py /app
 
-ADD minisab/*.py /app/
+ADD *.py /app/
 
-ADD minisab/templates /app/templates
+ADD templates /app/templates
 
 CMD gunicorn -c /app/gunicorn.py flaskminisab:app
