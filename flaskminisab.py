@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, Blueprint, request, jsonify
+from flask import Flask, render_template, abort, Blueprint, request, jsonify, url_for
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
@@ -71,19 +71,30 @@ def check_sab():
 @bp.route('/check_urls')
 def check_urls():
     logger.info('Requete : /maj')
-    return jsonify(sabnzbd_util.merge_nzb())
+    resultat = sabnzbd_util.merge_nzb()
+    for termine_id, termine_fichier in resultat['article_termine']:
+        ar = newminisab.Article.get(newminisab.Article.id == termine_id)
+        url = 'http://nginx' + url_for('minisab.get_nzb',
+                                       id_article=termine_id)
+        ar.creer_recherche_tous(termine_fichier, url)
+    return jsonify(resultat)
 
 
-@bp.route('/concat_nzb')
-def concat_nzb():
-    logger.info('Requete : /concat_nzb')
-    return jsonify(sabnzbd_util.concat_nzb())
+@bp.route('/nzb/<int:id_article>')
+def get_nzb(id_article=None):
+    logger.debug('get_nzb %d', id_article)
+    try:
+        with open('/app/dump-%d-concat.nzb' % id_article, mode='r') as fichier:
+            content = fichier.read()
+        return content
+    except FileNotFoundError:
+        abort(404)
 
 
 @util.avec_redis
 def get_info_affiche_urls(red_iter):
     logger.info('Affichage des urls')
-    num_art = [ x.decode() for x in red_iter.smembers(util.redis_liste_urls)]
+    num_art = [x.decode() for x in red_iter.smembers(util.redis_liste_urls)]
     table_urls = []
     for x in num_art:
         for y in (util.redis_urls % int(x),
@@ -107,7 +118,7 @@ def affiche_urls():
     return render_template('./traitement_en_cours.html',
                            version=version,
                            numeros_articles=num_art,
-                           table_urls=table_urls )
+                           table_urls=table_urls)
 
 
 @bp.route('/article/<int:id_article>/favoris/categorie')
@@ -191,7 +202,22 @@ def recherche_article(id_article, stop_multi):
         # print('lancer recherche %s %d' % (id_article, stop_multi))
         ar = newminisab.Article.get(newminisab.Article.id == id_article)
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
         return render_template('./article.html', item=ar,
+                               categorie_sabnzbd=get_categorie_sabnzbd(),
+                               categorie_favoris_id=newminisab.Categorie.get_favoris().id)
+    except newminisab.Article.DoesNotExist:
+        abort(404)
+
+
+@bp.route('/article/<id_article>/nettoyer_recherche')
+def nettoyer_recherche(id_article):
+    try:
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
+        ar.nettoyer_recherche()
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
+        return render_template('./article.html', item=ar,
+                               categorie=ar.categorie,
                                categorie_sabnzbd=get_categorie_sabnzbd(),
                                categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.Article.DoesNotExist:
@@ -351,12 +377,18 @@ def telechargement_sabnzbd(title, url, categorie):
                  'name': url,
                  'nzbname': title,
                  'cat': categorie}
+        logger.debug('telechargement_sabnzbd : url <%s> title <%s>',
+                     url, title)
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
                 port_sabG)
         r = requests.get(myurl, params=param)
         resultat = r.json()
+        logger.debug('telechargement_sabnzbd : status <%s>',
+                     resultat['status'])
         if resultat['status']:
+            logger.debug('telechargement_sabnzbd : nzo_ids <%s>',
+                         str(resultat['nzo_ids']))
             return resultat['nzo_ids'][0]
         else:
             return ''

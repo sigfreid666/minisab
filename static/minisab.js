@@ -46,6 +46,16 @@ function marquer_favoris(url, idarticle, idcatdepart, idcatarrivee) {
         });
 }
 
+function nettoyer_recherche(url, idarticle) {
+    $.get(url,  
+        function(data, status) {
+            if (status == "success") {
+                $("#art_"+idarticle).replaceWith(data);
+            }
+         })
+}
+
+
 function lancer_recherche(url, idarticle) {
     var stop_multi = $("#rec_multiple_" + idarticle).val();
     if (stop_multi != '') {

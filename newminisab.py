@@ -118,7 +118,7 @@ class Article(Model):
                 ret = recherche_indexeur(url_binsearch, fichier)
             if len(ret) > 0:
                 for item in ret:
-                    logger.info('item %s', str(item))
+                    logger.debug('item %s', str(item))
                     try:
                         rec = Recherche(id_check=item['id'],
                                         url=item['url'],
@@ -129,6 +129,20 @@ class Article(Model):
                         rec.save()
                     except IntegrityError:
                         logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
+
+    def creer_recherche_tous(self, nom_fichier, url):
+        rec = Recherche(id_check=0,
+                        url=url,
+                        taille='Vide',
+                        title='Tous',
+                        fichier=self.fichier,
+                        article=self)
+        rec.save()
+
+    def nettoyer_recherche(self):
+        n = Recherche.delete().where(Recherche.article == self).execute()
+        logger.debug('%d recherches supprimes pour article %d',
+                     n, self.id)
 
     def analyse_annee(self):
         if self.annee != 0:
@@ -180,7 +194,7 @@ class Article(Model):
 
 
 class Recherche(Model):
-    id_check = IntegerField(unique=True)
+    id_check = IntegerField()
     url = CharField()
     taille = CharField()
     title = CharField()

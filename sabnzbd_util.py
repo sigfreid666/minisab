@@ -49,7 +49,7 @@ def traitement_nzb(liste_nom_fichier, nom_fichier_sortie):
             int_node = 0
             for child in ajout_doc.documentElement.childNodes:
                 if ((child.nodeType == child.ELEMENT_NODE) and
-                    (child.tagName == 'file')):
+                        (child.tagName == 'file')):
                     doc.documentElement.appendChild(child)
                     int_node += 1
             logger.debug('Nombre de nodes : %d', int_node)
@@ -64,7 +64,7 @@ def traitement_nzb(liste_nom_fichier, nom_fichier_sortie):
 def merge_nzb(redis_iter, nombre_iteration=5):
     # res = red_iter.lrange(nom_cat_sab, 0, -1)
     # logger.debug('Redis : %s', str(res))
-    ret = {'article_id': []}
+    ret = {'article_encours': [], 'article_termine': []}
     logger.debug('merge_nzb')
     # d'abord on essaye de checker les urls en cours
     iteration = 0
@@ -83,27 +83,37 @@ def merge_nzb(redis_iter, nombre_iteration=5):
             nom_fichier = '/app/dump-%d-%d.xml' % (int_article_id,
                                                    redis_iter.llen(redis_urls_termine % int_article_id))
             if traitement_url(url, nom_fichier):
-                ret['article_id'].append((int_article_id, nom_fichier))
+                ret['article_encours'].append((int_article_id, nom_fichier))
                 redis_iter.rpush(redis_urls_termine % int_article_id, nom_fichier)
                 iteration += 1
+            else:
+                redis_iter.rpush(redis_urls_encours % int_article_id, url)
+        nom_fichier_concat = concat_nzb(redis_iter, int_article_id)
+        if nom_fichier_concat != '':
+            ret['article_termine'].append((int_article_id, nom_fichier_concat))
 
     return ret
 
 
-@avec_redis
-def concat_nzb(redis_iter):
+# @avec_redis
+def concat_nzb(redis_iter, numero_article):
     logger.debug('concat_nzb')
-    for article_id in redis_iter.smembers(redis_liste_urls):
-        int_article_id = int(article_id)
-        liste_nom_fichier = redis_iter.lrange(redis_urls_termine % int_article_id, 0, -1)
-        logger.debug('Article <%d>, nom fichier <%s>', int_article_id, str(liste_nom_fichier))
-        if traitement_nzb(liste_nom_fichier, '/app/dump-%d-concat.nzb' % int_article_id):
-            for fichier in liste_nom_fichier:
-                os.remove(fichier)
-            redis_iter.srem(redis_liste_urls, article_id)
-            redis_iter.ltrim(redis_urls % int_article_id, 1, 0)
-            redis_iter.ltrim(redis_urls_encours % int_article_id, 1, 0)
-            redis_iter.ltrim(redis_urls_termine % int_article_id, 1, 0)
-            redis_iter.delete(redis_urls % int_article_id)
-            redis_iter.delete(redis_urls_encours % int_article_id)
-            redis_iter.delete(redis_urls_termine % int_article_id)
+    if ((redis_iter.llen(redis_urls % numero_article) > 0) or
+            (redis_iter.llen(redis_urls % numero_article) > 0)):
+        logger.debug('telechargement en cours pour %d', numero_article)
+        return
+    liste_nom_fichier = redis_iter.lrange(redis_urls_termine % numero_article, 0, -1)
+    logger.debug('Article <%d>, nom fichier <%s>', numero_article, str(liste_nom_fichier))
+    nom_fichier_concat = '/app/dump-%d-concat.nzb' % numero_article
+    if traitement_nzb(liste_nom_fichier, nom_fichier_concat):
+        for fichier in liste_nom_fichier:
+            os.remove(fichier)
+        redis_iter.srem(redis_liste_urls, numero_article)
+        redis_iter.ltrim(redis_urls % numero_article, 1, 0)
+        redis_iter.ltrim(redis_urls_encours % numero_article, 1, 0)
+        redis_iter.ltrim(redis_urls_termine % numero_article, 1, 0)
+        redis_iter.delete(redis_urls % numero_article)
+        redis_iter.delete(redis_urls_encours % numero_article)
+        redis_iter.delete(redis_urls_termine % numero_article)
+        return nom_fichier_concat
+    return ''
