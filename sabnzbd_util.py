@@ -4,11 +4,16 @@ import requests
 import redis
 import os
 from xml.dom.minidom import parseString
+from xml.parsers.expat import ExpatError
 from util import avec_redis
 from util import redis_liste_urls, redis_urls
 from util import redis_urls_encours, redis_urls_termine
 
 logger = logging.getLogger('flaskminisab')
+
+
+def filename_dump(id_article, indice=-1):
+    return '/app/dump-%d-%s.nzb' % (id_article, str(indice) if indice >= 0 else 'concat')
 
 
 def traitement_url(url, nom_fichier):
@@ -18,9 +23,16 @@ def traitement_url(url, nom_fichier):
         content = req.text
         logger.debug('Taille fichier %d', len(content))
         if len(content) > 0:
-            with open(nom_fichier, 'w') as fichier:
-                fichier.write(content)
-                return True
+            # on verifie la validite du fichier avant d'ecrire
+            try:
+                doc = parseString(content)
+            except ExpatError as e:
+                logger.error('Fichier nzb mal forme : url <%s>', url)
+                return False
+            finally:
+                with open(nom_fichier, 'w') as fichier:
+                    fichier.write(content)
+                    return True
     except:
         return False
 
@@ -61,9 +73,7 @@ def traitement_nzb(liste_nom_fichier, nom_fichier_sortie):
 
 
 @avec_redis
-def merge_nzb(redis_iter, nombre_iteration=5):
-    # res = red_iter.lrange(nom_cat_sab, 0, -1)
-    # logger.debug('Redis : %s', str(res))
+def merge_nzb(redis_iter, nombre_iteration=15):
     ret = {'article_encours': [], 'article_termine': []}
     logger.debug('merge_nzb')
     # d'abord on essaye de checker les urls en cours
@@ -80,8 +90,8 @@ def merge_nzb(redis_iter, nombre_iteration=5):
             if url is None:
                 break
             logger.debug('En cours article %d, url %s', int_article_id, url)
-            nom_fichier = '/app/dump-%d-%d.xml' % (int_article_id,
-                                                   redis_iter.llen(redis_urls_termine % int_article_id))
+            nom_fichier = filename_dump(int_article_id,
+                                        redis_iter.llen(redis_urls_termine % int_article_id))
             if traitement_url(url, nom_fichier):
                 ret['article_encours'].append((int_article_id, nom_fichier))
                 redis_iter.rpush(redis_urls_termine % int_article_id, nom_fichier)
@@ -104,7 +114,7 @@ def concat_nzb(redis_iter, numero_article):
         return
     liste_nom_fichier = redis_iter.lrange(redis_urls_termine % numero_article, 0, -1)
     logger.debug('Article <%d>, nom fichier <%s>', numero_article, str(liste_nom_fichier))
-    nom_fichier_concat = '/app/dump-%d-concat.nzb' % numero_article
+    nom_fichier_concat = filename_dump(numero_article)
     if traitement_nzb(liste_nom_fichier, nom_fichier_concat):
         for fichier in liste_nom_fichier:
             os.remove(fichier)
@@ -117,3 +127,21 @@ def concat_nzb(redis_iter, numero_article):
         redis_iter.delete(redis_urls_termine % numero_article)
         return nom_fichier_concat
     return ''
+
+
+@avec_redis
+def nettoyage_traitement(redis_iter, numero_article):
+    logger.debug('Nettoyage traitement %d', numero_article)
+    if redis_iter.srem(redis_liste_urls, numero_article) == 1:
+        liste_nom_fichier = redis_iter.lrange(redis_urls_termine % numero_article, 0, -1)
+        for fichier in liste_nom_fichier:
+            os.remove(fichier)
+        redis_iter.ltrim(redis_urls % numero_article, 1, 0)
+        redis_iter.ltrim(redis_urls_encours % numero_article, 1, 0)
+        redis_iter.ltrim(redis_urls_termine % numero_article, 1, 0)
+        redis_iter.delete(redis_urls % numero_article)
+        redis_iter.delete(redis_urls_encours % numero_article)
+        redis_iter.delete(redis_urls_termine % numero_article)
+
+
+

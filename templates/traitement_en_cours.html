@@ -40,23 +40,41 @@
                 </div>
             </div>
         </div>
-        <div class="row"><div class="col-md-5">Numero article</div></div>
-
-        {% for numero in numeros_articles %}
-        <div class="row">
-            <div class="col-md-5">{{ numero }}</div>
-        </div>
-        {% endfor %}
-        <br>
-
+        <table class="table">
+            <thead>
+                <tr>
+                    <td>Numero article</td>
+                    <td>Nettoyer</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for numero in numeros_articles %}
+                <tr>
+                    <td>{{ numero }}</td>
+                    <td>
+                        <button class="btn btn-info btn-xs" onclick="lancer_url('{{ url_for('minisab.nettoyage_traitement', id_article=numero) }}', 'output')">
+                            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% for nom_table, urls in table_urls %}
-            <div class="row"><div class="col-md-12">{{nom_table}}</div></div>
-            {% for numero, url in urls %}
-            <div class="row">
-                <div class="col-md-2">{{ numero }}</div>
-                <div class="col-md-10">{{ url }}</div>
-            </div>
-            {% endfor %}
+        <table class="table table-striped">
+            <thead>
+                <tr><td>{{ nom_table }}</td></tr>
+                <tr>
+                    <td>#</td>
+                    <td>Url/Fichier</td>
+                </tr>
+            </thead>
+            <tbody>
+                {% for numero, url in urls %}
+                <tr><td>{{ numero }}</td><td>{{ url }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% endfor %}
         <br>
         <textarea id="output" name="Output"></textarea>

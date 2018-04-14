@@ -84,12 +84,17 @@ def check_urls():
 def get_nzb(id_article=None):
     logger.debug('get_nzb %d', id_article)
     try:
-        with open('/app/dump-%d-concat.nzb' % id_article, mode='r') as fichier:
+        with open(sabnzbd_util.filename_dump(id_article), mode='r') as fichier:
             content = fichier.read()
         return content
     except FileNotFoundError:
         abort(404)
 
+@bp.route('/nettoyage_traitement/<int:id_article>')
+def nettoyage_traitement(id_article):
+    logger.debug('nettoyage_traitement %d', id_article)
+    sabnzbd_util.nettoyage_traitement(id_article)
+    return "OK"
 
 @util.avec_redis
 def get_info_affiche_urls(red_iter):
