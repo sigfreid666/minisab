@@ -21,7 +21,7 @@
         <h4>
         <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
         <button class="btn btn-default" onclick="marquer_lu('{{ url_for('minisab.marquer_article_lu', lunonlu=0) }}', [{{ item.id }} ], {{ item.categorie.id}})">
-            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+            <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"/>
         </button>
         <button class="btn btn-default" onclick="marquer_favoris('{{ url_for('minisab.marquer_article_favoris_categorie', id_article=item.id) }}', {{ item.id }}, {{ item.categorie.id}}, {{ categorie_favoris_id }})">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"/>
@@ -31,6 +31,12 @@
         </button>
         <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
             <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"/>               
+        </button>
+        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" onclick="envoyer_sab_tous('{{ url_for('minisab.lancer_tout_telecharger', id_article=item.id) }}', {{ item.id }})">
+            <span class="glyphicon glyphicon-asterisk" aria-hidden="true"/>               
+        </button>
+        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" onclick="nettoyer_recherche('{{ url_for('minisab.nettoyer_recherche', id_article=item.id) }}', {{ item.id }})">
+            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
         </button>
         </h4>
     </div>
