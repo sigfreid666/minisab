@@ -1,4 +1,5 @@
 #!/bin/sh
 date +%d-%m-%Y-%H-%M-%S
 wget -O /root/out_cron2.txt http://nginx/minisab/check_sab
+wget -O /root/out_cron2.txt http://nginx/minisab/check_urls
 # cat /root/out_cron2.txt
