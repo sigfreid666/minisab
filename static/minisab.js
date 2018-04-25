@@ -46,6 +46,16 @@ function marquer_favoris(url, idarticle, idcatdepart, idcatarrivee) {
         });
 }
 
+function nettoyer_recherche(url, idarticle) {
+    $.get(url,  
+        function(data, status) {
+            if (status == "success") {
+                $("#art_"+idarticle).replaceWith(data);
+            }
+         })
+}
+
+
 function lancer_recherche(url, idarticle) {
     var stop_multi = $("#rec_multiple_" + idarticle).val();
     if (stop_multi != '') {
@@ -79,6 +89,20 @@ function envoyer_sab(url, idrecherche, idarticle) {
     $("#recherche_"+idrecherche).text($("#recherche_"+idrecherche).text() + " (En cours)");   
 }
 
+function envoyer_sab_tous(url, idarticle) {
+    var categorie = $("#art_"+idarticle+" div.recherche button.btn-danger").text()
+    console.log("envoyer_sab " + categorie);
+    if (categorie != "*") {
+        url = url + categorie; }
+    $.get(url,
+        function(data, status) {
+            if (status == "success") {
+                console.log("OK envoyer_sab");
+            }
+        })
+    // $("#recherche_"+idrecherche).text($("#recherche_"+idrecherche).text() + " (En cours)");   
+}
+
 function change_selection(idarticle, categorie){
     $("#art_"+idarticle+" div.recherche button.btn-danger").removeClass('btn-danger').addClass('btn-default');
     $("#art_"+idarticle+" div.recherche button." + categorie).removeClass('btn-default').addClass('btn-danger');
@@ -96,4 +120,10 @@ function change_selection_cat(url, idarticle, categorie){
                 console.log("OK envoyer_sab");
             }
         })
+}
+
+function lancer_url(url, idsortie) {
+    $.get(url, function(data) {
+        $("#" + idsortie).text(data);
+    })
 }

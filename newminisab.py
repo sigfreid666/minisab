@@ -10,6 +10,8 @@ from functools import wraps
 import redis
 import itertools
 import copy
+# from util import redis_liste_urls, redis_urls
+# from util import redis_urls_encours, redis_urls_termine
 
 # if __name__ == "__main__":
 #     import logging.config
@@ -116,7 +118,7 @@ class Article(Model):
                 ret = recherche_indexeur(url_binsearch, fichier)
             if len(ret) > 0:
                 for item in ret:
-                    logger.info('item %s', str(item))
+                    logger.debug('item %s', str(item))
                     try:
                         rec = Recherche(id_check=item['id'],
                                         url=item['url'],
@@ -127,6 +129,20 @@ class Article(Model):
                         rec.save()
                     except IntegrityError:
                         logger.error('recherche_indexeur : item deja existant <%s>', item['id'])
+
+    def creer_recherche_tous(self, nom_fichier, url):
+        rec = Recherche(id_check=0,
+                        url=url,
+                        taille='Vide',
+                        title='Tous',
+                        fichier=self.fichier,
+                        article=self)
+        rec.save()
+
+    def nettoyer_recherche(self):
+        n = Recherche.delete().where(Recherche.article == self).execute()
+        logger.debug('%d recherches supprimes pour article %d',
+                     n, self.id)
 
     def analyse_annee(self):
         if self.annee != 0:
@@ -178,7 +194,7 @@ class Article(Model):
 
 
 class Recherche(Model):
-    id_check = IntegerField(unique=True)
+    id_check = IntegerField()
     url = CharField()
     taille = CharField()
     title = CharField()
@@ -248,6 +264,7 @@ def base_de_donnee(wrap):
 def cli():
     pass
 
+
 def status_sabnzbd():
     if host_sabG is not None:
         param = {'apikey': sabnzbd_nc_cle_api,
@@ -282,7 +299,7 @@ def status_sabnzbd():
 
 @cli.command('check_sab')
 def cmd_check_sabnzbd():
-    check_sabnzbd();
+    check_sabnzbd()
 
 
 def check_sabnzbd():
@@ -337,7 +354,7 @@ def check_new_article():
     parse.feed(resultat)
     logger.info('check_new_article: article detecte <%d>', len(parse.data))
     nb_nouveau_article = 0
-    status['resultat'] = True 
+    status['resultat'] = True
     status['nombre_resultat'] = len(parse.data)
     status['nombre_nouveau'] = 0
     for x in parse.data:
@@ -375,7 +392,7 @@ def recuperer_tous_articles_par_categorie(filtres_article=[]):
                                .order_by(Categorie.preferee.desc(),
                                          Categorie.nom))
 
-    c = [(x, x.articles) for x in prefetch(les_categories, les_articles) 
+    c = [(x, x.articles) for x in prefetch(les_categories, les_articles)
                          if len(x.articles) > 0]
 
     # filtrage des articles pour detecter certains sur le titre
@@ -383,7 +400,7 @@ def recuperer_tous_articles_par_categorie(filtres_article=[]):
     for cat, articles in c:
         cat.avec_filtre = False
         for article in articles:
-            article.filtre = False                    
+            article.filtre = False
             for filtre in filtres_article:
                 if article.title.find(filtre) != -1:
                     logger.debug('filtre article %s %s', filtre, article.title)

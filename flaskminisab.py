@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, Blueprint, request, jsonify
+from flask import Flask, render_template, abort, Blueprint, request, jsonify, url_for
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
@@ -6,15 +6,17 @@ import logging.config
 import itertools
 import newminisab
 import redis
+import sabnzbd_util
 from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
 from settings import log_config, port_sabG
+import util
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
 
 logging.config.dictConfig(log_config)
 # logger.setLevel(logging.DEBUG)
 
-version = '2.9c'
+version = '2.10'
 bp = Blueprint('minisab', __name__, static_folder='/minisab/static')
 app = Flask(__name__)
 logger = app.logger # logging.getLogger('gunicorn.glogging.Logger')
@@ -64,6 +66,64 @@ def mise_a_jour():
 def check_sab():
     logger.info('Requete : /maj')
     return jsonify(newminisab.check_sabnzbd())
+
+
+@bp.route('/check_urls')
+def check_urls():
+    logger.info('Requete : /maj')
+    resultat = sabnzbd_util.merge_nzb()
+    for termine_id, termine_fichier in resultat['article_termine']:
+        ar = newminisab.Article.get(newminisab.Article.id == termine_id)
+        url = 'http://nginx' + url_for('minisab.get_nzb',
+                                       id_article=termine_id)
+        ar.creer_recherche_tous(termine_fichier, url)
+    return jsonify(resultat)
+
+
+@bp.route('/nzb/<int:id_article>')
+def get_nzb(id_article=None):
+    logger.debug('get_nzb %d', id_article)
+    try:
+        with open(sabnzbd_util.filename_dump(id_article), mode='r') as fichier:
+            content = fichier.read()
+        return content
+    except FileNotFoundError:
+        abort(404)
+
+@bp.route('/nettoyage_traitement/<int:id_article>')
+def nettoyage_traitement(id_article):
+    logger.debug('nettoyage_traitement %d', id_article)
+    sabnzbd_util.nettoyage_traitement(id_article)
+    return "OK"
+
+@util.avec_redis
+def get_info_affiche_urls(red_iter):
+    logger.info('Affichage des urls')
+    num_art = [x.decode() for x in red_iter.smembers(util.redis_liste_urls)]
+    table_urls = []
+    for x in num_art:
+        for y in (util.redis_urls % int(x),
+                  util.redis_urls_termine % int(x),
+                  util.redis_urls_encours % int(x)):
+            i = 0
+            table_urls.append((y, []))
+            for z in red_iter.lrange(y, 0, -1):
+                table_urls[-1][1].append((i, z))
+                i += 1
+
+    logger.debug('Liste article %s', str(num_art))
+    logger.debug('Liste urls %s', str(table_urls))
+    return num_art, table_urls
+
+
+@bp.route('/affiche_urls')
+def affiche_urls():
+    logger.info('Affichage des urls')
+    num_art, table_urls = get_info_affiche_urls()
+    return render_template('./traitement_en_cours.html',
+                           version=version,
+                           numeros_articles=num_art,
+                           table_urls=table_urls)
 
 
 @bp.route('/article/<int:id_article>/favoris/categorie')
@@ -147,7 +207,22 @@ def recherche_article(id_article, stop_multi):
         # print('lancer recherche %s %d' % (id_article, stop_multi))
         ar = newminisab.Article.get(newminisab.Article.id == id_article)
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
         return render_template('./article.html', item=ar,
+                               categorie_sabnzbd=get_categorie_sabnzbd(),
+                               categorie_favoris_id=newminisab.Categorie.get_favoris().id)
+    except newminisab.Article.DoesNotExist:
+        abort(404)
+
+
+@bp.route('/article/<id_article>/nettoyer_recherche')
+def nettoyer_recherche(id_article):
+    try:
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
+        ar.nettoyer_recherche()
+        ar = newminisab.Article.get(newminisab.Article.id == id_article)
+        return render_template('./article.html', item=ar,
+                               categorie=ar.categorie,
                                categorie_sabnzbd=get_categorie_sabnzbd(),
                                categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.Article.DoesNotExist:
@@ -172,6 +247,23 @@ def lancer_telecharger(id_recherche, categorie):
                 red.rpush('sabdownload', rec.article.id)
             except redis.exceptions.ConnectionError as e:
                 logging.error('Impossible de se connecter à Redis : %s', str(e))
+        return 'OK'
+    except newminisab.Article.DoesNotExist:
+        abort(404)
+
+
+@bp.route('/article/<int:id_article>/tout_telecharger/<categorie>')
+@bp.route('/article/<int:id_article>/tout_telecharger/',
+          defaults={'categorie': '*'})
+def lancer_tout_telecharger(id_article, categorie):
+    logger.info('Requete %s', request.url)
+    try:
+        rec = (newminisab.Recherche.select()
+                                   .where(newminisab.Recherche.article == id_article))
+        urls = [r.url for r in rec]
+        logger.debug('Nombre url trouve %d', len(urls))
+        logger.debug('recherche trouve %s', str(urls))
+        save_urls(id_article, urls)
         return 'OK'
     except newminisab.Article.DoesNotExist:
         abort(404)
@@ -290,12 +382,18 @@ def telechargement_sabnzbd(title, url, categorie):
                  'name': url,
                  'nzbname': title,
                  'cat': categorie}
+        logger.debug('telechargement_sabnzbd : url <%s> title <%s>',
+                     url, title)
         myurl = "http://{0}:{1}/sabnzbd/api".format(
                 host_sabG,
                 port_sabG)
         r = requests.get(myurl, params=param)
         resultat = r.json()
+        logger.debug('telechargement_sabnzbd : status <%s>',
+                     resultat['status'])
         if resultat['status']:
+            logger.debug('telechargement_sabnzbd : nzo_ids <%s>',
+                         str(resultat['nzo_ids']))
             return resultat['nzo_ids'][0]
         else:
             return ''
@@ -346,6 +444,20 @@ def delete_history_sab(id_sab):
         return r.status_code
     else:
         return 0
+
+
+@util.avec_redis
+def save_urls(red_iter, num_article, urls):
+    red_iter.sadd(util.redis_liste_urls, num_article)
+    if red_iter.exists(util.redis_urls % num_article):
+        logger.debug('%s existe', util.redis_urls % num_article)
+        red_iter.ltrim(util.redis_urls_encours % num_article, 1, 0)
+        red_iter.ltrim(util.redis_urls_termine % num_article, 1, 0)
+        red_iter.ltrim(util.redis_urls % num_article, 1, 0)
+        # red_iter.delete(util.redis_urls_encours % num_article)
+        # red_iter.delete(util.redis_urls_termine % num_article)
+        # red_iter.delete(util.redis_urls % num_article)
+    red_iter.lpush(util.redis_urls % num_article, *urls)
 
 
 app.register_blueprint(bp, url_prefix='/minisab')
