@@ -12,8 +12,6 @@ RUN mkdir /data
 
 WORKDIR /app
 
-ADD docker/gunicorn.py /app
-
 ADD *.py /app/
 
 ADD templates /app/templates
