@@ -44,6 +44,7 @@ class Article(Model):
     fichier = CharField()
     taille = CharField()
     categorie = ForeignKeyField(Categorie, related_name='articles')
+    categorie_origine = ForeignKeyField(Categorie, related_name='articles_2')
     categorie_str = CharField()
     lu = BooleanField(index=True, default=False)
     annee = IntegerField(default=0)
@@ -70,7 +71,7 @@ class Article(Model):
         ar.lu = self.lu
         ar.annee = self.annee
         ar.categorie = self.categorie
-        ar.categorie_origine = newminisab.Categorie.get(newminisab.Categorie.nom == self.categorie_str)
+        ar.categorie_origine = self.categorie_origine
         ar.categorie_str = self.categorie_str
         return ar
 
