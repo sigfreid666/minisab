@@ -8,6 +8,9 @@ from xml.parsers.expat import ExpatError
 from util import avec_redis
 from util import redis_liste_urls, redis_urls
 from util import redis_urls_encours, redis_urls_termine
+from settings import acces_config
+import itertools
+from functools import wraps
 
 logger = logging.getLogger('flaskminisab')
 
@@ -144,4 +147,76 @@ def nettoyage_traitement(redis_iter, numero_article):
         redis_iter.delete(redis_urls_termine % numero_article)
 
 
+def connection_sab(iconfig):
+    def connection_sab_wrap(wrap):
+        @wraps(wrap)
+        def wrapper(*args):
+            if iconfig['host_sab'] is not None:
+                try:
+                    wrap(iconfig)
+                except requests.exceptions.ConnectionError:
+                    logger.info('Impossible de se connecter a sabnzbd',
+                                iconfig['host_sab'], iconfig['port_sab'])
+                    return {}
+            else:
+                logger.info('sabnzbd non disponible')
+                return {}
 
+            return wrapper
+    return connection_sab_wrap
+
+
+def make_url_sab(iconfig):
+    return "http://%s:%s/sabnzbd/api" % (iconfig['host_sab'],
+                                         iconfig['port_sab'])
+
+
+@acces_config
+@connection_sab(iconfig)
+def status_sabnzbd(iconfig):
+    param = {'apikey': iconfig['sabnzbd_nc_cle_api'],
+             'output': 'json',
+             'limit': '100',
+             'mode': 'history'}
+    myurl = make_url_sab(iconfig)
+    r = requests.get(myurl, params=param)
+    resultat = r.json()
+    param = {'apikey': iconfig['sabnzbd_nc_cle_api'],
+             'output': 'json',
+             'mode': 'queue'}
+    myurl = make_url_sab(iconfig)
+    r = requests.get(myurl, params=param)
+    resultat2 = r.json()
+    resultat_total = itertools.chain(resultat['history']['slots'],
+                                     resultat2['queue']['slots'])
+    return {x['nzo_id']: x['status'] for x in resultat_total}
+
+
+@acces_config
+def telechargement_sabnzbd(iconfig, title, url, categorie):
+    if host_sabG is not None:
+        param = {'apikey': iconfig['sabnzbd_nc_cle_api'],
+                 'output': 'json',
+                 'mode': 'addurl',
+                 'name': url,
+                 'nzbname': title,
+                 'cat': categorie}
+        logger.debug('telechargement_sabnzbd : url <%s> title <%s>',
+                     url, title)
+        myurl = make_url_sab(iconfig)
+        r = requests.get(myurl, params=param)
+        resultat = r.json()
+        logger.debug('telechargement_sabnzbd : status <%s>',
+                     resultat['status'])
+        if resultat['status']:
+            logger.debug('telechargement_sabnzbd : nzo_ids <%s>',
+                         str(resultat['nzo_ids']))
+            return resultat['nzo_ids'][0]
+        else:
+            return ''
+    else:
+        return ''
+
+
+if __name__ == '__main__':
+    print(status_sabnzbd())

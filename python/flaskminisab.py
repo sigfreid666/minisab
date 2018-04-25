@@ -374,33 +374,6 @@ def get_categorie_sabnzbd():
         return categorie_sabnzbd
 
 
-def telechargement_sabnzbd(title, url, categorie):
-    if host_sabG is not None:
-        param = {'apikey': sabnzbd_nc_cle_api,
-                 'output': 'json',
-                 'mode': 'addurl',
-                 'name': url,
-                 'nzbname': title,
-                 'cat': categorie}
-        logger.debug('telechargement_sabnzbd : url <%s> title <%s>',
-                     url, title)
-        myurl = "http://{0}:{1}/sabnzbd/api".format(
-                host_sabG,
-                port_sabG)
-        r = requests.get(myurl, params=param)
-        resultat = r.json()
-        logger.debug('telechargement_sabnzbd : status <%s>',
-                     resultat['status'])
-        if resultat['status']:
-            logger.debug('telechargement_sabnzbd : nzo_ids <%s>',
-                         str(resultat['nzo_ids']))
-            return resultat['nzo_ids'][0]
-        else:
-            return ''
-    else:
-        return ''
-
-
 def status_sabnzbd():
     if host_sabG is not None:
         param = {'apikey': sabnzbd_nc_cle_api,
