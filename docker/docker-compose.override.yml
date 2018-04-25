@@ -9,7 +9,7 @@ services:
       - ..:/app
       - ./gunicorn-dev.py:/app/gunicorn.py
   nginx:
-    image: nginx:1.14
+    image: nginx:1.12
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../static:/usr/share/nginx/html/minisab/static/
