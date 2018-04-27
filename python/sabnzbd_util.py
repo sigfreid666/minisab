@@ -8,11 +8,13 @@ from xml.parsers.expat import ExpatError
 from util import avec_redis
 from util import redis_liste_urls, redis_urls
 from util import redis_urls_encours, redis_urls_termine
-from settings import acces_config
+from settings import connexion_sab, connexion_redis
 import itertools
 from functools import wraps
 
-logger = logging.getLogger('flaskminisab')
+nom_cat_sab = 'minisab_categorie_sabnzbd'
+logger = logging.getLogger('__main__')
+logger.level = logging.DEBUG
 
 
 def filename_dump(id_article, indice=-1):
@@ -28,7 +30,7 @@ def traitement_url(url, nom_fichier):
         if len(content) > 0:
             # on verifie la validite du fichier avant d'ecrire
             try:
-                doc = parseString(content)
+                parseString(content)
             except ExpatError as e:
                 logger.error('Fichier nzb mal forme : url <%s>', url)
                 return False
@@ -75,8 +77,8 @@ def traitement_nzb(liste_nom_fichier, nom_fichier_sortie):
     return False
 
 
-@avec_redis
-def merge_nzb(redis_iter, nombre_iteration=15):
+@connexion_redis
+def merge_nzb(nombre_iteration=15, redis_iter=None):
     ret = {'article_encours': [], 'article_termine': []}
     logger.debug('merge_nzb')
     # d'abord on essaye de checker les urls en cours
@@ -101,7 +103,8 @@ def merge_nzb(redis_iter, nombre_iteration=15):
                 iteration += 1
             else:
                 redis_iter.rpush(redis_urls_encours % int_article_id, url)
-        nom_fichier_concat = concat_nzb(redis_iter, int_article_id)
+        nom_fichier_concat = concat_nzb(int_article_id,
+                                        redis_iter=redis_iter)
         if nom_fichier_concat != '':
             ret['article_termine'].append((int_article_id, nom_fichier_concat))
 
@@ -109,7 +112,7 @@ def merge_nzb(redis_iter, nombre_iteration=15):
 
 
 # @avec_redis
-def concat_nzb(redis_iter, numero_article):
+def concat_nzb(numero_article, redis_iter=None):
     logger.debug('concat_nzb')
     if ((redis_iter.llen(redis_urls % numero_article) > 0) or
             (redis_iter.llen(redis_urls % numero_article) > 0)):
@@ -132,8 +135,8 @@ def concat_nzb(redis_iter, numero_article):
     return ''
 
 
-@avec_redis
-def nettoyage_traitement(redis_iter, numero_article):
+@connexion_redis
+def nettoyage_traitement(numero_article, redis_iter=None):
     logger.debug('Nettoyage traitement %d', numero_article)
     if redis_iter.srem(redis_liste_urls, numero_article) == 1:
         liste_nom_fichier = redis_iter.lrange(redis_urls_termine % numero_article, 0, -1)
@@ -147,76 +150,97 @@ def nettoyage_traitement(redis_iter, numero_article):
         redis_iter.delete(redis_urls_termine % numero_article)
 
 
-def connection_sab(iconfig):
-    def connection_sab_wrap(wrap):
-        @wraps(wrap)
-        def wrapper(*args):
-            if iconfig['host_sab'] is not None:
-                try:
-                    wrap(iconfig)
-                except requests.exceptions.ConnectionError:
-                    logger.info('Impossible de se connecter a sabnzbd',
-                                iconfig['host_sab'], iconfig['port_sab'])
-                    return {}
-            else:
-                logger.info('sabnzbd non disponible')
-                return {}
-
-            return wrapper
-    return connection_sab_wrap
-
-
-def make_url_sab(iconfig):
-    return "http://%s:%s/sabnzbd/api" % (iconfig['host_sab'],
-                                         iconfig['port_sab'])
-
-
-@acces_config
-@connection_sab(iconfig)
-def status_sabnzbd(iconfig):
-    param = {'apikey': iconfig['sabnzbd_nc_cle_api'],
+@connexion_sab
+def status_sabnzbd(sabnzbd_nc_cle_api='', url=''):
+    param = {'apikey': sabnzbd_nc_cle_api,
              'output': 'json',
              'limit': '100',
              'mode': 'history'}
-    myurl = make_url_sab(iconfig)
-    r = requests.get(myurl, params=param)
+    logger.debug('Url : %s, %s', url, str(param))
+    r = requests.get(url, params=param)
     resultat = r.json()
-    param = {'apikey': iconfig['sabnzbd_nc_cle_api'],
+    logger.debug('Resultat : %d', len(resultat['history']['slots']))
+    param = {'apikey': sabnzbd_nc_cle_api,
              'output': 'json',
              'mode': 'queue'}
-    myurl = make_url_sab(iconfig)
-    r = requests.get(myurl, params=param)
+    logger.debug('Url : %s, %s', url, str(param))
+    r = requests.get(url, params=param)
     resultat2 = r.json()
+    logger.debug('Resultat2 : %d', len(resultat2['queue']['slots']))
     resultat_total = itertools.chain(resultat['history']['slots'],
                                      resultat2['queue']['slots'])
     return {x['nzo_id']: x['status'] for x in resultat_total}
 
 
-@acces_config
-def telechargement_sabnzbd(iconfig, title, url, categorie):
-    if host_sabG is not None:
-        param = {'apikey': iconfig['sabnzbd_nc_cle_api'],
+@connexion_sab
+def telechargement_sabnzbd(title, url_tel, categorie,
+                           sabnzbd_nc_cle_api='', url=''):
+    param = {'apikey': sabnzbd_nc_cle_api,
+             'output': 'json',
+             'mode': 'addurl',
+             'name': url_tel,
+             'nzbname': title,
+             'cat': categorie}
+    logger.debug('telechargement_sabnzbd : url <%s> title <%s>',
+                 url_tel, title)
+    r = requests.get(url, params=param)
+    resultat = r.json()
+    logger.debug('telechargement_sabnzbd : status <%s>',
+                 resultat['status'])
+    if resultat['status']:
+        logger.debug('telechargement_sabnzbd : nzo_ids <%s>',
+                     str(resultat['nzo_ids']))
+        return {'nzo_ids': resultat['nzo_ids'][0]}
+    else:
+        return {}
+
+
+@connexion_sab
+def delete_history_sab(id_sab,
+                       sabnzbd_nc_cle_api='', url=''):
+    param = {'apikey': sabnzbd_nc_cle_api,
+             'output': 'json',
+             'name': 'delete',
+             'value': id_sab,
+             'mode': 'history'}
+    r = requests.get(url, params=param)
+    return {'status': r.status_code}
+
+
+@connexion_redis
+def get_categorie_redis(red_iter=None):
+    return [x.decode('utf-8')
+            for x in red_iter.lrange(nom_cat_sab, 0, -1)]
+
+
+@connexion_redis
+def set_categorie_redis(categories, red_iter=None):
+    red_iter.lpush(nom_cat_sab, *[x.encode('ascii')
+                                  for x in categories])
+    red_iter.expire(nom_cat_sab, 600)
+
+
+@connexion_sab
+def get_categorie_sabnzbd(sabnzbd_nc_cle_api='', url=''):
+    categorie_sabnzbd = get_categorie_redis()
+    if len(categorie_sabnzbd) == 0:
+        param = {'apikey': sabnzbd_nc_cle_api,
                  'output': 'json',
-                 'mode': 'addurl',
-                 'name': url,
-                 'nzbname': title,
-                 'cat': categorie}
-        logger.debug('telechargement_sabnzbd : url <%s> title <%s>',
-                     url, title)
-        myurl = make_url_sab(iconfig)
-        r = requests.get(myurl, params=param)
+                 'mode': 'get_cats'}
+        r = requests.get(url, params=param)
         resultat = r.json()
-        logger.debug('telechargement_sabnzbd : status <%s>',
-                     resultat['status'])
-        if resultat['status']:
-            logger.debug('telechargement_sabnzbd : nzo_ids <%s>',
-                         str(resultat['nzo_ids']))
-            return resultat['nzo_ids'][0]
+        if 'categories' in resultat:
+            set_categorie_redis(resultat['categories'])
+            return resultat['categories']
         else:
             return ''
     else:
-        return ''
+        return categorie_sabnzbd
 
 
 if __name__ == '__main__':
-    print(status_sabnzbd())
+    # a = status_sabnzbd()
+    # print(a)
+    # print(delete_history_sab('SABnzbd_nzo_gqKhUi'))
+    print(get_categorie_redis())
+    print(get_categorie_sabnzbd())
