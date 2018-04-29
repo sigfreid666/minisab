@@ -38,18 +38,16 @@ def connexion_redis(wrap):
     @wraps(wrap)
     def wrapper(*args):
         ret = None
-        if host_redis is not None:
+        config.config_file = './config.json'
+        iconfig = config()
+        if iconfig['host_redis'] is not None:
             red_iter = None
-            config.config_file = './config.json'
-            iconfig = config()
-            if iconfig['host_redis'] is not None:
-                red_iter = None
-                try:
-                    red_iter = redis.StrictRedis(host=iconfig['host_redis'],
-                                                 port=iconfig['port_redis'])
-                    ret = wrap(*args, red_iter=red_iter)
-                except redis.exceptions.ConnectionError as e:
-                    logging.error('Impossible de se connecter à Redis : %s', str(e))
+            try:
+                red_iter = redis.StrictRedis(host=iconfig['host_redis'],
+                                             port=iconfig['port_redis'])
+                ret = wrap(*args, red_iter=red_iter)
+            except redis.exceptions.ConnectionError as e:
+                logging.error('Impossible de se connecter à Redis : %s', str(e))
         else:
             logger.info('redis non disponible')
         return ret
@@ -139,5 +137,5 @@ class config(dict):
 if __name__ == '__main__':
     config.config_file = './config.json'
     a = config(init_from_env=False)
-    a.init_config('toto.db', 'toto.log', 'redis', 8890, '192.168.0.8', 9000, '6f8af3c4c4487edf93d96979ed7d2321')
+    a.init_config('toto.db', 'toto.log', 'localhost', 6379, '192.168.0.8', 9000, '6f8af3c4c4487edf93d96979ed7d2321')
     a.sauver_config()

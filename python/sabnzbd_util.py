@@ -13,8 +13,8 @@ import itertools
 from functools import wraps
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
-logger = logging.getLogger('__main__')
-logger.level = logging.DEBUG
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def filename_dump(id_article, indice=-1):
@@ -209,12 +209,16 @@ def delete_history_sab(id_sab,
 
 @connexion_redis
 def get_categorie_redis(red_iter=None):
-    return [x.decode('utf-8')
-            for x in red_iter.lrange(nom_cat_sab, 0, -1)]
+    logger.debug('get_categorie_redis : redis %s', str(red_iter))
+    ret = [x.decode('utf-8')
+           for x in red_iter.lrange(nom_cat_sab, 0, -1)]
+    logger.debug('get_categorie_redis : %s', str(ret))
+    return ret
 
 
 @connexion_redis
 def set_categorie_redis(categories, red_iter=None):
+    logger.debug('set_categorie_redis : redis %s', str(red_iter))
     red_iter.lpush(nom_cat_sab, *[x.encode('ascii')
                                   for x in categories])
     red_iter.expire(nom_cat_sab, 600)
@@ -242,5 +246,6 @@ if __name__ == '__main__':
     # a = status_sabnzbd()
     # print(a)
     # print(delete_history_sab('SABnzbd_nzo_gqKhUi'))
+    print('start')
     print(get_categorie_redis())
-    print(get_categorie_sabnzbd())
+    # print(get_categorie_sabnzbd())
