@@ -51,7 +51,7 @@ def index():
         logger.debug('cat %s nb items %d', cat.nom, len(x))
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
-                           categorie_sabnzbd=get_categorie_sabnzbd(),
+                           categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd(),
                            version=version,
                            categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
@@ -140,7 +140,7 @@ def marquer_article_favoris_categorie(id_article=None):
 
         cat_fav = newminisab.Categorie.get_favoris()
         logger.debug('cat favoris %d %s', cat_fav.id, cat_fav.nom)
-        cat_sab = get_categorie_sabnzbd()
+        cat_sab = sabnzbd_util.get_categorie_sabnzbd()
         fav_html = render_template_categorie(cat_fav.id)
         sab_html = render_template_categorie(id_cat_ar)
         article_html = render_template('./article.html', item=ar,
@@ -166,7 +166,7 @@ def marquer_article_favoris(id_article=None):
         ar.save()
         return render_template('./article.html', item=ar,
                                categorie=ar.categorie,
-                               categorie_sabnzbd=get_categorie_sabnzbd(),
+                               categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd(),
                                categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.Article.DoesNotExist:
         abort(404)
@@ -187,7 +187,7 @@ def marquer_article_lu(lunonlu=0):
                     logger.info('article_lu, title %s, id sab %s',
                                 ar.title, y.id_sabnzbd)
                     if y.id_sabnzbd != '':
-                        delete_history_sab(y.id_sabnzbd)
+                        sabnzbd_util.delete_history_sab(y.id_sabnzbd)
                         y.id_sabnzbd = ''
                         y.save()
                 ar.categorie = ar.categorie_origine
@@ -209,7 +209,7 @@ def recherche_article(id_article, stop_multi):
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         ar = newminisab.Article.get(newminisab.Article.id == id_article)
         return render_template('./article.html', item=ar,
-                               categorie_sabnzbd=get_categorie_sabnzbd(),
+                               categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd(),
                                categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.Article.DoesNotExist:
         abort(404)
@@ -223,7 +223,7 @@ def nettoyer_recherche(id_article):
         ar = newminisab.Article.get(newminisab.Article.id == id_article)
         return render_template('./article.html', item=ar,
                                categorie=ar.categorie,
-                               categorie_sabnzbd=get_categorie_sabnzbd(),
+                               categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd(),
                                categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.Article.DoesNotExist:
         abort(404)
@@ -322,7 +322,7 @@ def categorie_liste():
 def categories_index():
     return render_template('./categories_index.html',
                            categories=[x for x in newminisab.Categorie.select()],
-                           categorie_sabnzbd=get_categorie_sabnzbd())
+                           categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd())
 
 
 @bp.route('/categorie/<int:id_categorie>/sabnzbd/<cat_sab>')
@@ -339,84 +339,6 @@ def change_sab_preferee(id_categorie=None, preferee=0):
     cat.preferee = preferee
     cat.save()
     return 'OK'
-
-
-def get_categorie_sabnzbd():
-    categorie_sabnzbd = []
-    if host_redis is not None:
-        red = None
-        try:
-            red = redis.StrictRedis(host=host_redis, port=port_redis)
-            categorie_sabnzbd = [x.decode('utf-8')
-                                 for x in
-                                 red.lrange(nom_cat_sab, 0, -1)]
-        except redis.exceptions.ConnectionError as e:
-            logging.error('Impossible de se connecter à Redis : %s', str(e))
-    if (len(categorie_sabnzbd) == 0) and (host_sabG is not None):
-        param = {'apikey': sabnzbd_nc_cle_api,
-                 'output': 'json',
-                 'mode': 'get_cats'}
-        myurl = "http://{0}:{1}/sabnzbd/api".format(
-                host_sabG,
-                port_sabG)
-        r = requests.get(myurl, params=param)
-        resultat = r.json()
-        if 'categories' in resultat:
-            if (host_redis is not None) and\
-               (red is not None):
-                red.lpush(nom_cat_sab, *[x.encode('ascii')
-                                         for x in resultat['categories']])
-                red.expire(nom_cat_sab, 600)
-            return resultat['categories']
-        else:
-            return ''
-    else:
-        return categorie_sabnzbd
-
-
-def status_sabnzbd():
-    if host_sabG is not None:
-        param = {'apikey': sabnzbd_nc_cle_api,
-                 'output': 'json',
-                 'limit': '100',
-                 'mode': 'history'}
-        myurl = "http://{0}:{1}/sabnzbd/api".format(
-                host_sabG,
-                port_sabG)
-        try:
-            r = requests.get(myurl, params=param)
-            resultat = r.json()
-            param = {'apikey': sabnzbd_nc_cle_api,
-                     'output': 'json',
-                     'mode': 'queue'}
-            myurl = "http://{0}:{1}/sabnzbd/api".format(
-                    host_sabG,
-                    port_sabG)
-            r = requests.get(myurl, params=param)
-            resultat2 = r.json()
-            resultat_total = itertools.chain(resultat['history']['slots'],
-                                             resultat2['queue']['slots'])
-            return {x['nzo_id']: x['status'] for x in resultat_total}
-        except requests.exceptions.ConnectionError:
-            return {}
-    else:
-        return {}
-
-
-def delete_history_sab(id_sab):
-    if host_sabG is not None:
-        param = {'apikey': sabnzbd_nc_cle_api,
-                 'output': 'json',
-                 'name': 'delete',
-                 'value': id_sab,
-                 'mode': 'history'}
-        myurl = "http://{0}:{1}/sabnzbd/api".format(
-                host_sabG,
-                port_sabG)
-        r = requests.get(myurl, params=param)
-        return r.status_code
-    else:
-        return 0
 
 
 @util.avec_redis
