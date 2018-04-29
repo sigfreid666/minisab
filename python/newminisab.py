@@ -10,6 +10,7 @@ from functools import wraps
 import redis
 import itertools
 import copy
+import sabnzbd_util
 # from util import redis_liste_urls, redis_urls
 # from util import redis_urls_encours, redis_urls_termine
 
@@ -265,38 +266,6 @@ def cli():
     pass
 
 
-def status_sabnzbd():
-    if host_sabG is not None:
-        param = {'apikey': sabnzbd_nc_cle_api,
-                 'output': 'json',
-                 'limit': '100',
-                 'mode': 'history'}
-        myurl = "http://{0}:{1}/sabnzbd/api".format(
-                host_sabG,
-                port_sabG)
-        try:
-            r = requests.get(myurl, params=param)
-            resultat = r.json()
-            param = {'apikey': sabnzbd_nc_cle_api,
-                     'output': 'json',
-                     'mode': 'queue'}
-            myurl = "http://{0}:{1}/sabnzbd/api".format(
-                    host_sabG,
-                    port_sabG)
-            r = requests.get(myurl, params=param)
-            resultat2 = r.json()
-            resultat_total = itertools.chain(resultat['history']['slots'],
-                                             resultat2['queue']['slots'])
-            # for x in resultat_total:
-            #     print('===================================')
-            #     print(x)
-            return [ (x['nzo_id'], x['status']) for x in resultat_total ]
-        except requests.exceptions.ConnectionError:
-            return {}
-    else:
-        return {}
-
-
 @cli.command('check_sab')
 def cmd_check_sabnzbd():
     check_sabnzbd()
@@ -309,7 +278,7 @@ def check_sabnzbd():
         red = None
         try:
             red = redis.StrictRedis(host=host_redis, port=port_redis)
-            st_sb = status_sabnzbd()
+            st_sb = sabnzbd_util.status_sabnzbd()
             if len(st_sb) > 0: # on pete tous
                 for status in status_possibleG:
                     members = red.smembers('sab_' + status)
@@ -321,8 +290,6 @@ def check_sabnzbd():
                 else:
                     logger.info('Status ignore : %s', status)
             status = {'resultat' : True, 'nb_result' : len(st_sb) }
-            # for status in status_possibleG:
-            #     print('status :', status, 'members :', red.smembers('sab_' + status))
         except redis.exceptions.ConnectionError as e:
             logging.error('Impossible de se connecter à Redis : %s', str(e))
     return status
