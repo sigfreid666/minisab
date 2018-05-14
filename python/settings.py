@@ -101,8 +101,14 @@ class config(dict):
                 logging.debug('setting : %s', c_tuple[1])
 
         self.update([(x[1].lower(), x[0]) for x in config_tuple])
-        self['port_redis'] = int(self['port_redis'])
-        self['port_sab'] = int(self['port_sab'])
+        try:
+            self['port_sab'] = int(self['port_sab'])
+        except TypeError as e:
+            self['port_sab'] = 0
+        try:
+            self['port_redis'] = int(self['port_redis'])
+        except TypeError as e:
+            self['port_redis'] = 0
 
     def init_config(self, dbfile, logfile, host_redis, port_redis,
                     host_sab, port_sab, cle_sab):

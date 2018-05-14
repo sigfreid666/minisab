@@ -264,6 +264,15 @@ def check_sabnzbd(red_iter=None):
     return status
 
 
+@connexion_redis
+def get_status_sab_redis(red_iter=None):
+    status_sab = {}
+    for status in status_possibleG:
+        for elem in red_iter.smembers('sab_' + status):
+            status_sab[elem.decode()] = status
+    return status_sab
+
+
 if __name__ == '__main__':
     # a = status_sabnzbd()
     # print(a)
