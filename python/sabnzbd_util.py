@@ -16,6 +16,8 @@ nom_cat_sab = 'minisab_categorie_sabnzbd'
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
+
 
 def filename_dump(id_article, indice=-1):
     return '/app/dump-%d-%s.nzb' % (id_article, str(indice) if indice >= 0 else 'concat')
@@ -242,10 +244,30 @@ def get_categorie_sabnzbd(sabnzbd_nc_cle_api='', url=''):
         return categorie_sabnzbd
 
 
+@connexion_redis
+def check_sabnzbd(red_iter=None):
+    status = {'resultat': False}
+    logger.debug('check_sabnzbd')
+    st_sb = status_sabnzbd()
+    if len(st_sb) > 0:
+        for status in status_possibleG:
+            members = red_iter.smembers('sab_' + status)
+            if len(members) > 0:
+                red_iter.srem('sab_' + status, *members)
+    logger.debug('check_sabnzbd : %s', str(st_sb))
+    for idsab, status in st_sb.items():
+        if status in status_possibleG:
+            red_iter.sadd('sab_' + status, idsab)
+        else:
+            logger.info('Status ignore : %s', status)
+    status = {'resultat': True, 'nb_result': len(st_sb)}
+    return status
+
+
 if __name__ == '__main__':
     # a = status_sabnzbd()
     # print(a)
     # print(delete_history_sab('SABnzbd_nzo_gqKhUi'))
     print('start')
-    print(get_categorie_redis())
+    print(check_sabnzbd())
     # print(get_categorie_sabnzbd())

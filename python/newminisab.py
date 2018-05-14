@@ -5,7 +5,7 @@ import re
 import logging
 from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
-from settings import dbfile, host_sabG, sabnzbd_nc_cle_api, host_redis, port_redis, port_sabG
+from settings import dbfile, host_redis, port_redis, port_sabG
 from functools import wraps
 import redis
 import itertools
@@ -20,7 +20,6 @@ import sabnzbd_util
 #     print(log_config)
 #     logging.config.dictConfig(log_config)
 
-status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
 
 logger = logging.getLogger('flaskminisab')
 
@@ -268,31 +267,8 @@ def cli():
 
 @cli.command('check_sab')
 def cmd_check_sabnzbd():
-    check_sabnzbd()
+    sabnzbd_util.check_sabnzbd()
 
-
-def check_sabnzbd():
-    status = {'resultat' : False }
-    logger.debug('check_sabnzbd')
-    if host_redis is not None:
-        red = None
-        try:
-            red = redis.StrictRedis(host=host_redis, port=port_redis)
-            st_sb = sabnzbd_util.status_sabnzbd()
-            if len(st_sb) > 0: # on pete tous
-                for status in status_possibleG:
-                    members = red.smembers('sab_' + status)
-                    if len(members) > 0:
-                        red.srem('sab_' + status, *members)
-            for idsab, status in st_sb:
-                if status in status_possibleG:
-                    red.sadd('sab_' + status, idsab)
-                else:
-                    logger.info('Status ignore : %s', status)
-            status = {'resultat' : True, 'nb_result' : len(st_sb) }
-        except redis.exceptions.ConnectionError as e:
-            logging.error('Impossible de se connecter à Redis : %s', str(e))
-    return status
 
 
 @base_de_donnee
@@ -380,7 +356,7 @@ def recuperer_tous_articles_par_categorie(filtres_article=[]):
         try:
             red = redis.StrictRedis(host=host_redis, port=port_redis)
             status_sab = {}
-            for status in status_possibleG:
+            for status in sabnzbd_util.status_possibleG:
                 for elem in red.smembers('sab_' + status):
                     status_sab[elem.decode()] = status
             # print(status_sab)

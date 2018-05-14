@@ -40,7 +40,7 @@ def connexion_redis(wrap):
         ret = None
         config.config_file = './config.json'
         iconfig = config()
-        if iconfig['host_redis'] is not None:
+        if (iconfig['host_redis'] is not None) and (iconfig['host_redis'] != ''):
             red_iter = None
             try:
                 red_iter = redis.StrictRedis(host=iconfig['host_redis'],
@@ -60,7 +60,7 @@ def connexion_sab(wrap):
         config.config_file = './config.json'
         iconfig = config()
         myurl = make_url_sab(iconfig)
-        if iconfig['host_sab'] is not None:
+        if (iconfig['host_sab'] is not None) and (iconfig['host_sab'] != ''):
             try:
                 return wrap(*args, sabnzbd_nc_cle_api=iconfig['cle_sab'],
                             url=myurl)
