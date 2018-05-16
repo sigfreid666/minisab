@@ -5,6 +5,7 @@ import json
 import requests
 import redis
 from functools import wraps
+from flask import current_app
 
 log_config = {'version': 1, 'loggers': {'flaskminisab': {'level': 'INFO'},
                                         'newminisab': {'level': 'INFO'},
@@ -19,9 +20,8 @@ host_sabG, port_sabG, sabnzbd_nc_cle_api = (None, None, None)
 logger = logging.getLogger('flaskminisab')
 
 
-def make_url_sab(iconfig):
-    return "http://%s:%s/sabnzbd/api" % (iconfig['host_sab'],
-                                         iconfig['port_sab'])
+def make_url_sab(host, port):
+    return "http://%s:%s/sabnzbd/api" % (host, port)
 
 
 def acces_config_avec_sab(wrap):
@@ -37,14 +37,13 @@ def acces_config_avec_sab(wrap):
 def connexion_redis(wrap):
     @wraps(wrap)
     def wrapper(*args):
-        ret = None
-        config.config_file = './config.json'
-        iconfig = config()
-        if (iconfig['host_redis'] is not None) and (iconfig['host_redis'] != ''):
+        ret = {}
+        if ((current_app.config['MINISAB_HOST_REDIS'] is not None) and
+            (current_app.config['MINISAB_HOST_REDIS'] != '')):
             red_iter = None
             try:
-                red_iter = redis.StrictRedis(host=iconfig['host_redis'],
-                                             port=iconfig['port_redis'])
+                red_iter = redis.StrictRedis(host=current_app.config['MINISAB_HOST_REDIS'],
+                                             port=current_app.config['MINISAB_PORT_REDIS'])
                 ret = wrap(*args, red_iter=red_iter)
             except redis.exceptions.ConnectionError as e:
                 logging.error('Impossible de se connecter à Redis : %s', str(e))
@@ -57,22 +56,49 @@ def connexion_redis(wrap):
 def connexion_sab(wrap):
     @wraps(wrap)
     def wrapper(*args):
-        config.config_file = './config.json'
-        iconfig = config()
-        myurl = make_url_sab(iconfig)
-        if (iconfig['host_sab'] is not None) and (iconfig['host_sab'] != ''):
+        myurl = make_url_sab(current_app.config['MINISAB_HOST_SAB'],
+                             current_app.config['MINISAB_PORT_SAB'])
+        if ((current_app.config['MINISAB_HOST_SAB'] is not None) and
+            (current_app.config['MINISAB_HOST_SAB'] != '')):
             try:
-                return wrap(*args, sabnzbd_nc_cle_api=iconfig['cle_sab'],
+                return wrap(*args, sabnzbd_nc_cle_api=current_app.config['MINISAB_CLE_SAB'],
                             url=myurl)
             except requests.exceptions.ConnectionError:
                 logger.info('Impossible de se connecter a sabnzbd',
-                            iconfig['host_sab'], iconfig['port_sab'])
+                            current_app.config['MINISAB_HOST_SAB'],
+                            current_app.config['MINISAB_PORT_SAB'])
                 return {}
         else:
             logger.info('sabnzbd non disponible')
             return {}
 
     return wrapper
+
+
+class ConfigBase:
+    MINISAB_DBFILE = None
+    MINISAB_LOGFILE = None
+    MINISAB_HOST_REDIS = None 
+    MINISAB_PORT_REDIS = 0
+    MINISAB_HOST_SAB = None 
+    MINISAB_PORT_SAB = 0
+    MINISAB_CLE_SAB = None
+    MINISAB_CONFIG_FILE = None
+
+    def charger_config(self):
+        if ((self.MINISAB_CONFIG_FILE is not None) and 
+            os.path.exists(self.MINISAB_CONFIG_FILE)):
+            logging.debug('file config exist')
+            current_app.config.from_json(self.MINISAB_CONFIG_FILE, silent=True)
+            return True
+        return False
+
+    def sauver_config(self):
+        if self.MINISAB_CONFIG_FILE is not None: 
+            with open(self.MINISAB_CONFIG_FILE, mode='w') as config_file:
+                json_data = {self.ident: self}
+                json.dump(json_data, self.MINISAB_CONFIG_FILE, indent=0)
+                logging.debug('ecriture fichier config')
 
 
 class config(dict):

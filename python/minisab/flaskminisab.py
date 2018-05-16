@@ -4,28 +4,22 @@ import requests
 import logging
 import logging.config
 import itertools
-import newminisab
+from . import newminisab
 import redis
-import sabnzbd_util
-from settings import host_redis, port_redis, host_sabG, sabnzbd_nc_cle_api
-from settings import log_config, port_sabG
-import util
+from . import sabnzbd_util
+# import util
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
 
-logging.config.dictConfig(log_config)
+# logging.config.dictConfig(log_config)
 # logger.setLevel(logging.DEBUG)
+logger = logging.getLogger('flaskminisab')
 
-version = '2.10'
-bp = Blueprint('minisab', __name__, static_folder='/minisab/static')
-app = Flask(__name__)
-logger = app.logger # logging.getLogger('gunicorn.glogging.Logger')
-gunicorn_logger = logging.getLogger('gunicorn.error')
-app.logger.handlers = gunicorn_logger.handlers
-
+version = '2.11'
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
 
+bp = Blueprint('minisab', __name__, static_folder='/minisab/static')
 
 def render_template_categorie(id_categorie):
     cat = newminisab.Categorie.get(newminisab.Categorie.id == id_categorie)
@@ -95,25 +89,6 @@ def nettoyage_traitement(id_article):
     logger.debug('nettoyage_traitement %d', id_article)
     sabnzbd_util.nettoyage_traitement(id_article)
     return "OK"
-
-@util.avec_redis
-def get_info_affiche_urls(red_iter):
-    logger.info('Affichage des urls')
-    num_art = [x.decode() for x in red_iter.smembers(util.redis_liste_urls)]
-    table_urls = []
-    for x in num_art:
-        for y in (util.redis_urls % int(x),
-                  util.redis_urls_termine % int(x),
-                  util.redis_urls_encours % int(x)):
-            i = 0
-            table_urls.append((y, []))
-            for z in red_iter.lrange(y, 0, -1):
-                table_urls[-1][1].append((i, z))
-                i += 1
-
-    logger.debug('Liste article %s', str(num_art))
-    logger.debug('Liste urls %s', str(table_urls))
-    return num_art, table_urls
 
 
 @bp.route('/affiche_urls')
@@ -341,22 +316,6 @@ def change_sab_preferee(id_categorie=None, preferee=0):
     return 'OK'
 
 
-@util.avec_redis
-def save_urls(red_iter, num_article, urls):
-    red_iter.sadd(util.redis_liste_urls, num_article)
-    if red_iter.exists(util.redis_urls % num_article):
-        logger.debug('%s existe', util.redis_urls % num_article)
-        red_iter.ltrim(util.redis_urls_encours % num_article, 1, 0)
-        red_iter.ltrim(util.redis_urls_termine % num_article, 1, 0)
-        red_iter.ltrim(util.redis_urls % num_article, 1, 0)
-        # red_iter.delete(util.redis_urls_encours % num_article)
-        # red_iter.delete(util.redis_urls_termine % num_article)
-        # red_iter.delete(util.redis_urls % num_article)
-    red_iter.lpush(util.redis_urls % num_article, *urls)
-
-
-app.register_blueprint(bp, url_prefix='/minisab')
-
 if __name__ == "__main__":
-    # app.run(host="0.0.0.0", port=9030)
-    app.run(host="0.0.0.0", port=5000)
+    from application import create_app
+    create_app().run(host="0.0.0.0", port=5000)

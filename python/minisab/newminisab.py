@@ -3,12 +3,13 @@ from peewee import *
 import html.parser
 import re
 import logging
-from indexeur import recherche_indexeur, MyParserNzbIndex
 import click
-from settings import config
+# from settings import config
 from functools import wraps
 import copy
-import sabnzbd_util
+from minisab.indexeur import recherche_indexeur, MyParserNzbIndex
+from . import sabnzbd_util
+from flask import current_app
 # from util import redis_liste_urls, redis_urls
 # from util import redis_urls_encours, redis_urls_termine
 
@@ -21,9 +22,7 @@ import sabnzbd_util
 
 logger = logging.getLogger('flaskminisab')
 
-config.config_file = './config.json'
-logger.debug('DB File %s', config()['dbfile'])
-db = SqliteDatabase(config()['dbfile'])
+db = SqliteDatabase(None)
 
 
 class Categorie(Model):
@@ -430,9 +429,9 @@ def cmd_check_new_article():
 
 
 if __name__ == "__main__":
-    config.config_file = './config.json'
-    a = config(init_from_env=False)
-    import logging.config
+    # config.config_file = './config.json'
+    # a = config(init_from_env=False)
+    # import logging.config
     from settings import log_config
     logging.config.dictConfig(log_config)
     cli()

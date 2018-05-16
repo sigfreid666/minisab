@@ -5,10 +5,7 @@ import redis
 import os
 from xml.dom.minidom import parseString
 from xml.parsers.expat import ExpatError
-from util import avec_redis
-from util import redis_liste_urls, redis_urls
-from util import redis_urls_encours, redis_urls_termine
-from settings import connexion_sab, connexion_redis
+from minisab.settings import connexion_sab, connexion_redis
 import itertools
 from functools import wraps
 
@@ -17,6 +14,10 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 status_possibleG = ('Completed', 'Failed', 'Downloading', 'Queued')
+redis_liste_urls = 'minisab_article_urls'
+redis_urls = 'minisab_%d_urls'
+redis_urls_encours = 'minisab_%d_urls_encours'
+redis_urls_termine = 'minisab_%d_urls_termine'
 
 
 def filename_dump(id_article, indice=-1):
@@ -271,6 +272,40 @@ def get_status_sab_redis(red_iter=None):
         for elem in red_iter.smembers('sab_' + status):
             status_sab[elem.decode()] = status
     return status_sab
+
+
+@connexion_redis
+def get_info_affiche_urls(red_iter=None):
+    logger.info('Affichage des urls')
+    num_art = [x.decode() for x in red_iter.smembers(util.redis_liste_urls)]
+    table_urls = []
+    for x in num_art:
+        for y in (util.redis_urls % int(x),
+                  util.redis_urls_termine % int(x),
+                  util.redis_urls_encours % int(x)):
+            i = 0
+            table_urls.append((y, []))
+            for z in red_iter.lrange(y, 0, -1):
+                table_urls[-1][1].append((i, z))
+                i += 1
+
+    logger.debug('Liste article %s', str(num_art))
+    logger.debug('Liste urls %s', str(table_urls))
+    return num_art, table_urls
+
+
+@connexion_redis
+def save_urls(red_iter, num_article, urls):
+    red_iter.sadd(util.redis_liste_urls, num_article)
+    if red_iter.exists(util.redis_urls % num_article):
+        logger.debug('%s existe', util.redis_urls % num_article)
+        red_iter.ltrim(util.redis_urls_encours % num_article, 1, 0)
+        red_iter.ltrim(util.redis_urls_termine % num_article, 1, 0)
+        red_iter.ltrim(util.redis_urls % num_article, 1, 0)
+        # red_iter.delete(util.redis_urls_encours % num_article)
+        # red_iter.delete(util.redis_urls_termine % num_article)
+        # red_iter.delete(util.redis_urls % num_article)
+    red_iter.lpush(util.redis_urls % num_article, *urls)
 
 
 if __name__ == '__main__':
