@@ -20,7 +20,7 @@ def create_app(mode):
 	app.config.from_object('minisab.settings.ConfigBase')
 	if app.config.from_envvar('MINISAB_CONFIG', silent=False):
 		logger.info('Chargement configuration de MINISAB_CONFIG')
-		logger.warning('MINISAB_DBFILE = %s', app.config['MINISAB_DBFILE'])
+		logger.info('MINISAB_DBFILE = %s', app.config['MINISAB_DBFILE'])
 		logger.info('MINISAB_LOGFILE = %s', app.config['MINISAB_LOGFILE'])
 		logger.info('MINISAB_HOST_REDIS = %s', app.config['MINISAB_HOST_REDIS'])
 		logger.info('MINISAB_PORT_REDIS = %d', app.config['MINISAB_PORT_REDIS'])

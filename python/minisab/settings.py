@@ -17,7 +17,7 @@ prefixe = "MINISAB_"
 dbfile, logfile, host_redis, port_redis = (None, None, None, None)
 host_sabG, port_sabG, sabnzbd_nc_cle_api = (None, None, None)
 
-logger = logging.getLogger('flaskminisab')
+logger = logging.getLogger('minisab')
 
 
 def make_url_sab(host, port):
@@ -76,6 +76,7 @@ def connexion_sab(wrap):
 
 
 class ConfigBase:
+    _prefix = 'MINISAB_'
     MINISAB_DBFILE = None
     MINISAB_LOGFILE = None
     MINISAB_HOST_REDIS = None 
@@ -84,6 +85,16 @@ class ConfigBase:
     MINISAB_PORT_SAB = 0
     MINISAB_CLE_SAB = None
     MINISAB_CONFIG_FILE = None
+
+    def maj_config(self, data, prefixe=''):
+        logger.debug('data : %s', str(data))
+        for attr in data:
+            if type(getattr(self, (prefixe+attr).upper())) == int:
+                setattr(self, (prefixe+attr).upper(), int(data[attr]))
+            else:
+                setattr(self, (prefixe+attr).upper(), data[attr])
+            logger.debug('attr : %s', (prefixe+attr).upper())
+        return self
 
     def charger_config(self):
         if ((self.MINISAB_CONFIG_FILE is not None) and 
@@ -99,6 +110,13 @@ class ConfigBase:
                 json_data = {self.ident: self}
                 json.dump(json_data, self.MINISAB_CONFIG_FILE, indent=0)
                 logging.debug('ecriture fichier config')
+
+    def __str__(self):
+        r = ''
+        for x in dir(self):
+            if x.startswith(self._prefix):
+                r = r + '(<%s> = <%s>)' % (x, getattr(self, x))
+        return r
 
 
 class config(dict):

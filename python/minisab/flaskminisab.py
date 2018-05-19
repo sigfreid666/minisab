@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, Blueprint, request, jsonify, url_for, current_app
+from flask import Flask, render_template, abort, Blueprint, request, jsonify, url_for, current_app, redirect
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
@@ -7,6 +7,7 @@ import itertools
 from . import newminisab
 import redis
 from . import sabnzbd_util
+from . import settings
 # import util
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
@@ -314,6 +315,34 @@ def change_sab_preferee(id_categorie=None, preferee=0):
     cat.preferee = preferee
     cat.save()
     return 'OK'
+
+
+@bp.route('/config', methods=['GET', 'POST'])
+def flaskconfig():
+    if request.method == 'POST':
+        data_json = request.form
+        # logger.debug('data : %s', request.get_data())
+        logger.debug('content length : %s', request.content_length)
+        logger.debug('change config : %s', str([data_json[x] for x in data_json.keys()]))
+        a = settings.ConfigBase().maj_config(data_json, prefixe='MINISAB_')
+        logger.debug(str(a))
+        current_app.config.from_object(a)
+        logger.info('mise a jour configuration')
+        logger.info('MINISAB_DBFILE = %s', current_app.config['MINISAB_DBFILE'])
+        logger.info('MINISAB_LOGFILE = %s', current_app.config['MINISAB_LOGFILE'])
+        logger.info('MINISAB_HOST_REDIS = %s', current_app.config['MINISAB_HOST_REDIS'])
+        logger.info('MINISAB_PORT_REDIS = %d', current_app.config['MINISAB_PORT_REDIS'])
+        logger.info('MINISAB_HOST_SAB = %s', current_app.config['MINISAB_HOST_SAB'])
+        logger.info('MINISAB_PORT_SAB = %d', current_app.config['MINISAB_PORT_SAB'])
+        logger.info('MINISAB_CLE_SAB = %s', current_app.config['MINISAB_CLE_SAB'])
+        logger.info('MINISAB_CONFIG_FILE = %s', current_app.config['MINISAB_CONFIG_FILE'])
+
+    config_app = current_app.config.get_namespace('MINISAB_')
+    logger.debug('config_app : %s', str(config_app))
+    for x in config_app:
+        logger.debug('%s : %s', x, str(type(config_app[x])))
+    return render_template('./config.html',
+                           config=config_app)
 
 
 if __name__ == "__main__":
