@@ -13,7 +13,8 @@ services:
       - MINISAB_HOST_SAB=$MINISAB_HOST_SAB
       - MINISAB_PORT_SAB=$MINISAB_PORT_SAB
       - MINISAB_CLE_SAB=$MINISAB_CLE_SAB
-    image: minisab:2.10
+      - MINISAB_CONFIG=/app/minisab_config.py
+    image: minisab:2.11
     networks:
       minisab_default:
   nginx:
@@ -24,7 +25,7 @@ services:
     networks:
       minisab_default:
   redis:
-      image: redis:4.0.9
+      image: redis:4.0.8
       networks:
         minisab_default:
 volumes:

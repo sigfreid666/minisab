@@ -20,7 +20,7 @@ from flask import current_app
 #     logging.config.dictConfig(log_config)
 
 
-logger = logging.getLogger('flaskminisab')
+logger = logging.getLogger('minisab')
 
 db = SqliteDatabase(None)
 

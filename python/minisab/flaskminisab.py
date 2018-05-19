@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, Blueprint, request, jsonify, url_for
+from flask import Flask, render_template, abort, Blueprint, request, jsonify, url_for, current_app
 # from ownmodule import sabnzbd, sabnzbd_nc_cle_api
 import requests
 import logging
@@ -13,7 +13,7 @@ filtre_article = [ '*** MOT DE PASSE ***' ]
 
 # logging.config.dictConfig(log_config)
 # logger.setLevel(logging.DEBUG)
-logger = logging.getLogger('flaskminisab')
+logger = logging.getLogger('minisab')
 
 version = '2.11'
 
@@ -211,13 +211,13 @@ def lancer_telecharger(id_recherche, categorie):
     logger.info('Requete %s', request.url)
     try:
         rec = newminisab.Recherche.get(newminisab.Recherche.id == id_recherche)
-        rec.id_sabnzbd = telechargement_sabnzbd(rec.article.title,
+        rec.id_sabnzbd = sabnzbd_util.telechargement_sabnzbd(rec.article.title,
                                                 rec.url, categorie)
         rec.save()
-        if host_redis is not None:
+        if current_app.config['MINISAB_HOST_REDIS'] is not None:
             red = None
             try:
-                red = redis.StrictRedis(host=host_redis, port=port_redis)
+                red = redis.StrictRedis(host=current_app.config['MINISAB_HOST_REDIS'], port=current_app.config['MINISAB_PORT_REDIS'])
                 red.rpush('sabdownload', rec.id_sabnzbd)
                 red.rpush('sabdownload', rec.article.id)
             except redis.exceptions.ConnectionError as e:
