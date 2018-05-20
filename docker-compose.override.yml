@@ -18,9 +18,9 @@ services:
       - SABNZBD_UID=$SABNZBD_USER
       - SABNZBD_GID=$SABNZBD_GROUP
     ports:
-      - "$SABNZBD_PORT:$MINISAB_PORT_SAB"
+      - "$SABNZBD_PORT"
     volumes:
-      - "./sabnzbd/media:/media"
-      - "./sabnzbd/datadir:/datadir"
+      - "$SABNZBD_MEDIA:/media"
+      - "$SABNZBD_DATADIR:/datadir"
     networks:
       minisab_default:

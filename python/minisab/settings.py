@@ -38,17 +38,16 @@ def connexion_redis(wrap):
     @wraps(wrap)
     def wrapper(*args):
         ret = {}
-        if ((current_app.config['MINISAB_HOST_REDIS'] is not None) and
-            (current_app.config['MINISAB_HOST_REDIS'] != '')):
+        if current_app.config['MINISAB_REDIS_CNX']:
             red_iter = None
             try:
-                red_iter = redis.StrictRedis(host=current_app.config['MINISAB_HOST_REDIS'],
-                                             port=current_app.config['MINISAB_PORT_REDIS'])
+                red_iter = redis.StrictRedis(host=current_app.config['MINISAB_REDIS_HOST'],
+                                             port=current_app.config['MINISAB_REDIS_PORT'])
                 ret = wrap(*args, red_iter=red_iter)
             except redis.exceptions.ConnectionError as e:
-                logging.error('Impossible de se connecter à Redis : %s', str(e))
+                logger.error('Impossible de se connecter à Redis : %s', str(e))
         else:
-            logger.info('redis non disponible')
+            logger.warning('redis non disponible')
         return ret
     return wrapper
 
@@ -56,60 +55,98 @@ def connexion_redis(wrap):
 def connexion_sab(wrap):
     @wraps(wrap)
     def wrapper(*args):
-        myurl = make_url_sab(current_app.config['MINISAB_HOST_SAB'],
-                             current_app.config['MINISAB_PORT_SAB'])
-        if ((current_app.config['MINISAB_HOST_SAB'] is not None) and
-            (current_app.config['MINISAB_HOST_SAB'] != '')):
+        if current_app.config['MINISAB_SAB_CNX']:
             try:
-                return wrap(*args, sabnzbd_nc_cle_api=current_app.config['MINISAB_CLE_SAB'],
+                myurl = make_url_sab(current_app.config['MINISAB_SAB_HOST'],
+                                     current_app.config['MINISAB_SAB_PORT'])
+                return wrap(*args, sabnzbd_nc_cle_api=current_app.config['MINISAB_SAB_CLE'],
                             url=myurl)
-            except requests.exceptions.ConnectionError:
-                logger.info('Impossible de se connecter a sabnzbd',
-                            current_app.config['MINISAB_HOST_SAB'],
-                            current_app.config['MINISAB_PORT_SAB'])
+            except requests.exceptions.ConnectionError as e:
+                logger.error('Impossible de se connecter a sabnzbd %s:%d, %s',
+                            current_app.config['MINISAB_SAB_HOST'],
+                            current_app.config['MINISAB_SAB_PORT'], str(e))
                 return {}
         else:
-            logger.info('sabnzbd non disponible')
+            logger.warning('sabnzbd non disponible')
             return {}
 
     return wrapper
 
+def init_config(app):
+    app.config.from_object('minisab.settings.ConfigBase')
+    for key in ConfigBase.MINISABINV_AUTRE_CONFIG:
+        if app.config.from_pyfile(key, silent=False):
+            logger.info('Chargement configuration de %s : %s', key, ConfigBase.strConfig(app.config))
+
+    if ConfigBase.MINISABINV_CONFIG_FILE is not None:
+        app.config.from_json(ConfigBase.MINISABINV_CONFIG_FILE, silent=True)        
+        logger.info('Chargement configuration json %s : %s', ConfigBase.MINISABINV_CONFIG_FILE,
+                    ConfigBase.strConfig(app.config))
+
 
 class ConfigBase:
+    _prefix_invariant = 'MINISABINV_'
     _prefix = 'MINISAB_'
-    MINISAB_DBFILE = None
-    MINISAB_LOGFILE = None
-    MINISAB_HOST_REDIS = None 
-    MINISAB_PORT_REDIS = 0
-    MINISAB_HOST_SAB = None 
-    MINISAB_PORT_SAB = 0
-    MINISAB_CLE_SAB = None
-    MINISAB_CONFIG_FILE = None
+    _sousprefix = (('MINISAB_REDIS_', 'Redis'), 
+                   ('MINISAB_SAB_', 'Sabnzbd'),
+                   ('MINISAB_AUTRE_', 'Autre'))
+    MINISAB_REDIS_CNX = False 
+    MINISAB_REDIS_HOST = None 
+    MINISAB_REDIS_PORT = 0
+    MINISAB_SAB_CNX = False 
+    MINISAB_SAB_HOST = None 
+    MINISAB_SAB_PORT = 0
+    MINISAB_SAB_CLE = None
+    MINISAB_AUTRE_DBFILE = None if 'MINISAB_AUTRE_DBFILE' not in os.environ else os.environ['MINISAB_AUTRE_DBFILE']
+    MINISAB_AUTRE_LOGFILE = None if 'MINISAB_AUTRE_LOGFILE' not in os.environ else os.environ['MINISAB_AUTRE_LOGFILE']
+    MINISABINV_AUTRE_CONFIG = [] if 'MINISABINV_AUTRE_CONFIG' not in os.environ else os.environ['MINISABINV_AUTRE_CONFIG'].split(';')
+    MINISABINV_CONFIG_FILE = None if 'MINISABINV_CONFIG_FILE' not in os.environ else os.environ['MINISABINV_CONFIG_FILE']
 
-    def maj_config(self, data, prefixe=''):
+    def __init__(self, app):
+        for attr in app.config:
+            if attr.startswith(self._prefix):
+                setattr(self, attr.upper(), app.config[attr])
+                logger.debug('attr : %s', attr.upper())
+
+    def maj_config(self, data):
         logger.debug('data : %s', str(data))
+        diff = {}
         for attr in data:
-            if type(getattr(self, (prefixe+attr).upper())) == int:
-                setattr(self, (prefixe+attr).upper(), int(data[attr]))
+            attribut = attr.upper()
+            # value = getattr(self, attribut)
+            if type(getattr(self, attribut)) == bool:
+                setattr(self, attribut, bool(data[attr]))
+            elif type(getattr(self, attribut)) == int:
+                setattr(self, attribut, int(data[attr]))
             else:
-                setattr(self, (prefixe+attr).upper(), data[attr])
-            logger.debug('attr : %s', (prefixe+attr).upper())
+                setattr(self, attribut, data[attr])
+            # newvalue = getattr(self, attribut)
+            # if value != newvalue:
+            diff[attribut] = getattr(self, attribut)
+            logger.debug('attr : %s', attribut)
+        if ((self.MINISABINV_CONFIG_FILE is not None) and
+            (len(diff) > 0)):
+            logger.debug('Ecriture json : %s', str(diff))
+            with open(self.MINISABINV_CONFIG_FILE, 'w') as fichier_json:
+                json.dump(diff, fichier_json)
         return self
 
-    def charger_config(self):
-        if ((self.MINISAB_CONFIG_FILE is not None) and 
-            os.path.exists(self.MINISAB_CONFIG_FILE)):
-            logging.debug('file config exist')
-            current_app.config.from_json(self.MINISAB_CONFIG_FILE, silent=True)
-            return True
-        return False
+    def get_config(app):
+        config_app = [ ((libelle, souspref), app.config.get_namespace(souspref)) for souspref, libelle in ConfigBase._sousprefix]
 
-    def sauver_config(self):
-        if self.MINISAB_CONFIG_FILE is not None: 
-            with open(self.MINISAB_CONFIG_FILE, mode='w') as config_file:
-                json_data = {self.ident: self}
-                json.dump(json_data, self.MINISAB_CONFIG_FILE, indent=0)
-                logging.debug('ecriture fichier config')
+        logger.debug('config_app : %s', str(config_app))
+        for libelle, x in config_app:
+            logger.debug('%s', str(libelle))
+            for y in x:
+                logger.debug('%s : %s', y, str(type(x[y])))
+        return config_app
+
+    def strConfig(dictconfig):
+        r = ''
+        for x in dictconfig:
+            if x.startswith(ConfigBase._prefix):
+                r = r + '(<%s> = <%s>)' % (x, dictconfig[x])
+        return r                
 
     def __str__(self):
         r = ''

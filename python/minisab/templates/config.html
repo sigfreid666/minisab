@@ -26,11 +26,20 @@
         <div class="container-fluid" id="app">
             <h1>Configuration <a href="{{ url_for('minisab.index') }}"><span class="badge">Minisab {{ version }}</span></a></h1>
             <form>
-              {% for config_elem in config %}
+              {% for libelle, config_elem in config %}
               <div class="form-group">
-                <label for="{{config_elem}}">{{config_elem}}</label>
-                <input name="{{config_elem}}" type="text" class="form-control" id="{{config_elem}}" placeholder="{{config_elem}}" value="{{config[config_elem]}}">
+              <label>{{libelle[0]}}</label><br>
+              {% for elem in config_elem %}
+                {% if (config_elem[elem] == True) %}
+                <input name="{{libelle[1]+elem}}" type="checkbox" class="form-control" id="{{elem}}" placeholder="{{elem}}" value="test" checked="checked">
+                {% elif (config_elem[elem] == False) %}
+                <input name="{{libelle[1]+elem}}" type="checkbox" class="form-control" id="{{elem}}" placeholder="{{elem}}" value="test" checked="">
+                {% else %}
+                <label for="{{elem}}">{{elem}}</label>
+                <input name="{{libelle[1]+elem}}" type="text" class="form-control" id="{{elem}}" placeholder="{{elem}}" value="{{config_elem[elem]}}">
+                {% endif %}
               </div>
+              {% endfor %}
               {% endfor %}
               <button type="submit" class="btn btn-default" formaction="{{ url_for('minisab.flaskconfig') }}" formmethod="post">Submit</button>
             </form>    

@@ -215,14 +215,7 @@ def lancer_telecharger(id_recherche, categorie):
         rec.id_sabnzbd = sabnzbd_util.telechargement_sabnzbd(rec.article.title,
                                                 rec.url, categorie)
         rec.save()
-        if current_app.config['MINISAB_HOST_REDIS'] is not None:
-            red = None
-            try:
-                red = redis.StrictRedis(host=current_app.config['MINISAB_HOST_REDIS'], port=current_app.config['MINISAB_PORT_REDIS'])
-                red.rpush('sabdownload', rec.id_sabnzbd)
-                red.rpush('sabdownload', rec.article.id)
-            except redis.exceptions.ConnectionError as e:
-                logging.error('Impossible de se connecter à Redis : %s', str(e))
+        sabnzbd_util.redis_sav_recherche(rec)
         return 'OK'
     except newminisab.Article.DoesNotExist:
         abort(404)
@@ -324,23 +317,17 @@ def flaskconfig():
         # logger.debug('data : %s', request.get_data())
         logger.debug('content length : %s', request.content_length)
         logger.debug('change config : %s', str([data_json[x] for x in data_json.keys()]))
-        a = settings.ConfigBase().maj_config(data_json, prefixe='MINISAB_')
-        logger.debug(str(a))
-        current_app.config.from_object(a)
-        logger.info('mise a jour configuration')
-        logger.info('MINISAB_DBFILE = %s', current_app.config['MINISAB_DBFILE'])
-        logger.info('MINISAB_LOGFILE = %s', current_app.config['MINISAB_LOGFILE'])
-        logger.info('MINISAB_HOST_REDIS = %s', current_app.config['MINISAB_HOST_REDIS'])
-        logger.info('MINISAB_PORT_REDIS = %d', current_app.config['MINISAB_PORT_REDIS'])
-        logger.info('MINISAB_HOST_SAB = %s', current_app.config['MINISAB_HOST_SAB'])
-        logger.info('MINISAB_PORT_SAB = %d', current_app.config['MINISAB_PORT_SAB'])
-        logger.info('MINISAB_CLE_SAB = %s', current_app.config['MINISAB_CLE_SAB'])
-        logger.info('MINISAB_CONFIG_FILE = %s', current_app.config['MINISAB_CONFIG_FILE'])
+        a = settings.ConfigBase(current_app).maj_config(data_json)
+        logger.debug('New config : %s', str(a))
 
-    config_app = current_app.config.get_namespace('MINISAB_')
-    logger.debug('config_app : %s', str(config_app))
-    for x in config_app:
-        logger.debug('%s : %s', x, str(type(config_app[x])))
+        current_app.config.from_object(a)
+        if newminisab.db.is_closed():
+            newminisab.db.close()
+        newminisab.db.init(current_app.config['MINISAB_AUTRE_DBFILE'])
+        logger.info('mise a jour configuration')
+        logger.info('chargement configuration : %s', settings.ConfigBase.strConfig(current_app.config))
+
+    config_app = settings.ConfigBase.get_config(current_app)
     return render_template('./config.html',
                            config=config_app)
 

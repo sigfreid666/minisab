@@ -308,6 +308,13 @@ def save_urls(red_iter, num_article, urls):
     red_iter.lpush(util.redis_urls % num_article, *urls)
 
 
+@connexion_redis
+def redis_sav_recherche(red_iter, recherche):
+    red_iter.rpush('sabdownload', recherche.id_sabnzbd)
+    red_iter.rpush('sabdownload', recherche.article.id)
+
+
+
 if __name__ == '__main__':
     # a = status_sabnzbd()
     # print(a)
