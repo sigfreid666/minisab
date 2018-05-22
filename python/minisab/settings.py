@@ -87,14 +87,15 @@ def init_config(app):
 class ConfigBase:
     _prefix_invariant = 'MINISABINV_'
     _prefix = 'MINISAB_'
-    _sousprefix = (('MINISAB_REDIS_', 'Redis'), 
+    _suffixe_active = 'CNX'
+    _sousprefix = (('MINISAB_REDIS_', 'Redis'),
                    ('MINISAB_SAB_', 'Sabnzbd'),
                    ('MINISAB_AUTRE_', 'Autre'))
-    MINISAB_REDIS_CNX = False 
-    MINISAB_REDIS_HOST = None 
+    MINISAB_REDIS_CNX = False
+    MINISAB_REDIS_HOST = None
     MINISAB_REDIS_PORT = 0
-    MINISAB_SAB_CNX = False 
-    MINISAB_SAB_HOST = None 
+    MINISAB_SAB_CNX = False
+    MINISAB_SAB_HOST = None
     MINISAB_SAB_PORT = 0
     MINISAB_SAB_CLE = None
     MINISAB_AUTRE_DBFILE = None if 'MINISAB_AUTRE_DBFILE' not in os.environ else os.environ['MINISAB_AUTRE_DBFILE']
@@ -132,7 +133,15 @@ class ConfigBase:
         return self
 
     def get_config(app):
-        config_app = [ ((libelle, souspref), app.config.get_namespace(souspref)) for souspref, libelle in ConfigBase._sousprefix]
+        config_app = []
+        for souspref, libelle in ConfigBase._sousprefix:
+            values = app.config.get_namespace(souspref)
+            if ConfigBase._suffixe_active.lower() in values:
+                act = values[ConfigBase._suffixe_active.lower()]
+                del values[ConfigBase._suffixe_active.lower()]
+                config_app.append(((libelle, act, souspref), values))
+            else:
+                config_app.append(((libelle, souspref), values))
 
         logger.debug('config_app : %s', str(config_app))
         for libelle, x in config_app:
