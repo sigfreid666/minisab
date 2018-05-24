@@ -107,16 +107,23 @@ class ConfigBase:
         for attr in app.config:
             if attr.startswith(self._prefix):
                 setattr(self, attr.upper(), app.config[attr])
-                logger.debug('attr : %s', attr.upper())
+        logger.debug('__init__ : %s', str(self))
 
     def maj_config(self, data):
         logger.debug('data : %s', str(data))
         diff = {}
+        # mis a False de tous les attributs bool
+        # ils seront mis a true par data
+        for attr in dir(self):
+            if (attr.startswith(self._prefix) and
+                (type(getattr(self, attr)) == bool)):
+                setattr(self, attr, False)
+                diff[attr] = getattr(self, attr)
         for attr in data:
             attribut = attr.upper()
             # value = getattr(self, attribut)
             if type(getattr(self, attribut)) == bool:
-                setattr(self, attribut, bool(data[attr]))
+                setattr(self, attribut, True)
             elif type(getattr(self, attribut)) == int:
                 setattr(self, attribut, int(data[attr]))
             else:
@@ -124,7 +131,7 @@ class ConfigBase:
             # newvalue = getattr(self, attribut)
             # if value != newvalue:
             diff[attribut] = getattr(self, attribut)
-            logger.debug('attr : %s', attribut)
+        logger.debug('maj_config : %s', str(self))
         if ((self.MINISABINV_CONFIG_FILE is not None) and
             (len(diff) > 0)):
             logger.debug('Ecriture json : %s', str(diff))
@@ -141,13 +148,13 @@ class ConfigBase:
                 del values[ConfigBase._suffixe_active.lower()]
                 config_app.append(((libelle, act, souspref), values))
             else:
-                config_app.append(((libelle, souspref), values))
+                config_app.append(((libelle, None, souspref), values))
 
         logger.debug('config_app : %s', str(config_app))
-        for libelle, x in config_app:
-            logger.debug('%s', str(libelle))
-            for y in x:
-                logger.debug('%s : %s', y, str(type(x[y])))
+        # for libelle, x in config_app:
+        #     logger.debug('%s', str(libelle))
+        #     for y in x:
+        #         logger.debug('%s : %s', y, str(type(x[y])))
         return config_app
 
     def strConfig(dictconfig):

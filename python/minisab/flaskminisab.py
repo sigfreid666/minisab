@@ -312,6 +312,7 @@ def change_sab_preferee(id_categorie=None, preferee=0):
 
 @bp.route('/config', methods=['GET', 'POST'])
 def flaskconfig():
+    logger.debug('flaskconfig : method : %s', request.method)
     if request.method == 'POST':
         data_json = request.form
         # logger.debug('data : %s', request.get_data())

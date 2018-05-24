@@ -27,7 +27,7 @@
             <h1>Configuration <a href="{{ url_for('minisab.index') }}"><span class="badge">Minisab {{ version }}</span></a></h1>
             <form>
               {% for libelle, config_elem in config %}
-              {% if libelle|length == 3 %}
+              {% if libelle[1] != None %}
               <div class="page-header">
                 <div class="checkbox">
                 <label>
@@ -47,7 +47,7 @@
               {% for elem in config_elem %}
               <div class="form-group">
                 <label for="{{elem}}">{{elem}}</label>
-                <input name="{{libelle[1]+elem}}" type="text" class="form-control" id="{{elem}}" placeholder="{{elem}}" value="{{config_elem[elem]}}">
+                <input name="{{libelle[2]+elem}}" type="text" class="form-control" id="{{elem}}" placeholder="{{elem}}" value="{{config_elem[elem]}}">
               </div>
               {% endfor %}
               {% endfor %}
