@@ -81,33 +81,33 @@ def traitement_nzb(liste_nom_fichier, nom_fichier_sortie):
 
 
 @connexion_redis
-def merge_nzb(nombre_iteration=15, redis_iter=None):
+def merge_nzb(nombre_iteration=15, red_iter=None):
     ret = {'article_encours': [], 'article_termine': []}
     logger.debug('merge_nzb')
     # d'abord on essaye de checker les urls en cours
     iteration = 0
-    for article_id in redis_iter.smembers(redis_liste_urls):
+    for article_id in red_iter.smembers(redis_liste_urls):
         int_article_id = int(article_id)
-        taille_en_cours = redis_iter.llen(redis_urls_encours % int_article_id)
+        taille_en_cours = red_iter.llen(redis_urls_encours % int_article_id)
         if taille_en_cours < nombre_iteration:
             for i in range(nombre_iteration - taille_en_cours):
-                redis_iter.rpoplpush(redis_urls % int_article_id,
+                red_iter.rpoplpush(redis_urls % int_article_id,
                                      redis_urls_encours % int_article_id)
         for i_url in range(nombre_iteration):
-            url = redis_iter.lpop(redis_urls_encours % int_article_id)
+            url = red_iter.lpop(redis_urls_encours % int_article_id)
             if url is None:
                 break
             logger.debug('En cours article %d, url %s', int_article_id, url)
             nom_fichier = filename_dump(int_article_id,
-                                        redis_iter.llen(redis_urls_termine % int_article_id))
+                                        red_iter.llen(redis_urls_termine % int_article_id))
             if traitement_url(url, nom_fichier):
                 ret['article_encours'].append((int_article_id, nom_fichier))
-                redis_iter.rpush(redis_urls_termine % int_article_id, nom_fichier)
+                red_iter.rpush(redis_urls_termine % int_article_id, nom_fichier)
                 iteration += 1
             else:
-                redis_iter.rpush(redis_urls_encours % int_article_id, url)
+                red_iter.rpush(redis_urls_encours % int_article_id, url)
         nom_fichier_concat = concat_nzb(int_article_id,
-                                        redis_iter=redis_iter)
+                                        red_iter=red_iter)
         if nom_fichier_concat != '':
             ret['article_termine'].append((int_article_id, nom_fichier_concat))
 
@@ -115,42 +115,42 @@ def merge_nzb(nombre_iteration=15, redis_iter=None):
 
 
 # @avec_redis
-def concat_nzb(numero_article, redis_iter=None):
+def concat_nzb(numero_article, red_iter=None):
     logger.debug('concat_nzb')
-    if ((redis_iter.llen(redis_urls % numero_article) > 0) or
-            (redis_iter.llen(redis_urls % numero_article) > 0)):
+    if ((red_iter.llen(redis_urls % numero_article) > 0) or
+            (red_iter.llen(redis_urls % numero_article) > 0)):
         logger.debug('telechargement en cours pour %d', numero_article)
         return
-    liste_nom_fichier = redis_iter.lrange(redis_urls_termine % numero_article, 0, -1)
+    liste_nom_fichier = red_iter.lrange(redis_urls_termine % numero_article, 0, -1)
     logger.debug('Article <%d>, nom fichier <%s>', numero_article, str(liste_nom_fichier))
     nom_fichier_concat = filename_dump(numero_article)
     if traitement_nzb(liste_nom_fichier, nom_fichier_concat):
         for fichier in liste_nom_fichier:
             os.remove(fichier)
-        redis_iter.srem(redis_liste_urls, numero_article)
-        redis_iter.ltrim(redis_urls % numero_article, 1, 0)
-        redis_iter.ltrim(redis_urls_encours % numero_article, 1, 0)
-        redis_iter.ltrim(redis_urls_termine % numero_article, 1, 0)
-        redis_iter.delete(redis_urls % numero_article)
-        redis_iter.delete(redis_urls_encours % numero_article)
-        redis_iter.delete(redis_urls_termine % numero_article)
+        red_iter.srem(redis_liste_urls, numero_article)
+        red_iter.ltrim(redis_urls % numero_article, 1, 0)
+        red_iter.ltrim(redis_urls_encours % numero_article, 1, 0)
+        red_iter.ltrim(redis_urls_termine % numero_article, 1, 0)
+        red_iter.delete(redis_urls % numero_article)
+        red_iter.delete(redis_urls_encours % numero_article)
+        red_iter.delete(redis_urls_termine % numero_article)
         return nom_fichier_concat
     return ''
 
 
 @connexion_redis
-def nettoyage_traitement(numero_article, redis_iter=None):
+def nettoyage_traitement(numero_article, red_iter=None):
     logger.debug('Nettoyage traitement %d', numero_article)
-    if redis_iter.srem(redis_liste_urls, numero_article) == 1:
-        liste_nom_fichier = redis_iter.lrange(redis_urls_termine % numero_article, 0, -1)
+    if red_iter.srem(redis_liste_urls, numero_article) == 1:
+        liste_nom_fichier = red_iter.lrange(redis_urls_termine % numero_article, 0, -1)
         for fichier in liste_nom_fichier:
             os.remove(fichier)
-        redis_iter.ltrim(redis_urls % numero_article, 1, 0)
-        redis_iter.ltrim(redis_urls_encours % numero_article, 1, 0)
-        redis_iter.ltrim(redis_urls_termine % numero_article, 1, 0)
-        redis_iter.delete(redis_urls % numero_article)
-        redis_iter.delete(redis_urls_encours % numero_article)
-        redis_iter.delete(redis_urls_termine % numero_article)
+        red_iter.ltrim(redis_urls % numero_article, 1, 0)
+        red_iter.ltrim(redis_urls_encours % numero_article, 1, 0)
+        red_iter.ltrim(redis_urls_termine % numero_article, 1, 0)
+        red_iter.delete(redis_urls % numero_article)
+        red_iter.delete(redis_urls_encours % numero_article)
+        red_iter.delete(redis_urls_termine % numero_article)
 
 
 @connexion_sab

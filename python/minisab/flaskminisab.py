@@ -16,7 +16,7 @@ filtre_article = [ '*** MOT DE PASSE ***' ]
 # logger.setLevel(logging.DEBUG)
 logger = logging.getLogger('minisab')
 
-version = '2.11'
+version = '2.11beta'
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
 
@@ -60,7 +60,7 @@ def mise_a_jour():
 @bp.route('/check_sab')
 def check_sab():
     logger.info('Requete : /maj')
-    return jsonify(newminisab.check_sabnzbd())
+    return jsonify(sabnzbd_util.check_sabnzbd())
 
 
 @bp.route('/check_urls')

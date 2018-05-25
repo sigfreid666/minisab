@@ -4,6 +4,8 @@ services:
     build:
       context: python
       dockerfile: Dockerfile_minisab_prod
+    environment:
+      - MINISABINV_AUTRE_CONFIG=redis_docker.py
   nginx:
     depends_on:
       - "minisab"

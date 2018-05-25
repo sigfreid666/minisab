@@ -3,7 +3,7 @@ from flask import Flask, Blueprint
 import logging
 import os
 
-def create_app(mode):
+def create_app(mode=''):
 	from . import settings
 
 	logger = logging.getLogger(__name__)
@@ -14,7 +14,8 @@ def create_app(mode):
 	# handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s'))
 	# logger.addHandler(handler)
 	handler = logging.StreamHandler()
-	handler.setLevel(logging.DEBUG)
+	if mode == 'dev':
+		handler.setLevel(logging.DEBUG)
 	handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s'))
 	logger.addHandler(handler)
 	app = Flask(__name__, instance_relative_config=True)
@@ -29,4 +30,4 @@ def create_app(mode):
 #current_app.config['MINISAB_DBFILE']
 	return app
 
-app = create_app('dev')
+# app = create_app('dev')

@@ -5,6 +5,8 @@ services:
       context: python
       dockerfile: Dockerfile_minisab
     image: minisab:dev
+    environment:
+      - MINISABINV_AUTRE_CONFIG=redis_docker.py;sab_docker.py
     volumes:
       - ./python:/app
   nginx:
