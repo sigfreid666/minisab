@@ -6,14 +6,10 @@ services:
     depends_on:
       - "redis"
     environment:
-      - MINISAB_DBFILE=$MINISAB_DBFILE
-      - MINISAB_LOGFILE=$MINISAB_LOGFILE
-      - MINISAB_HOST_REDIS=$MINISAB_HOST_REDIS
-      - MINISAB_PORT_REDIS=$MINISAB_PORT_REDIS
-      - MINISAB_HOST_SAB=$MINISAB_HOST_SAB
-      - MINISAB_PORT_SAB=$MINISAB_PORT_SAB
-      - MINISAB_CLE_SAB=$MINISAB_CLE_SAB
-    image: minisab:2.10
+      - MINISAB_AUTRE_DBFILE=/app/minisab.db
+      - MINISABINV_AUTRE_CONFIG=redis_docker.py;sab_docker.py
+      - MINISABINV_CONFIG_FILE=/data/config.json
+    image: minisab:2.11
     networks:
       minisab_default:
   nginx:
@@ -24,7 +20,7 @@ services:
     networks:
       minisab_default:
   redis:
-      image: redis:4.0.9
+      image: redis:4.0.8
       networks:
         minisab_default:
 volumes:

@@ -14,6 +14,6 @@ WORKDIR /app
 
 ADD *.py /app/
 
-ADD templates /app/templates
+ADD minisab /app/minisab
 
-CMD gunicorn -c /app/gunicorn.py flaskminisab:app
+CMD gunicorn -c /app/gunicorn.py minisab:app
