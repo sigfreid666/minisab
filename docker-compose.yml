@@ -8,6 +8,7 @@ services:
     environment:
       - MINISAB_AUTRE_DBFILE=/app/minisab.db
       - MINISABINV_CONFIG_FILE=/data/config.json
+      - MINISABINV_AUTRE_CONFIG=redis_docker.py
     image: minisab:2.11
     networks:
       minisab_default:

@@ -5,7 +5,7 @@
 			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",
 			"name": "Anaconda Python Builder",
 			"selector": "source.python",
-			"shell_cmd": "\"python3\" -u \"$file\""
+			"shell_cmd": "\"C:\\Users\\gfrutoso\\AppData\\Local\\Programs\\Python\\Python35-32\\python.exe\" -u \"$file\""
 		},
 		{
 			"file_regex": "^[ ]*File \"(...*?)\", line ([0-9]*)",

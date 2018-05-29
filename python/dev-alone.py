@@ -1,4 +1,4 @@
 from minisab import create_app
 
-app = create_app('dev')
+create_app('dev').run()
 

@@ -1,0 +1,8 @@
+COMPOSE_FILE=docker-compose.yml:docker-compose.override.yml:docker-compose-sabnzbd.yml
+MINISAB_PORT=9100
+SABNZBD_PORT_EXT=9101
+SABNZBD_PORT=8080
+SABNZBD_USER=1002
+SABNZBD_GROUP=1002
+SABNZBD_DATADIR=./sabnzbd/datadir
+SABNZBD_MEDIA=./sabnzbd/media
