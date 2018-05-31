@@ -95,7 +95,7 @@ def nettoyage_traitement(id_article):
 @bp.route('/affiche_urls')
 def affiche_urls():
     logger.info('Affichage des urls')
-    num_art, table_urls = get_info_affiche_urls()
+    num_art, table_urls = sabnzbd_util.get_info_affiche_urls()
     return render_template('./traitement_en_cours.html',
                            version=version,
                            numeros_articles=num_art,
@@ -232,7 +232,7 @@ def lancer_tout_telecharger(id_article, categorie):
         urls = [r.url for r in rec]
         logger.debug('Nombre url trouve %d', len(urls))
         logger.debug('recherche trouve %s', str(urls))
-        save_urls(id_article, urls)
+        sabnzbd_util.save_urls(id_article, urls)
         return 'OK'
     except newminisab.Article.DoesNotExist:
         abort(404)
@@ -333,6 +333,3 @@ def flaskconfig():
                            config=config_app)
 
 
-if __name__ == "__main__":
-    from application import create_app
-    create_app().run(host="0.0.0.0", port=5000)
