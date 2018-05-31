@@ -63,9 +63,11 @@ def traitement_nzb(liste_nom_fichier, nom_fichier_sortie):
         for ajout_fichier in liste_nom_fichier[1:]:
             with open(ajout_fichier, 'r') as fichier:
                 ajout_content = fichier.read()
-            logger.debug('Taille fichier %s : %d', ajout_fichier, len(ajout_content))
+            logger.debug('Taille fichier %s : %d',
+                         ajout_fichier, len(ajout_content))
             ajout_doc = parseString(ajout_content)
-            logger.debug('Nombre de nodes : %d', len(ajout_doc.documentElement.childNodes))
+            logger.debug('Nombre de nodes : %d', len(
+                ajout_doc.documentElement.childNodes))
             int_node = 0
             for child in ajout_doc.documentElement.childNodes:
                 if ((child.nodeType == child.ELEMENT_NODE) and
@@ -92,7 +94,7 @@ def merge_nzb(nombre_iteration=15, red_iter=None):
         if taille_en_cours < nombre_iteration:
             for i in range(nombre_iteration - taille_en_cours):
                 red_iter.rpoplpush(redis_urls % int_article_id,
-                                     redis_urls_encours % int_article_id)
+                                   redis_urls_encours % int_article_id)
         for i_url in range(nombre_iteration):
             url = red_iter.lpop(redis_urls_encours % int_article_id)
             if url is None:
@@ -102,7 +104,8 @@ def merge_nzb(nombre_iteration=15, red_iter=None):
                                         red_iter.llen(redis_urls_termine % int_article_id))
             if traitement_url(url, nom_fichier):
                 ret['article_encours'].append((int_article_id, nom_fichier))
-                red_iter.rpush(redis_urls_termine % int_article_id, nom_fichier)
+                red_iter.rpush(redis_urls_termine %
+                               int_article_id, nom_fichier)
                 iteration += 1
             else:
                 red_iter.rpush(redis_urls_encours % int_article_id, url)
@@ -121,8 +124,10 @@ def concat_nzb(numero_article, red_iter=None):
             (red_iter.llen(redis_urls % numero_article) > 0)):
         logger.debug('telechargement en cours pour %d', numero_article)
         return
-    liste_nom_fichier = red_iter.lrange(redis_urls_termine % numero_article, 0, -1)
-    logger.debug('Article <%d>, nom fichier <%s>', numero_article, str(liste_nom_fichier))
+    liste_nom_fichier = red_iter.lrange(
+        redis_urls_termine % numero_article, 0, -1)
+    logger.debug('Article <%d>, nom fichier <%s>',
+                 numero_article, str(liste_nom_fichier))
     nom_fichier_concat = filename_dump(numero_article)
     if traitement_nzb(liste_nom_fichier, nom_fichier_concat):
         for fichier in liste_nom_fichier:
@@ -142,7 +147,8 @@ def concat_nzb(numero_article, red_iter=None):
 def nettoyage_traitement(numero_article, red_iter=None):
     logger.debug('Nettoyage traitement %d', numero_article)
     if red_iter.srem(redis_liste_urls, numero_article) == 1:
-        liste_nom_fichier = red_iter.lrange(redis_urls_termine % numero_article, 0, -1)
+        liste_nom_fichier = red_iter.lrange(
+            redis_urls_termine % numero_article, 0, -1)
         for fichier in liste_nom_fichier:
             os.remove(fichier)
         red_iter.ltrim(redis_urls % numero_article, 1, 0)
@@ -277,12 +283,12 @@ def get_status_sab_redis(red_iter=None):
 @connexion_redis
 def get_info_affiche_urls(red_iter=None):
     logger.info('Affichage des urls')
-    num_art = [x.decode() for x in red_iter.smembers(util.redis_liste_urls)]
+    num_art = [x.decode() for x in red_iter.smembers(redis_liste_urls)]
     table_urls = []
     for x in num_art:
-        for y in (util.redis_urls % int(x),
-                  util.redis_urls_termine % int(x),
-                  util.redis_urls_encours % int(x)):
+        for y in (redis_urls % int(x),
+                  redis_urls_termine % int(x),
+                  redis_urls_encours % int(x)):
             i = 0
             table_urls.append((y, []))
             for z in red_iter.lrange(y, 0, -1):
@@ -296,23 +302,22 @@ def get_info_affiche_urls(red_iter=None):
 
 @connexion_redis
 def save_urls(red_iter, num_article, urls):
-    red_iter.sadd(util.redis_liste_urls, num_article)
-    if red_iter.exists(util.redis_urls % num_article):
-        logger.debug('%s existe', util.redis_urls % num_article)
-        red_iter.ltrim(util.redis_urls_encours % num_article, 1, 0)
-        red_iter.ltrim(util.redis_urls_termine % num_article, 1, 0)
-        red_iter.ltrim(util.redis_urls % num_article, 1, 0)
-        # red_iter.delete(util.redis_urls_encours % num_article)
-        # red_iter.delete(util.redis_urls_termine % num_article)
-        # red_iter.delete(util.redis_urls % num_article)
-    red_iter.lpush(util.redis_urls % num_article, *urls)
+    red_iter.sadd(redis_liste_urls, num_article)
+    if red_iter.exists(redis_urls % num_article):
+        logger.debug('%s existe', redis_urls % num_article)
+        red_iter.ltrim(redis_urls_encours % num_article, 1, 0)
+        red_iter.ltrim(redis_urls_termine % num_article, 1, 0)
+        red_iter.ltrim(redis_urls % num_article, 1, 0)
+        # red_iter.delete(redis_urls_encours % num_article)
+        # red_iter.delete(redis_urls_termine % num_article)
+        # red_iter.delete(redis_urls % num_article)
+    red_iter.lpush(redis_urls % num_article, *urls)
 
 
 @connexion_redis
 def redis_sav_recherche(red_iter, recherche):
     red_iter.rpush('sabdownload', recherche.id_sabnzbd)
     red_iter.rpush('sabdownload', recherche.article.id)
-
 
 
 if __name__ == '__main__':
