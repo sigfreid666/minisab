@@ -168,7 +168,8 @@ def status_sabnzbd(sabnzbd_nc_cle_api='', url=''):
     logger.debug('Url : %s, %s', url, str(param))
     r = requests.get(url, params=param)
     resultat = r.json()
-    logger.debug('Resultat : %d', len(resultat['history']['slots']))
+    if 'history' in resultat:
+        logger.debug('Resultat : %d', len(resultat['history']['slots']))
     param = {'apikey': sabnzbd_nc_cle_api,
              'output': 'json',
              'mode': 'queue'}
