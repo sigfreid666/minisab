@@ -16,7 +16,7 @@ filtre_article = [ '*** MOT DE PASSE ***' ]
 # logger.setLevel(logging.DEBUG)
 logger = logging.getLogger('minisab')
 
-version = '2.11beta'
+version = '2.11'
 
 nom_cat_sab = 'minisab_categorie_sabnzbd'
 
