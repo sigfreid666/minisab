@@ -11,9 +11,6 @@ settings_local\.py
 
 *.tar
 
-docker/datadir
-docker/media
-docker/.env
-
-docker/datadir/
-docker/media/
+sabnzbd/datadir
+sabnzbd/media
+.env

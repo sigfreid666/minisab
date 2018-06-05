@@ -10,4 +10,4 @@ WORKDIR /app
 
 VOLUME /app
 
-CMD gunicorn -c /app/gunicorn.py flaskminisab:app
+CMD gunicorn -c /app/gunicorn-dev.py dev:app

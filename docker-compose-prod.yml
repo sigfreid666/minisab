@@ -2,23 +2,27 @@ version: '2'
 services:
   minisab:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile_minisab_prod
+      context: python
+      dockerfile: Dockerfile_minisab_prod
+    environment:
+      - MINISABINV_AUTRE_CONFIG=redis_docker.py
   nginx:
     depends_on:
       - "minisab"
     image: minisab_nginx:1.1
     build:
-      context: ..
+      context: nginx
       args:
-        - DEFAULT_NGINX=docker/nginx-prod.conf
+        - DEFAULT_NGINX=nginx-prod.conf
         - STATIC_NGINX=static
-      dockerfile: docker/Dockerfile_nginx
+      dockerfile: Dockerfile_nginx
   cron:
     build:
-      context: .
+      context: cron
       dockerfile: Dockerfile_cron
     image: minisab_cron:1.2
+    logging:
+      driver: "json-file"
     depends_on:
       - "nginx"
     networks:

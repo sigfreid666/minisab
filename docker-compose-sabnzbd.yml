@@ -1,0 +1,17 @@
+version: '2'
+services:
+  minisab:
+    environment:
+      - MINISABINV_AUTRE_CONFIG=redis_docker.py;sab_docker.py
+  sabnzbd:
+    image: "sabnzbd/sabnzbd"
+    environment:
+      - SABNZBD_UID=$SABNZBD_USER
+      - SABNZBD_GID=$SABNZBD_GROUP
+    ports:
+      - "$SABNZBD_PORT_EXT:$SABNZBD_PORT"
+    volumes:
+      - "$SABNZBD_MEDIA:/media"
+      - "$SABNZBD_DATADIR:/datadir"
+    networks:
+      minisab_default:
