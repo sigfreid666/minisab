@@ -301,7 +301,7 @@ def get_info_affiche_urls(red_iter=None):
 
 
 @connexion_redis
-def save_urls(red_iter, num_article, urls):
+def save_urls(num_article, urls, red_iter=None):
     red_iter.sadd(redis_liste_urls, num_article)
     if red_iter.exists(redis_urls % num_article):
         logger.debug('%s existe', redis_urls % num_article)
@@ -315,7 +315,7 @@ def save_urls(red_iter, num_article, urls):
 
 
 @connexion_redis
-def redis_sav_recherche(red_iter, recherche):
+def redis_sav_recherche(recherche, red_iter=None):
     red_iter.rpush('sabdownload', recherche.id_sabnzbd)
     red_iter.rpush('sabdownload', recherche.article.id)
 

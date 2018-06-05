@@ -212,10 +212,12 @@ def lancer_telecharger(id_recherche, categorie):
     logger.info('Requete %s', request.url)
     try:
         rec = newminisab.Recherche.get(newminisab.Recherche.id == id_recherche)
-        rec.id_sabnzbd = sabnzbd_util.telechargement_sabnzbd(rec.article.title,
+        res_tele = sabnzbd_util.telechargement_sabnzbd(rec.article.title,
                                                 rec.url, categorie)
-        rec.save()
-        sabnzbd_util.redis_sav_recherche(rec)
+        if 'nzo_ids' in res_tele:
+            rec.id_sabnzbd = res_tele['nzo_ids']
+            rec.save()
+            sabnzbd_util.redis_sav_recherche(rec)
         return 'OK'
     except newminisab.Article.DoesNotExist:
         abort(404)
