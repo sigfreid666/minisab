@@ -21,6 +21,8 @@ services:
       context: cron
       dockerfile: Dockerfile_cron
     image: minisab_cron:1.2
+    logging:
+      driver: "json-file"
     depends_on:
       - "nginx"
     networks:

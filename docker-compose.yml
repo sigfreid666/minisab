@@ -10,6 +10,8 @@ services:
       - MINISABINV_CONFIG_FILE=/data/config.json
       - MINISABINV_AUTRE_CONFIG=redis_docker.py
     image: minisab:2.11
+    logging:
+      driver: "json-file"
     networks:
       minisab_default:
   nginx:
@@ -17,10 +19,14 @@ services:
       - "minisab"
     ports:
       - "$MINISAB_PORT:80"
+    logging:
+      driver: "json-file"
     networks:
       minisab_default:
   redis:
       image: redis:4.0.8
+      logging:
+        driver: "json-file"
       networks:
         minisab_default:
 volumes:
