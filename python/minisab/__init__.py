@@ -3,6 +3,8 @@ from flask import Flask, Blueprint
 import logging
 import os
 
+__version__ = '2.12'
+
 def create_app(mode=''):
 	from . import settings
 
