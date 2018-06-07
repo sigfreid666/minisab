@@ -14,3 +14,4 @@ settings_local\.py
 sabnzbd/datadir
 sabnzbd/media
 .env
+\.vscode/tags

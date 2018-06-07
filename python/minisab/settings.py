@@ -24,6 +24,11 @@ def make_url_sab(host, port):
     return "http://%s:%s/sabnzbd/api" % (host, port)
 
 
+def filename_dump(id_article, indice=-1):
+    return '%s/dump-%d-%s.nzb' % (current_app.config['MINISAB_AUTRE_DUMPDIR'],
+                                  id_article, str(indice) if indice >= 0 else 'concat')
+
+
 def acces_config_avec_sab(wrap):
     @wraps(wrap)
     def wrapper(*args):
@@ -100,8 +105,10 @@ class ConfigBase:
     MINISAB_SAB_CLE = None
     MINISAB_AUTRE_DBFILE = None if 'MINISAB_AUTRE_DBFILE' not in os.environ else os.environ['MINISAB_AUTRE_DBFILE']
     MINISAB_AUTRE_LOGFILE = None if 'MINISAB_AUTRE_LOGFILE' not in os.environ else os.environ['MINISAB_AUTRE_LOGFILE']
+    MINISAB_AUTRE_DUMPDIR = '/data' if 'MINISAB_AUTRE_DUMPDIR' not in os.environ else os.environ['MINISAB_AUTRE_DUMPDIR']
     MINISABINV_AUTRE_CONFIG = [] if 'MINISABINV_AUTRE_CONFIG' not in os.environ else os.environ['MINISABINV_AUTRE_CONFIG'].split(';')
     MINISABINV_CONFIG_FILE = None if 'MINISABINV_CONFIG_FILE' not in os.environ else os.environ['MINISABINV_CONFIG_FILE']
+    MINISABINV_URL_EXTERNE = None if 'MINISABINV_URL_EXTERNE' not in os.environ else os.environ['MINISABINV_URL_EXTERNE']
 
     def __init__(self, app):
         for attr in app.config:
@@ -162,7 +169,8 @@ class ConfigBase:
     def strConfig(cls, dictconfig):
         r = ''
         for x in dictconfig:
-            if x.startswith(cls._prefix):
+            if (x.startswith(cls._prefix) or
+                x.startswith(cls._prefix_invariant)):
                 r = r + '(<%s> = <%s>)' % (x, dictconfig[x])
         return r                
 
