@@ -16,7 +16,7 @@
 {% endif %}
 <div class="panel-heading">
     <div class="row">
-    <div class="col-md-12">
+    <div class="col-md-11">
     <div class="btn-group" role="group" aria-label="...">
         <h4>
         <a href="{{ item.link }}" target="_blank">{{ item.title }}</a>
@@ -29,46 +29,53 @@
         <button class="btn btn-default" onclick="lancer_recherche('{{ url_for('minisab.recherche_article', id_article=item.id) }}', {{ item.id }})">
             <span class="glyphicon glyphicon-search" aria-hidden="true"/>               
         </button>
-        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
+        {% if item.recherche|length > 0 %}
+        <button class="btn btn-default" data-toggle="collapse" data-parent="#art_{{ item.id }}" data-target="#recresult_{{ item.id }}">
             <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"/>               
         </button>
-        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" onclick="envoyer_sab_tous('{{ url_for('minisab.lancer_tout_telecharger', id_article=item.id) }}', {{ item.id }})">
+        <button class="btn btn-default" onclick="envoyer_sab_tous('{{ url_for('minisab.lancer_tout_telecharger', id_article=item.id) }}', {{ item.id }})">
             <span class="glyphicon glyphicon-asterisk" aria-hidden="true"/>               
         </button>
-        <button class="btn btn-default {{ 'disabled' if item.recherche|length == 0 }}" onclick="nettoyer_recherche('{{ url_for('minisab.nettoyer_recherche', id_article=item.id) }}', {{ item.id }})">
+        <button class="btn btn-default" onclick="nettoyer_recherche('{{ url_for('minisab.nettoyer_recherche', id_article=item.id) }}', {{ item.id }})">
             <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
         </button>
+        {% endif %}
         </h4>
     </div>
     </div>
+    <div class="col-md-1">
+        <h4>
+            <span class="label {{ 'label-default' if item.recherche|length == 0 else 'label-primary' }}">{{ item.annee }}</span>
+        </h4>
     </div>
+    </div>
+    {% if categorie.nom == 'Favoris' %}
     <div class="row">
         <div class="col-md-1">
             <div class="input-group">
               <input type="text" class="form-control" aria-label="..." id="rec_multiple_{{ item.id }}">
             </div>
         </div>
-    {% if item.recherche|length > 0 %}
-    <div class="col-md-11">
-    <div class="btn-group recherche" role="group" aria-label="...">
-        {% for item_categorie in categorie_sabnzbd %}
-            {% if item_categorie == item.categorie_origine.categorie_sabnzbd %}
-            <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
-            {% else %}
-            <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
-            {% endif %}
-        {% endfor %}
-    </div>
+        {% if item.recherche|length > 0 %}
+        <div class="col-md-11">
+            <div class="btn-group recherche" role="group" aria-label="...">
+                {% for item_categorie in categorie_sabnzbd %}
+                {% if item_categorie == item.categorie_origine.categorie_sabnzbd %}
+                <button type="button" class="btn btn-danger {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                {% else %}
+                <button type="button" class="btn btn-default {{ item_categorie }}" onclick="change_selection({{ item.id }}, '{{ item_categorie }}')">{{ item_categorie }}</button>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
-    </div>
 </div>
 <div class="panel-body">
     <p data-toggle="tooltip" title="{{item.fichier|escape()}}">
         <span class="label label-default">{{ item.taille }}</span>
-        <span class="label label-default">{{ item.annee }}</span><br>
-        {{ item.fichier|truncate(40) }}<br>
-        <a href="{{ item.nfo }}">Nfo</a>
+        {{ item.fichier|truncate(40) }} <a href="{{ item.nfo }}">Nfo</a>
     </p>
     {% if (item.recherche|length > 0) and (item.recherche|length < 4) %}
     <div class="btn-group" role="group" aria-label="...">

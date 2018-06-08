@@ -8,6 +8,7 @@ from . import newminisab
 import redis
 from . import sabnzbd_util
 from . import settings
+from . import __version__
 # import util
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
@@ -47,7 +48,7 @@ def index():
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
                            categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd(),
-                           version=version,
+                           version=__version__,
                            categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
