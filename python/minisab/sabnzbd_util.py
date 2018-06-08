@@ -5,7 +5,9 @@ import redis
 import os
 from xml.dom.minidom import parseString
 from xml.parsers.expat import ExpatError
-from minisab.settings import connexion_sab, connexion_redis
+from minisab.settings import (connexion_sab, 
+                              connexion_redis,
+                              filename_dump)
 import itertools
 from functools import wraps
 
@@ -20,27 +22,25 @@ redis_urls_encours = 'minisab_%d_urls_encours'
 redis_urls_termine = 'minisab_%d_urls_termine'
 
 
-def filename_dump(id_article, indice=-1):
-    return '/app/dump-%d-%s.nzb' % (id_article, str(indice) if indice >= 0 else 'concat')
-
-
 def traitement_url(url, nom_fichier):
     try:
         logger.debug('Recuperation url %s', url)
         req = requests.get(url)
         content = req.text
         logger.debug('Taille fichier %d', len(content))
-        if len(content) > 0:
+        if (len(content) > 0) and (req.status_code == 200):
             # on verifie la validite du fichier avant d'ecrire
             try:
                 parseString(content)
-            except ExpatError as e:
+            except ExpatError:
                 logger.error('Fichier nzb mal forme : url <%s>', url)
                 return False
             finally:
                 with open(nom_fichier, 'w') as fichier:
                     fichier.write(content)
                     return True
+        else:
+            return False
     except:
         return False
 
@@ -123,7 +123,7 @@ def concat_nzb(numero_article, red_iter=None):
     if ((red_iter.llen(redis_urls % numero_article) > 0) or
             (red_iter.llen(redis_urls % numero_article) > 0)):
         logger.debug('telechargement en cours pour %d', numero_article)
-        return
+        return ''
     liste_nom_fichier = red_iter.lrange(
         redis_urls_termine % numero_article, 0, -1)
     logger.debug('Article <%d>, nom fichier <%s>',

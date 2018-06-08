@@ -8,6 +8,7 @@ from . import newminisab
 import redis
 from . import sabnzbd_util
 from . import settings
+from . import __version__
 # import util
 
 filtre_article = [ '*** MOT DE PASSE ***' ]
@@ -47,7 +48,7 @@ def index():
     return render_template('./minifluxlist.html', titlepage='Miniflux',
                            articles=articles,
                            categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd(),
-                           version=version,
+                           version=__version__,
                            categorie_favoris_id=newminisab.Categorie.get_favoris().id)
 
 
@@ -65,12 +66,15 @@ def check_sab():
 
 @bp.route('/check_urls')
 def check_urls():
-    logger.info('Requete : /maj')
+    logger.info('Requete : /check_urls')
     resultat = sabnzbd_util.merge_nzb()
     for termine_id, termine_fichier in resultat['article_termine']:
         ar = newminisab.Article.get(newminisab.Article.id == termine_id)
-        url = 'http://nginx' + url_for('minisab.get_nzb',
-                                       id_article=termine_id)
+        url = (current_app.config['MINISABINV_URL_EXTERNE'] +
+               url_for('minisab.get_nzb',
+                       id_article=termine_id))
+        logger.debug('ajout recherche tous pour %s et %s',
+                     termine_fichier, url)
         ar.creer_recherche_tous(termine_fichier, url)
     return jsonify(resultat)
 
@@ -79,7 +83,7 @@ def check_urls():
 def get_nzb(id_article=None):
     logger.debug('get_nzb %d', id_article)
     try:
-        with open(sabnzbd_util.filename_dump(id_article), mode='r') as fichier:
+        with open(settings.filename_dump(id_article), mode='r') as fichier:
             content = fichier.read()
         return content
     except FileNotFoundError:

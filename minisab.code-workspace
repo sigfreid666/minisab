@@ -3,5 +3,9 @@
 		{
 			"path": "."
 		}
-	]
+	],
+	"settings": {
+		"docker.dockerComposeBuild": false,
+		"docker.dockerComposeDetached": false
+	}
 }

@@ -24,6 +24,11 @@ def make_url_sab(host, port):
     return "http://%s:%s/sabnzbd/api" % (host, port)
 
 
+def filename_dump(id_article, indice=-1):
+    return '%s/dump-%d-%s.nzb' % (current_app.config['MINISAB_AUTRE_DUMPDIR'],
+                                  id_article, str(indice) if indice >= 0 else 'concat')
+
+
 def acces_config_avec_sab(wrap):
     @wraps(wrap)
     def wrapper(*args):
@@ -100,8 +105,10 @@ class ConfigBase:
     MINISAB_SAB_CLE = None
     MINISAB_AUTRE_DBFILE = None if 'MINISAB_AUTRE_DBFILE' not in os.environ else os.environ['MINISAB_AUTRE_DBFILE']
     MINISAB_AUTRE_LOGFILE = None if 'MINISAB_AUTRE_LOGFILE' not in os.environ else os.environ['MINISAB_AUTRE_LOGFILE']
+    MINISAB_AUTRE_DUMPDIR = '/data' if 'MINISAB_AUTRE_DUMPDIR' not in os.environ else os.environ['MINISAB_AUTRE_DUMPDIR']
     MINISABINV_AUTRE_CONFIG = [] if 'MINISABINV_AUTRE_CONFIG' not in os.environ else os.environ['MINISABINV_AUTRE_CONFIG'].split(';')
     MINISABINV_CONFIG_FILE = None if 'MINISABINV_CONFIG_FILE' not in os.environ else os.environ['MINISABINV_CONFIG_FILE']
+    MINISABINV_URL_EXTERNE = None if 'MINISABINV_URL_EXTERNE' not in os.environ else os.environ['MINISABINV_URL_EXTERNE']
 
     def __init__(self, app):
         for attr in app.config:
@@ -139,13 +146,14 @@ class ConfigBase:
                 json.dump(diff, fichier_json)
         return self
 
-    def get_config(app):
+    @classmethod
+    def get_config(cls, app):
         config_app = []
-        for souspref, libelle in ConfigBase._sousprefix:
+        for souspref, libelle in cls._sousprefix:
             values = app.config.get_namespace(souspref)
-            if ConfigBase._suffixe_active.lower() in values:
-                act = values[ConfigBase._suffixe_active.lower()]
-                del values[ConfigBase._suffixe_active.lower()]
+            if cls._suffixe_active.lower() in values:
+                act = values[cls._suffixe_active.lower()]
+                del values[cls._suffixe_active.lower()]
                 config_app.append(((libelle, act, souspref), values))
             else:
                 config_app.append(((libelle, None, souspref), values))
@@ -157,10 +165,12 @@ class ConfigBase:
         #         logger.debug('%s : %s', y, str(type(x[y])))
         return config_app
 
-    def strConfig(dictconfig):
+    @classmethod
+    def strConfig(cls, dictconfig):
         r = ''
         for x in dictconfig:
-            if x.startswith(ConfigBase._prefix):
+            if (x.startswith(cls._prefix) or
+                x.startswith(cls._prefix_invariant)):
                 r = r + '(<%s> = <%s>)' % (x, dictconfig[x])
         return r                
 
@@ -200,11 +210,11 @@ class config(dict):
         self.update([(x[1].lower(), x[0]) for x in config_tuple])
         try:
             self['port_sab'] = int(self['port_sab'])
-        except TypeError as e:
+        except TypeError:
             self['port_sab'] = 0
         try:
             self['port_redis'] = int(self['port_redis'])
-        except TypeError as e:
+        except TypeError:
             self['port_redis'] = 0
 
     def init_config(self, dbfile, logfile, host_redis, port_redis,

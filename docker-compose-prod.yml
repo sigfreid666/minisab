@@ -4,18 +4,43 @@ services:
     build:
       context: python
       dockerfile: Dockerfile_minisab_prod
+    volumes:
+      - data:/data
     environment:
+      - MINISAB_AUTRE_DBFILE=/data/minisab.db
+      - MINISAB_AUTRE_DUMPDIR=/data
+      - MINISABINV_CONFIG_FILE=/data/config.json
       - MINISABINV_AUTRE_CONFIG=redis_docker.py
-  nginx:
+      - MINISABINV_URL_EXTERNE=${MINISABINV_URL_EXTERNE}
+    image: minisab:2.12
+    logging:
+      driver: "json-file"
     depends_on:
-      - "minisab"
-    image: minisab_nginx:1.1
+      - "redis"
+    networks:
+      minisab_default:
+  nginx:
+    image: minisab_nginx:1.2
     build:
       context: nginx
       args:
         - DEFAULT_NGINX=nginx-prod.conf
         - STATIC_NGINX=static
       dockerfile: Dockerfile_nginx
+    ports:
+      - "$MINISAB_PORT:80"
+    logging:
+      driver: "json-file"
+    depends_on:
+      - "minisab"
+    networks:
+      minisab_default:
+  redis:
+      image: redis:4.0.8
+      logging:
+        driver: "json-file"
+      networks:
+        minisab_default:
   cron:
     build:
       context: cron
@@ -27,3 +52,7 @@ services:
       - "nginx"
     networks:
       minisab_default:
+volumes:
+  data: {}
+networks:
+  minisab_default:
