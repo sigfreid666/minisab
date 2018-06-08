@@ -1,2 +1,4 @@
-COMPOSE_FILE=docker-compose.yml:docker-compose.override.yml
+COMPOSE_FILE=docker-compose-prod.yml
+COMPOSE_PROJECT_NAME=minisabdev
 MINISAB_PORT=9100
+MINISABINV_URL_EXTERNE=http://192.168.0.5:9100
