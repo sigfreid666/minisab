@@ -1,7 +1,7 @@
 from flask import Flask
 import logging
 
-__version__ = "2.12"
+__version__ = "2.12a"
 
 
 def create_app(mode=""):
