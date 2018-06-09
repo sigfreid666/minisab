@@ -15,7 +15,6 @@ from peewee import (
     DoesNotExist,
     IntegrityError,
     prefetch,
-    fn,
     OperationalError,
 )
 from minisab.indexeur import MyParserNzbIndex, recherche_indexeur
@@ -175,15 +174,6 @@ class Article(Model):
         logger.debug("marquer_favorie")
         self.categorie = Categorie.get(Categorie.nom == "Favoris")
         self.save()
-
-    @classmethod
-    def liste_categorie(cls):
-        a = (
-            cls.select(cls.categorie, fn.Count(cls.categorie).alias("nb"))
-            .where(cls.lu is False)
-            .group_by(cls.categorie)
-        )
-        return [(x.categorie, x.nb) for x in a]
 
     def __str__(self):
         return "<%s %s %s>" % (self.title, self.pubDate, self.lu)
@@ -367,7 +357,7 @@ def recuperer_tous_articles():
 def recuperer_tous_articles_par_categorie(filtres_article=[]):
     logger.debug("recuperer_tous_articles_par_categorie")
     les_articles = (
-        Article.select().where(Article.lu is False).order_by(Article.annee.desc())
+        Article.select().where(Article.lu == False).order_by(Article.annee.desc())
     )
     les_categories = Categorie.select().order_by(
         Categorie.preferee.desc(), Categorie.nom
