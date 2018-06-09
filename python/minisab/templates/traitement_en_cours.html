@@ -31,10 +31,10 @@
                     Minisab <span class="badge">{{ version }}</span>
                 </div>
                 <div class="col-md-3">
+                    <a class="btn btn-link btn-lg" href="{{ url_for('minisab.index') }}"><span class="badge">Minisab</span></a>
                     <div class="btn-group" role="group" aria-label="...">
-                        <a class="btn btn-link btn-lg" href="{{ url_for('minisab.index') }}"><span class="glyphicon glyphicon-th" aria-hidden="true"></span></a>
                         <button class="btn btn-info" onclick="lancer_url('{{ url_for('minisab.check_urls') }}', 'output')">
-                            <span class="glyphicon glyphicon-trash" aria-hidden="true"/>
+                            <span class="glyphicon glyphicon-refresh" aria-hidden="true"/>
                         </button>
                     </div>
                 </div>
