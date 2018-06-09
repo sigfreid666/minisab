@@ -189,6 +189,7 @@ def recherche_article(id_article, stop_multi):
         ar.lancer_recherche(start_multi=1, stop_multi=stop_multi)
         ar = newminisab.Article.get(newminisab.Article.id == id_article)
         return render_template('./article.html', item=ar,
+                               categorie=ar.categorie,
                                categorie_sabnzbd=sabnzbd_util.get_categorie_sabnzbd(),
                                categorie_favoris_id=newminisab.Categorie.get_favoris().id)
     except newminisab.Article.DoesNotExist:
